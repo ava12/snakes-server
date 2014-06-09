@@ -13,8 +13,7 @@ final class RequestValidatorTest extends PHPUnit_Framework_TestCase {
 	 * @expectedExceptionCode NackException::ERR_MISSING_FIELD
 	 */
 	public function testEmptyRequest() {
-		$Request = new Request(array());
-		$Request->validate();
+		RequestValidator::validate(array());
 	}
 
 	/**
@@ -22,8 +21,7 @@ final class RequestValidatorTest extends PHPUnit_Framework_TestCase {
 	 * @expectedExceptionCode NackException::ERR_UNKNOWN_REQUEST
 	 */
 	public function testWrongRequest() {
-		$Request = new Request(array('Request' => 'foo'));
-		$Request->validate();
+		RequestValidator::validate(array('Request' => 'foo'));
 	}
 
 	/**
@@ -31,8 +29,7 @@ final class RequestValidatorTest extends PHPUnit_Framework_TestCase {
 	 * @expectedExceptionCode NackException::ERR_WRONG_FORMAT
 	 */
 	public function testWrongRequestFormat() {
-		$Request = new Request(array('Request' => array('foo', 'bar')));
-		$Request->validate();
+		RequestValidator::validate(array('Request' => array('foo', 'bar')));
 	}
 
 	/**
@@ -40,8 +37,7 @@ final class RequestValidatorTest extends PHPUnit_Framework_TestCase {
 	 * @expectedExceptionCode NackException::ERR_MISSING_FIELD
 	 */
 	public function testMissingField() {
-		$Request = new Request(array('Request' => 'player info'));
-		$Request->validate();
+		RequestValidator::validate(array('Request' => 'player info'));
 	}
 
 	/**
@@ -49,36 +45,31 @@ final class RequestValidatorTest extends PHPUnit_Framework_TestCase {
 	 * @expectedExceptionCode NackException::ERR_UNKNOWN_FIELD
 	 */
 	public function testUnknownField() {
-		$Request = new Request(array('Request' => 'ping', 'Sid' => '1', 'PlayerId' => 1));
-		$Request->validate();
+		RequestValidator::validate(array('Request' => 'ping', 'Sid' => '1', 'PlayerId' => 1));
 	}
 
 	/**
 	 */
 	public function testIgnoredFieldPresent() {
-		$Request = new Request(array('Request' => 'info', 'Sid' => '1'));
-		$Request->validate();
+		RequestValidator::validate(array('Request' => 'info', 'Sid' => '1'));
 	}
 
 	/**
 	 */
 	public function testIgnoredFieldMissing() {
-		$Request = new Request(array('Request' => 'info'));
-		$Request->validate();
+		RequestValidator::validate(array('Request' => 'info'));
 	}
 
 	/**
 	 */
 	public function testOptionalFieldPresent() {
-		$Request = new Request(array('Request' => 'ratings', 'Sid' => '1', 'FirstIndex' => '1'));
-		$Request->validate();
+		RequestValidator::validate(array('Request' => 'ratings', 'Sid' => '1', 'FirstIndex' => '1'));
 	}
 
 	/**
 	 */
 	public function testOptionalFieldMissing() {
-		$Request = new Request(array('Request' => 'ratings', 'Sid' => '1'));
-		$Request->validate();
+		RequestValidator::validate(array('Request' => 'ratings', 'Sid' => '1'));
 	}
 
 
@@ -99,8 +90,7 @@ final class RequestValidatorTest extends PHPUnit_Framework_TestCase {
 
 			$Flag = false;
 			try {
-				$Request = new Request($Request);
-				$Request->validate();
+				RequestValidator::validate($Request);
 			}
 			catch(NackException $e) {
 				$Flag = true;
@@ -129,8 +119,7 @@ final class RequestValidatorTest extends PHPUnit_Framework_TestCase {
 			$p = $Entry[1];
 
 			try {
-				$Request = new Request($Request);
-				$Request->validate();
+				RequestValidator::validate($Request);
 			}
 			catch(NackException $e) {
 				$Message = ' ! запрос "' . $Type . '": отвергнуто корректное поле : ' . $e->getMessage();
@@ -160,9 +149,9 @@ final class RequestValidatorTest extends PHPUnit_Framework_TestCase {
 
 			$Flag = false;
 			$Code = (isset($Entry[2]) ? $Entry[2] : $DefaultCode);
+
 			try {
-				$Request = new Request($Request);
-				$Request->validate();
+				RequestValidator::validate($Request);
 			}
 			catch(NackException $e) {
 				$Flag = true;
@@ -201,18 +190,16 @@ final class RequestValidatorTest extends PHPUnit_Framework_TestCase {
 
 
 		// все требуемые поля присутствуют
-		$Request = new Request($RequiredFields);
 		try {
-			$Request->validate();
+			RequestValidator::validate($RequiredFields);
 		}
 		catch(NackException $e) {
 			$this->fail($e->getMessage());
 		}
 
 		// все поля присутствуют
-		$Request = new Request($Fields);
 		try {
-			$Request->validate();
+			RequestValidator::validate($Fields);
 		}
 		catch(NackException $e) {
 			$this->fail($e->getMessage());

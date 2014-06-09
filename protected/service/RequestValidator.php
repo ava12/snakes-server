@@ -1,10 +1,12 @@
 <?php
 
-class Request {
-	protected $fields;
-
-	protected static $version = 1;
-	protected static $compatible = 1;
+/**
+ * Базовая валидация AJAX-запросов.
+ *
+ * Проверяется тип запроса, наличие необходимых и отсутствие лишних полей,
+ * формат полей.
+ */
+class RequestValidator {
 	protected static $arrayFieldTypes = array('_array', '_narray', '_list', '_object');
 
 	/* {имя => [имя_типа, значение_по_умолчанию*, параметр*]|имя_типа}
@@ -99,54 +101,47 @@ class Request {
 		'RequestId' => false,
 	);
 
-	// {запрос => [обработчик, [требуемое_поле*]?, [дополнительное_поле*]?]}
+	// {запрос => [[требуемое_поле*]?, [дополнительное_поле*]?]}
 	protected static $requestTypes = array(
-		'info' => array(array('Request', 'RequestInfo'), NULL, 'Sid'),
-		'ping' => array(array('Game', 'Ack')),
-		'whoami' => array(array('Game', 'Whoami')),
-		'login data' => array(array('Game', 'LoginData'), 'Login', 'Sid'),
-		'login' => array(array('Game', 'Login'), array('Login', 'Timestamp', 'Hash'), 'Sid'),
-		'logout' => array(array('Game', 'Logout')),
+		'info' => array(NULL, 'Sid'),
+		'ping' => array(),
+		'whoami' => array(),
+		'login data' => array('Login', 'Sid'),
+		'login' => array(array('Login', 'Timestamp', 'Hash'), 'Sid'),
+		'logout' => array(),
 
-		'ratings' => array(array('Player', 'RequestRatings'), NULL, array('FirstIndex', 'Count', 'SortBy')),
-		'player list' => array(array('Player', 'RequestList'), NULL, array('FirstIndex', 'Count', 'SortBy')),
-		'player info' => array(array('Player', 'RequestInfo'), 'PlayerId'),
+		'ratings' => array(NULL, array('FirstIndex', 'Count', 'SortBy')),
+		'player list' => array(NULL, array('FirstIndex', 'Count', 'SortBy')),
+		'player info' => array('PlayerId'),
 
-		'snake list' => array(array('Snake', 'RequestList'), NULL, array('SnakeTypes', 'FirstIndex', 'Count', 'SortBy')),
-		'skin list' => array(array('Snake', 'RequestListSkins')),
-		'snake info' => array(array('Snake', 'RequestInfo'), 'SnakeId'),
-		'snake new' => array(array('Snake', 'RequestNew'), array(
+		'snake list' => array(NULL, array('SnakeTypes', 'FirstIndex', 'Count', 'SortBy')),
+		'skin list' => array(),
+		'snake info' => array('SnakeId'),
+		'snake new' => array(array(
 			'SnakeName', 'SnakeType', 'SkinId', 'ProgramDescription', 'Templates', 'Maps'
 		)),
-		'snake delete' => array(array('Snake', 'RequestDelete'), 'SnakeId'),
-		'snake edit' => array(array('Snake', 'RequestEdit'), 'SnakeId', array(
+		'snake delete' => array('SnakeId'),
+		'snake edit' => array('SnakeId', array(
 			'SnakeName', 'SnakeType', 'SkinId', 'ProgramDescription', 'Templates', 'Maps'
 		)),
-		'snake assign' => array(array('Player', 'RequestAssign'), 'SnakeId'),
+		'snake assign' => array('SnakeId'),
 
-		'fight list' => array(array('Fight', 'RequestList'), 'FightListType'),
-		'fight info' => array(array('Fight', 'RequestInfo'), 'FightId'),
-		'fight test' => array(array('Fight', 'RequestTest'), array(
+		'fight list' => array('FightListType'),
+		'fight info' => array('FightId'),
+		'fight test' => array(array(
 			'SnakeName', 'SkinId', 'ProgramDescription', 'Templates', 'Maps', 'OtherSnakeIds'
 		), 'TurnLimit'),
-		'fight train' => array(array('Fight', 'RequestTrain'), 'SnakeIds', 'TurnLimit'),
-		'fight challenge' => array(array('Fight', 'RequestChallenge'), 'PlayerIds'),
-		'fight cancel' => array(array('Fight', 'RequestCancel')),
+		'fight train' => array('SnakeIds', 'TurnLimit'),
+		'fight challenge' => array('PlayerIds'),
+		'fight cancel' => array(),
 
-		'slot list' => array(array('FightSlot', 'RequestList')),
-		'slot view' => array(array('FightSlot', 'RequestView'), 'SlotIndex'),
-		'slot save' => array(array('FightSlot', 'RequestSave'), array(
-			'SlotIndex', 'SlotName', 'FightId'
-		)),
-		'slot rename' => array(array('FightSlot', 'RequestRename'), array('SlotIndex', 'SlotName')),
-		'slot delete' => array(array('FightSlot', 'RequestDelete'), 'SlotIndex'),
+		'slot list' => array(),
+		'slot view' => array('SlotIndex'),
+		'slot save' => array(array('SlotIndex', 'SlotName', 'FightId')),
+		'slot rename' => array(array('SlotIndex', 'SlotName')),
+		'slot delete' => array('SlotIndex'),
 	);
 
-
-//---------------------------------------------------------------------------
-	public function __construct($fields) {
-		$this->fields = $fields;
-	}
 
 //---------------------------------------------------------------------------
 	protected function getDefaultValue($type) {
@@ -275,9 +270,7 @@ class Request {
 
 
 //---------------------------------------------------------------------------
-	public function validate() {
-		$request = &$this->fields;
-
+	public static function validate($request) {
 		if(!@$request['Request']) {
 			throw new NackException(NackException::ERR_MISSING_FIELD, 'Request');
 		}
@@ -293,10 +286,10 @@ class Request {
 
 		$t = static::$requestTypes[$requestType];
 		$requestFields = array();
-		if(@$t[1]) {
+		if(@$t[0]) {
 			$requestFields += array_combine((array)$t[1], array_fill(0, count((array)$t[1]), true));
 		}
-		if(@$t[2]) {
+		if(@$t[1]) {
 			$requestFields += array_combine((array)$t[2], array_fill(0, count((array)$t[2]), false));
 		}
 		$requestFields += static::$defaultFields;
@@ -329,25 +322,4 @@ class Request {
 	}
 
 //---------------------------------------------------------------------------
-	public function run() {
-		try {
-			$this->validate();
-//			$requestType = static::$requestTypes[$this->fields['Request']];
-//			return call_user_func($requestType[0], $this->fields);//TODO: раскомментировать
-		}
-		catch(NackException $e) {
-			return $e->asArray();
-		}
-	}
-
-//---------------------------------------------------------------------------
-	public static function requestInfo() {
-		return array(
-			'Response' => 'info',
-			'Version' => static::$version,
-			'Compatible' => static::$compatible,
-			'Lifetime' => 365 * 86400,
-		);
-	}
-
 }

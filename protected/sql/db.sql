@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Хост: localhost
--- Время создания: Май 23 2013 г., 20:07
+-- Время создания: Июн 07 2014 г., 23:43
 -- Версия сервера: 5.6.10-log
 -- Версия PHP: 5.3.10
 
@@ -21,15 +21,18 @@ DELIMITER $$
 --
 DROP PROCEDURE IF EXISTS `delete_zero_refs`$$
 CREATE PROCEDURE `delete_zero_refs`()
+    MODIFIES SQL DATA
+    SQL SECURITY INVOKER
 begin
  delete from `snake` where `refs` <= 0;
  delete from `fight` where `refs` <= 0;
+ delete from `session` where `expires` >= NOW();
 end$$
 
 DROP PROCEDURE IF EXISTS `update_fight_list`$$
-CREATE PROCEDURE `update_fight_list`(
- IN `@player_id` INT, IN `@list_type` ENUM('ordered', 'challenged'), IN `@fight_id` INT
-)
+CREATE PROCEDURE `update_fight_list`(IN `@player_id` INT, IN `@list_type` ENUM('ordered','challenged'), IN `@fight_id` INT)
+    MODIFIES SQL DATA
+    SQL SECURITY INVOKER
 begin
  insert into `fightlist` (`player_id`, `type`, `fight_id`)
  values (`@player_id`, `@list_type`, `@fight_id`);
@@ -55,10 +58,44 @@ DELIMITER ;
 DROP TABLE IF EXISTS `delayedfight`;
 CREATE TABLE `delayedfight` (
   `fight_id` int(11) NOT NULL,
-  `delay_till` TIMESTAMP NULL DEFAULT NULL,
+  `delay_till` timestamp NULL DEFAULT NULL,
   `state` text CHARACTER SET ascii COLLATE ascii_bin,
   PRIMARY KEY (`fight_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Структура таблицы `fight`
+--
+
+DROP TABLE IF EXISTS `fight`;
+CREATE TABLE `fight` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `refs` int(11) NOT NULL DEFAULT '1',
+  `type` char(9) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `time` timestamp NULL DEFAULT NULL,
+  `ordered` int(11) NOT NULL,
+  `turn_limit` smallint(6) NOT NULL,
+  `turn_count` smallint(6) NOT NULL,
+  `turns` varbinary(2000) DEFAULT NULL,
+  `result` char(7) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `refs` (`refs`,`ordered`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+--
+-- Триггеры `fight`
+--
+DROP TRIGGER IF EXISTS `fight_before_delete_t`;
+DELIMITER //
+CREATE TRIGGER `fight_before_delete_t` BEFORE DELETE ON `fight`
+ FOR EACH ROW BEGIN
+ update `snake` set `refs` = `refs` - 1
+ where `id` in (SELECT `snake_id` FROM `snakestat` WHERE `fight_id` = old.`id`);
+END
+//
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -79,45 +116,13 @@ CREATE TABLE `fightlist` (
 -- Триггеры `fightlist`
 --
 DROP TRIGGER IF EXISTS `fightlist_before_delete_t`;
-DELIMITER $$
+DELIMITER //
 CREATE TRIGGER `fightlist_before_delete_t` BEFORE DELETE ON `fightlist`
  FOR EACH ROW BEGIN
  update `fight` set `refs` = `refs` - 1
  where `id` = old.`fight_id`;
-END$$
-DELIMITER ;
-
--- --------------------------------------------------------
-
---
--- Структура таблицы `fight`
---
-
-DROP TABLE IF EXISTS `fight`;
-CREATE TABLE `fight` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `refs` int(11) NOT NULL DEFAULT '1',
-  `type` char(9) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
-  `time` timestamp NULL DEFAULT NULL,
-  `ordered` int(11) NOT NULL,
-  `turn_limit` smallint(6) NOT NULL,
-  `turn_count` smallint(6) NOT NULL,
-  `turns` varbinary(2000),
-  `result` char(7) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `refs` (`refs`,`ordered`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
-
---
--- Триггеры `fight`
---
-DROP TRIGGER IF EXISTS `fight_before_delete_t`;
-DELIMITER $$
-CREATE TRIGGER `fight_before_delete_t` BEFORE DELETE ON `fight`
- FOR EACH ROW BEGIN
- update `snake` set `refs` = `refs` - 1
- where `id` in (SELECT `snake_id` FROM `snakestat` WHERE `fight_id` = old.`id`);
-END$$
+END
+//
 DELIMITER ;
 
 -- --------------------------------------------------------
@@ -135,15 +140,16 @@ CREATE TABLE `fightslot` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Триггеры `fightstot`
+-- Триггеры `fightslot`
 --
 DROP TRIGGER IF EXISTS `fightslot_before_delete_t`;
-DELIMITER $$
+DELIMITER //
 CREATE TRIGGER `fightslot_before_delete_t` BEFORE DELETE ON `fightslot`
  FOR EACH ROW BEGIN
  update `fight` set `refs` = `refs` - 1
  where `id` = old.`fight_id`;
-END$$
+END
+//
 DELIMITER ;
 
 -- --------------------------------------------------------
@@ -185,13 +191,23 @@ CREATE TABLE `player` (
   `sequence` int(11) NOT NULL DEFAULT '0',
   `fighter_id` int(11) DEFAULT NULL,
   `rating` int(11) DEFAULT NULL,
-	`delayed_id` int(11) DEFAULT NULL,
-	`viewed_id` int(11) DEFAULT NULL,
+  `delayed_id` int(11) DEFAULT NULL,
+  `viewed_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `login_k` (`login`),
   UNIQUE KEY `name_k` (`name`),
-  KEY `rating_k` (`rating`)
+  KEY `rating_k` (`rating`),
+  KEY `player_ibfk_1` (`delayed_id`),
+  KEY `player_ibfk_2` (`viewed_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+--
+-- СВЯЗИ ТАБЛИЦЫ `player`:
+--   `delayed_id`
+--       `fight` -> `id`
+--   `viewed_id`
+--       `fight` -> `id`
+--
 
 -- --------------------------------------------------------
 
@@ -201,16 +217,16 @@ CREATE TABLE `player` (
 
 DROP TABLE IF EXISTS `session`;
 CREATE TABLE `session` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `type` tinyint(4) NOT NULL,
-  `sid` char(40) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
-  `cid` char(40) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `sid` char(32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `cid` char(32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `flags` tinyint(1) NOT NULL,
   `player_id` int(11) NOT NULL,
   `sequence` int(11) NOT NULL,
   `expires` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `type` (`type`,`expires`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+  UNIQUE KEY `sid_k` (`sid`),
+  UNIQUE KEY `cid_k` (`cid`),
+  KEY `expires_k` (`expires`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -262,7 +278,7 @@ CREATE TABLE `snake` (
 -- СВЯЗИ ТАБЛИЦЫ `snake`:
 --   `player_id`
 --       `player` -> `id`
---   `skin`
+--   `skin_id`
 --       `skin` -> `id`
 --
 
@@ -299,17 +315,17 @@ CREATE TABLE `snakestat` (
 --
 
 --
+-- Ограничения внешнего ключа таблицы `map`
+--
+ALTER TABLE `map`
+  ADD CONSTRAINT `map_ibfk_1` FOREIGN KEY (`snake_id`) REFERENCES `snake` (`id`) ON DELETE CASCADE;
+
+--
 -- Ограничения внешнего ключа таблицы `player`
 --
 ALTER TABLE `player`
   ADD CONSTRAINT `player_ibfk_1` FOREIGN KEY (`delayed_id`) REFERENCES `fight` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `player_ibfk_2` FOREIGN KEY (`viewed_id`) REFERENCES `fight` (`id`) ON DELETE CASCADE;
-
---
--- Ограничения внешнего ключа таблицы `map`
---
-ALTER TABLE `map`
-  ADD CONSTRAINT `map_ibfk_1` FOREIGN KEY (`snake_id`) REFERENCES `snake` (`id`) ON DELETE CASCADE;
 
 --
 -- Ограничения внешнего ключа таблицы `snake`
