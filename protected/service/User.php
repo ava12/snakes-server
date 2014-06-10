@@ -78,7 +78,7 @@ class User extends CApplicationComponent implements IWebUser {
 			return NULL;
 		}
 
-		$seconds = ($isClientSid ? $this->clientLifetime : $this->serverLifetime);
+		$seconds = ($row['flags'] & self::FLAG_IS_CLIENT ? $this->clientLifetime : $this->serverLifetime);
 		$db->createCommand()
 			->update($this->sessionTable,
 				array('expires' => 'NOW() + INTERVAL :sec SECOND'),
@@ -97,6 +97,7 @@ class User extends CApplicationComponent implements IWebUser {
 		$cols = array(
 			'player_id' => $player->id,
 			'sequence' => $player->sequence,
+			'flags' => ($isClient ? self::FLAG_IS_CLIENT : 0),
 			'expires' => new CDbExpression('NOW() + INTERVAL ' . (int)$seconds . ' SECOND'),
 			'sid' => '', 'cid' => ''
 		);
