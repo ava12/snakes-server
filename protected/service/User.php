@@ -13,6 +13,7 @@ class User extends CApplicationComponent implements IWebUser {
 
 	protected $player;
 	protected $sid;
+	protected $isClient = true;
 
 //---------------------------------------------------------------------------
 	public function checkAccess($operation, $params = array()) {
@@ -40,6 +41,23 @@ class User extends CApplicationComponent implements IWebUser {
 	}
 
 //---------------------------------------------------------------------------
+	public function getIsClient() {
+		return $this->isClient;
+	}
+
+//---------------------------------------------------------------------------
+	protected function refreshCookie() {
+		$sid = $this->sid;
+		$timestamp = $time() + $this->serverLifetime;
+		$name = $this->serverSessionName;
+		Yii::app()->request->cookies->add(
+			new CHttpCookie($name, $sid, array(
+				'expire' => $timestamp, 'httpOnly' => true,
+			))
+		);
+	}
+
+//---------------------------------------------------------------------------
 	public function init() {
 		parent::init();
 
@@ -50,10 +68,14 @@ class User extends CApplicationComponent implements IWebUser {
 		);
 
 		$request = Yii::app()->getRequest();
-		if (!isset($request[self::$serverSessionName])) return;
-
-		$this->sid = $request[self::$serverSessionName];
-		$this->player = $this->open($this->sid, false);
+		if (isset($request[self::$serverSessionName])) {
+			$this->sid = $request[self::$serverSessionName];
+			$this->player = $this->open($this->sid, false);
+			$this->isClient = false;
+		} else if (isset($request['Sid'])){
+			$this->sid = $request['Sid'];
+			$this->player = $this->open($this->sid, true);
+		}
 	}
 
 //---------------------------------------------------------------------------
@@ -84,6 +106,8 @@ class User extends CApplicationComponent implements IWebUser {
 				array('expires' => 'NOW() + INTERVAL :sec SECOND'),
 				"$fieldName = '$sid'", array(':sec' => $seconds));
 
+
+		if (!$isClientSid) $this->refreshCookie();
 		return $player;
 	}
 
@@ -112,7 +136,9 @@ class User extends CApplicationComponent implements IWebUser {
 
 				$this->player = $player;
 				$this->isClient = $isClient;
-				return true;
+				$this->sid = $cols['sid'];
+				if (!$isClient) $this->refreshCookie();
+				return $cols['cid'];
 			}
 			catch(CDbException $e) {}
 		}

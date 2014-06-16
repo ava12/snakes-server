@@ -4,7 +4,7 @@
  * Базовая валидация AJAX-запросов.
  *
  * Проверяется тип запроса, наличие необходимых и отсутствие лишних полей,
- * формат полей.
+ * формат полей (в т. ч. диапазоны чисел).
  */
 class RequestValidator {
 	protected static $arrayFieldTypes = array('_array', '_narray', '_list', '_object');
@@ -94,6 +94,7 @@ class RequestValidator {
 		'Turns' => array('_array', NULL, '.Turn', 1, 1000),
 	);
 
+	// поля, общие для всех запросов
 	// {имя_поля => требуется?}
 	protected static $defaultFields = array(
 		'Request' => true,
@@ -101,7 +102,10 @@ class RequestValidator {
 		'RequestId' => false,
 	);
 
+	// поля, специфичные для запросов
 	// {запрос => [[требуемое_поле*]?, [дополнительное_поле*]?]}
+	// поле, помеченное и как обязательное, и как дополнительное,
+	// считается дополнительным
 	protected static $requestTypes = array(
 		'info' => array(NULL, 'Sid'),
 		'ping' => array(),
@@ -270,7 +274,7 @@ class RequestValidator {
 
 
 //---------------------------------------------------------------------------
-	public static function validate($request) {
+	public static function validate(&$request) {
 		if(!@$request['Request']) {
 			throw new NackException(NackException::ERR_MISSING_FIELD, 'Request');
 		}

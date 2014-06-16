@@ -6,9 +6,14 @@ return array(
 		'application.service.*',
 		'application.models.*',
 	),
-	'components' => array(),
+	'components' => array(
+		'user' => array(
+			'class' => 'User',
+			'clientLifetime' => 600,
+			'serverLifetime' => 365 * 86400,
+		),
+	),
 	'params' => array(
-		'SessionLifetime' => 365 * 86400,
 		'MaxTimestampDiff' => 3 * 60,
 	),
 );
