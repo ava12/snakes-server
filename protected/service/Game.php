@@ -185,9 +185,9 @@ class Game {
 
 		foreach($data as $player) {
 			$list[] = array(
-				'PlayerId' => $player->id,
-				'PlayerName' => $player->name,
-				'Rating' => $player->rating,
+				'Id' => $player->id,
+				'Name' => $player->name,
+				'Rating' => (int)$player->rating,
 			);
 		}
 
@@ -209,7 +209,7 @@ class Game {
 				'SnakeId' => $snake->base_id,
 				'SnakeName' => $snake->name,
 				'SnakeType' => $snake->type,
-				'SkinId' => $snake->skin_id,
+				'SkinId' => (int)$snake->skin_id,
 			);
 		}
 
@@ -217,7 +217,7 @@ class Game {
 			'Response' => 'player info',
 			'PlayerId' => $player->id,
 			'PlayerName' => $player->name,
-			'Rating' => $player->rating,
+			'Rating' => (int)$player->rating,
 			'PlayerSnakes' => $snakes,
 		);
 	}
@@ -227,7 +227,7 @@ class Game {
 		$list = array();
 		foreach(SnakeSkin::model()->findAll() as $skin) {
 			$list[] = array(
-				'SkinId' => $skin->id,
+				'SkinId' => (int)$skin->id,
 				'SkinName' => $skin->name,
 			);
 		}
@@ -238,10 +238,157 @@ class Game {
 	}
 
 //---------------------------------------------------------------------------
+	protected function requestSnakeList() {
+		$model = Snake::model()
+			->current()
+			->types($this->request['SnakeTypes'])
+			->with('player');
+
+		$provider = $this->makeDataProvider($model, '<SnakeName',
+			array('SnakeName' => 'name'));
+
+		$data = $provider->getData();
+		$response = $this->makeListResponse('snake list', $provider);
+		$list = array();
+
+		foreach($data as $snake) {
+			$list[] = array(
+				'Id' => $snake->base_id,
+				'Name' => $snake->name,
+				'Type' => $snake->type,
+				'Skin' => (int)$snake->skin_id,
+				'PlayerId' => $snake->player_id,
+				'PlayerName' => $snake->player->name,
+			);
+		}
+
+		$response['SnakeList'] = $list;
+		return $response;
+	}
+
 //---------------------------------------------------------------------------
+	protected function makeResponseMap($map) {
+		$lines = $map->lines;
+		$offset = strspn($lines, '-') >> 1;
+
+		return array(
+			'Description' => $map->description,
+			'HeadX' => (int)$map->head_x,
+			'HeadY' => (int)$map->head_y,
+			'Lines' => array(
+				array(
+					'X' => $offset % 7,
+					'Y' => (int)($offset / 7),
+					'Line' => str_replace('--', '', $lines),
+				),
+			),
+		);
+	}
+
 //---------------------------------------------------------------------------
+	protected function requestSnakeInfo() {
+		$snakeId = $this->request['SnakeId'];
+		$snake = Snake::model()->current()->byBaseId($snakeId)->with('player')->find();
+		if (!$snake) {
+			throw new NackException(NackException::ERR_UNKNOWN_SNAKE);
+		}
+
+		$response = array(
+			'Response' => 'snake info',
+			'SnakeId' => $snake->base_id,
+			'SnakeName' => $snake->name,
+			'SnakeType' => $snake->type,
+			'SkinId' => (int)$snake->skin_id,
+			'PlayerId' => $snake->player_id,
+			'PlayerName' => $snake->player->name,
+		);
+
+		if (
+			$snake->type == Snake::TYPE_NORMAL and
+			(!$this->player or $snake->player_id <> $this->player->id)
+		) {
+			return $response;
+		}
+
+		$maps = array();
+		foreach ($snake->maps as $map) {
+			$maps[] = $this->makeResponseMap($map);
+		}
+
+		$response += array(
+			'ProgramDescription' => $snake->description,
+			'Templates' => $snake->getTemplates(),
+			'Maps' => $maps,
+		);
+
+		return $response;
+	}
+
 //---------------------------------------------------------------------------
+	protected function requestSnakeAssign() {
+		$snakeId = $this->request['SnakeId'];
+		$transaction = Yii::app()->db->beginTransaction();
+
+		try {
+			$snake = Snake::model()->current()->byBaseId($snakeId)->find();
+			if (!$snake) {
+				throw new NackException(NackException::ERR_UNKNOWN_SNAKE, $snakeId);
+			}
+
+			if ($snake->player_id <> $this->player->id) {
+				throw new NackException(NackException::ERR_NOT_MY_SNAKE, $snakeId);
+			}
+
+			if ($snake->type <> Snake::TYPE_NORMAL) {
+				throw new NackException(NackException::ERR_CANNOT_ASSIGN_BOT, $snakeId);
+			}
+
+			$this->player->update(array('fighter_id' => $snakeId));
+		} catch (Exception $e) {
+			$transaction->rollback();
+			throw $e;
+		}
+
+		$transaction->commit();
+		return $this->ack;
+	}
+
 //---------------------------------------------------------------------------
+	protected function requestSnakeDelete() {
+		$snakeId = $this->request['SnakeId'];
+		$transaction = Yii::app()->db->beginTransaction();
+
+		try {
+			$snake = Snake::model()->current()->byBaseId($snakeId)->find();
+			if (!$snake) {
+				throw new NackException(NackException::ERR_UNKNOWN_SNAKE, $snakeId);
+			}
+
+			if ($snake->player_id <> $this->player->id) {
+				throw new NackException(NackException::ERR_NOT_MY_SNAKE, $snakeId);
+			}
+
+			if ($snake->type == Snake::TYPE_NORMAL) {
+				if (Player::model()->countByAttributes(array('fighter_id' => $snakeId))) {
+					throw new NackException(NackException::ERR_CANNOT_REMOVE_FIGHTER, $snakeId);
+				}
+			}
+
+			$snake->update(array('current' => 0, 'refs' => new CDbExpression('refs - 1')));
+		} catch (Exception $e) {
+			$transaction->rollback();
+			throw $e;
+		}
+
+		$transaction->commit();
+		return $this->ack;
+	}
+
+//---------------------------------------------------------------------------
+	protected function requestSnakeAdd() {
+		
+	}
+
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
