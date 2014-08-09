@@ -6,6 +6,7 @@ class ActiveRecordCollection {
 	protected $dbConnection;
 	protected $table = '';
 	protected $defaults = array();
+	protected $columns = null;
 
 //---------------------------------------------------------------------------
 	public function __construct($items, $model = NULL) {
@@ -70,7 +71,12 @@ class ActiveRecordCollection {
 				if (isset($value)) $columns[$name] = true;
 			}
 		}
-		return array_keys($columns);
+		return array_keys(array_intersect_key(array_flip($this->columns), $columns));
+	}
+
+//---------------------------------------------------------------------------
+	public function setColumns($columns) {
+		$this->columns = $columns;
 	}
 
 //---------------------------------------------------------------------------

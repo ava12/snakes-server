@@ -47,6 +47,27 @@ begin
  );
 end$$
 
+DROP FUNCTION IF EXISTS `can_view_fight`$$
+CREATE FUNCTION `can_view_fight`(IN `@player_id` INT, IN `@fight_id` INT,
+    IN `@ordered_limit` INT, IN `@challenged_limit` INT)
+RETURNS INT
+    READS SQL DATA
+    SQL SECURITY INVOKER
+begin
+ RETURN (
+  SELECT COUNT(DISTINCT *) FROM (
+   (SELECT `fight_id` FROM `fightlist`
+    WHERE `player_id` = @`player_id` AND `type` = 'ordered'
+    ORDER BY `time` DESC LIMIT `@ordered_limit`)
+   UNION
+   (SELECT `fight_id` FROM `fightlist`
+    WHERE `player_id` = @`player_id` AND `type` = 'challenged'
+    ORDER BY `time` DESC LIMIT `@challenged_limit`)
+  )
+	WHERE `fight_id` = `@fight_id`
+ );
+end$$
+
 DELIMITER ;
 
 -- --------------------------------------------------------
@@ -75,13 +96,13 @@ CREATE TABLE `fight` (
   `refs` int(11) NOT NULL DEFAULT '1',
   `type` char(9) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
   `time` timestamp NULL DEFAULT NULL,
-  `ordered` int(11) NOT NULL,
+  `player_id` int(11) NOT NULL,
   `turn_limit` smallint(6) NOT NULL,
   `turn_count` smallint(6) NOT NULL,
   `turns` varbinary(2000) DEFAULT NULL,
   `result` char(7) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `refs` (`refs`,`ordered`)
+  KEY `refs` (`refs`,`player_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 --
@@ -105,11 +126,11 @@ DELIMITER ;
 
 DROP TABLE IF EXISTS `fightlist`;
 CREATE TABLE `fightlist` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
   `player_id` int(11) NOT NULL,
+  `time` timestamp NOT NULL,
   `type` char(10) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
   `fight_id` int(11) NOT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`player_id`, `time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 --
@@ -136,7 +157,8 @@ CREATE TABLE `fightslot` (
   `player_id` int(11) NOT NULL,
   `index` tinyint(1) unsigned NOT NULL,
   `fight_id` int(11) NOT NULL,
-  `name` varchar(255) NOT NULL
+  `name` varchar(255) NOT NULL,
+  PRIMARY KEY (`player_id`, `index`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --

@@ -9,6 +9,14 @@ class Game {
 	protected $player;
 	protected $ack = array('Response' => 'ack');
 
+	protected $snakeFields = array(
+		'SnakeName' => 'name', 'SnakeType' => 'type', 'SkinId' => 'skin_id',
+		'ProgramDescription' => 'description', 'Templates' => 'templates',
+	);
+	protected $mapNames = array(
+		'Description' => 'description', 'HeadX' => 'head_x', 'HeadY' => 'head_y',
+	);
+
 //---------------------------------------------------------------------------
 	public function __construct($request = NULL) {
 		$this->request = ($request ? $request : $_POST);
@@ -386,9 +394,96 @@ class Game {
 
 //---------------------------------------------------------------------------
 	protected function requestSnakeAdd() {
+		$request = $this->request;
+		$snake = new Snake;
+		$snake->player_id = $this->player->id;
+
+		foreach ($this->snakeFields as $requestName => $dbName) {
+			$snake->$dbName = $request[$requestName];
+		}
+
+		$maps = array();
+		foreach ($request['Maps'] as $mapFields) {
+			$map = new SnakeMap();
+			foreach ($this->mapNames as $requestName => $dbName) {
+				$map->$dbName = $mapFields[$requestName];
+			}
+			foreach ($mapFields['Lines'] as $line) {
+				$map->addLine($line['X'], $line['Y'], $line['Line']);
+			}
+			$maps[] = $map;
+		}
+
+		$snake->setMaps($maps);
+		if (!$snake->save()) {
+			throw new RuntimeException('не могу создать змею');
+		}
+
+		return array(
+			'Response' => 'snake new',
+			'SnakeId' => $snake->base_id,
+		);
+	}
+
+//---------------------------------------------------------------------------
+	protected function requestSnakeEdit() {
+		$request = $this->request;
+		$snakeId = $request['SnakeId'];
+		$snake = Snake::model()->current()->byBaseId($snakeId)->find();
+		if (!$snake) {
+			throw new NackException(NackException::ERR_UNKNOWN_SNAKE, $snakeId);
+		}
+
+		if ($snake->player_id <> $this->player->id) {
+			throw new NackException(NackException::ERR_NOT_MY_SNAKE, $snakeId);
+		}
+
+		foreach ($this->snakeFields as $requestName => $dbName) {
+			if (array_key_exists($requestName, $request) {
+				$snake->$dbName = $request[$requestName];
+			}
+		}
+
+		if (isset($request['Maps'])) {
+			$maps = array();
+			foreach ($request['Maps'] as $mapFields) {
+				$map = new SnakeMap();
+				foreach ($this->mapNames as $requestName => $dbName) {
+					$map->$dbName = $mapFields[$requestName];
+				}
+				foreach ($mapFields['Lines'] as $line) {
+					$map->addLine($line['X'], $line['Y'], $line['Line']);
+				}
+				$maps[] = $map;
+			}
+
+			$snake->setMaps($maps);
+		}
+
+		if ($snake->needsRespawn) {
+			$snake = $snake->respawn();
+		}
+
+		if (!$snake->save()) {
+			throw new RuntimeException('не могу отредактировать змею');
+		}
+
+		return $this->ack;
+	}
+
+//---------------------------------------------------------------------------
+	protected function requestFightList() {
 		
 	}
 
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------

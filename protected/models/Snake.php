@@ -20,6 +20,7 @@ class Snake extends CActiveRecord {
 
 	protected $newMaps = array();
 	protected $needsRespawn = false;
+	protected $typeChanged = false;
 
 //---------------------------------------------------------------------------
 	public static function model($className = __CLASS__) {
@@ -41,8 +42,7 @@ class Snake extends CActiveRecord {
 //---------------------------------------------------------------------------
 	public function relations() {
 		return array(
-			'maps' => array(self::HAS_MANY, 'SnakeMap', 'snake_id',
-				'order' => 'maps.index', 'index' => 'maps.index'),
+			'maps' => array(self::HAS_MANY, 'SnakeMap', 'snake_id', 'order' => 'maps.index'),
 			'player' => array(self::BELONGS_TO, 'Player', 'player_id'),
 		);
 	}
@@ -76,10 +76,17 @@ class Snake extends CActiveRecord {
 		foreach ($templates as &$p) {
 			if (strspn($p, 'ABCDSTVWXYZ') <> strlen($p)) return false;
 
-			$p = implode('', array_unique(str_split($p)));
+			$p = array_unique(str_split($p));
+			sort($p);
+			$p = implode('', $p);
 		}
 		unset($p);
-		$this->attributes['templates'] = implode(',', $templates);
+
+		$templates = implode(',', $templates);
+		if ($templates == $this->attributes['templates']) return;
+
+		$this->attributes['templates'] = $templates;
+		$this->needsRespawn = true;
 	}
 
 //---------------------------------------------------------------------------
@@ -112,8 +119,18 @@ class Snake extends CActiveRecord {
 
 //---------------------------------------------------------------------------
 	public function setMaps($maps) {
+		$maps = array_values($maps);
 		$this->newMaps = $maps;
-		$this->needsRespawn = true;
+		$oldMaps = array_values($this->maps);
+		$this->needsRespawn = (count($maps) == count($oldMaps));
+		if (!$this->needsRespawn) {
+			foreach ($oldMaps as $index => $oldMap) {
+				if (!$oldMap->sameAs($maps[$index])) {
+					$this->needsRespawn = true;
+					return;
+				}
+			}
+		}
 	}
 
 //---------------------------------------------------------------------------
@@ -125,6 +142,7 @@ class Snake extends CActiveRecord {
 		if ($type == $this->type) return true;
 
 		$this->type = $type;
+		$this->typeChanged = true;
 		$this->needsRespawn = true;
 	}
 
@@ -137,6 +155,31 @@ class Snake extends CActiveRecord {
 	}
 
 //---------------------------------------------------------------------------
+	public function getNeedsRespawn() {
+		return ($this->needsRespawn and $this->getIsNewRecord());
+	}
+
+//---------------------------------------------------------------------------
+	public function respawn() {
+		if (!$this->needsRespawn or $this->getIsNewRecord()) return $this;
+
+		$snake = new Snake();
+		$snake->attributes = $this->attributes;
+		$snake->newMaps = ($this->newMaps ? $this->newMaps : $this->maps);
+
+		return $snake;
+	}
+
+//---------------------------------------------------------------------------
+	protected function checkCanChangeType() {
+		if (!$this->typeChanged or $this->type == self::TYPE_BOT) return;
+
+		if (Player::model()->findByPk($this->player_id)->fighter_id == $this->base_id) {
+			throw new NackException(NackException::ERR_CANNOT_REMOVE_FIGHTER, $this->base_id);
+		}
+	}
+
+//---------------------------------------------------------------------------
 	public function insert() {
 		if (!$this->newMaps) {
 			throw new RuntimeException('требуется хотя бы одна карта');
@@ -144,10 +187,23 @@ class Snake extends CActiveRecord {
 
 		$mapCollection = new ActiveRecordCollection($this->newMaps);
 		$mapCollection->number('index');
+		$this->current = 1;
+		$this->refs = 1;
+		$baseId = $this->base_id;
 
 		$transaction = $this->getTransaction();
 
 		try {
+			if ($baseId) {
+				$this->checkCanChangeType();
+
+				$this->updateAll(
+					array('current' => 0, 'refs' => new CDbExpression('refs - 1')),
+					array('condition' => 'base_id = :id AND current'),
+					array(':id' => $this->base_id)
+				);
+			}
+
 			if (!parent::insert()) {
 				throw new RuntimeException('не могу создать змею');
 			}
@@ -158,8 +214,12 @@ class Snake extends CActiveRecord {
 				throw new RuntimeException('не могу сохранить карты');
 			}
 
-			if (!$this->updateByPk($snakeId, array('base_id' => $snakeId))) {
-				throw new RuntimeException('не могу создать змею');
+			if (!$this->base_id) {
+				if (!$this->updateByPk($snakeId, array('base_id' => $snakeId))) {
+					throw new RuntimeException('не могу создать змею');
+				}
+
+				$this->base_id = $snakeId;
 			}
 		} catch (Exception $e) {
 			if ($transaction) $transaction->rollback();
@@ -167,12 +227,46 @@ class Snake extends CActiveRecord {
 		}
 
 		if ($transaction) $transaction->commit();
+
+		$this->newMaps = array();
+		$this->needsRespawn = false;
+		$this->typeChanged = false;
+
 		return true;
 	}
 
 //---------------------------------------------------------------------------
 	public function update() {
+		if ($this->needsRespawn) return false;
 
+		if ($this->newMaps) {
+			$mapCollection = new ActiveRecordCollection($this->newMaps);
+			$mapCollection->setColumns(array('snake_id', 'index', 'description'));
+		}
+
+		$transaction = $this->getTransaction();
+
+		try {
+			if (!parent::update()) {
+				throw new RuntimeException('не могу обновить змею');
+			}
+
+			if ($this->newMaps and !$mapCollection->save()) {
+				throw new RuntimeException('не могу обновить карты');
+			}
+
+		} catch (Exception $e) {
+			if ($transaction) $transaction->rollback();
+			throw $e;
+		}
+
+		if ($transaction) $transaction->commit();
+
+		$this->newMaps = array();
+		$this->needsRespawn = false;
+		$this->typeChanged = false;
+
+		return true;
 	}
 
 //---------------------------------------------------------------------------
