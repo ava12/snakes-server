@@ -58,6 +58,11 @@ class Game {
 	}
 
 //---------------------------------------------------------------------------
+	protected function requestPing() {
+		return $this->ack;
+	}
+
+//---------------------------------------------------------------------------
 	protected function requestInfo() {
 		$user = Yii::app()->user;
 		return array(
@@ -473,11 +478,126 @@ class Game {
 
 //---------------------------------------------------------------------------
 	protected function requestFightList() {
-		
+		$listType = $this->request['FightListType'];
+
+		$fightList = FightList::model()->forPlayer($this->player->id)->byType($listType)
+			->with(
+				'fight', 'fight.player', 'snake_stats', 'snake_stats.snake',
+				'snake_stats.snake.player'
+			)->findAll();
+
+		$list = array();
+		foreach ($fightList as $item) {
+			$fight = $item->fight;
+
+			$snakes = array(NULL, NULL, NULL, NULL);
+			foreach ($item->snake_stats as $index => $stat) {
+				$snake = $stat->snake;
+				$snakes[$index] = array(
+					'SnakeId' => $snake->id,
+					'SnakeName' => $snake->name,
+					'SnakeType' => $snake->type,
+					'SkinId' => (int)$snake->skin_id,
+					'PlayerId' => $snake->player_id,
+					'PlayerName' => $snake->player->name,
+				);
+			}
+
+			$list[] = array(
+				'FightId' => $item->fight_id,
+				'FightType' => $fight->type,
+				'FightTime' => (int)$fight->time,
+				'PlayerId' => $fight->player_id,
+				'PlayerName' => $fight->player->name,
+				'Snakes' => $snakes,
+			);
+		}
+
+		return array(
+			'Response' => 'fight list',
+			'FightListType' => $listType,
+			'FightList' => $list,
+		);
 	}
 
 //---------------------------------------------------------------------------
+	protected function requestFightInfo() {
+		$fightId = $this->request['FightId'];
+
+		if ($this->player->delayed_id == $fightId) {
+			return array(
+				'Response' => 'fight delayed',
+				'FightId' => $fightId,
+			);
+		}
+
+		$playerId = $this->player->id;
+		$fight = Fight::model()->forPlayer($playerId)
+			->with('snake_stats', 'snake_stats.snake', 'snake_stats.snake.player', 'snake_stats.maps')
+			->findByPk($fightId);
+
+		if (!$fight or !$fight->isListed($playerId)) {
+			throw new NackException(NackException::ERR_UNKNOWN_FIGHT, $fightId);
+		}
+
+		$fightType = $fight->type;
+		$stats = array(NULL, NULL, NULL, NULL);
+		$snakes = $stats;
+		foreach ($fight->snake_stats as $index => $stat) {
+			$snake = $stat->snake;
+
+			$snakes[$index] = array(
+				'SnakeId' => $snake->id,
+				'SnakeName' => $snake->name,
+				'SnakeType' => $snake->type,
+				'SkinId' => (int)$snake->skin_id,
+				'PlayerId' => $snake->player_id,
+				'PlayerName' => $snake->player->name,
+			);
+
+			$entry = array(
+				'Status' => $stat->result,
+				'FinalLength' => (int)$length,
+			);
+
+			if ($fightType == Fight::TYPE_CHALLENGE) $entry += array(
+				'InitialRating' => (int)$stat->pre_rating,
+				'FinalRating' => (int)$stat->post_rating,
+			);
+
+			if ($snake->player_id == $playerId or $snake->type == Snake::TYPE_BOT) {
+				$maps = array();
+				foreach($stat->maps as $map) {
+					$maps[] = $this->makeResponseMap($map);
+				}
+
+				$entry += array(
+					'ProgramDescription' => $snake->description,
+					'Templates' => $snake->templates,
+					'Maps' => $maps,
+					'DebugData' => $stat->debug,
+				);
+
+				$stats[$index] = $entry;
+			}
+		} // foreach stats
+
+		return array(
+			'Response' => 'fight info',
+			'FightId' => $fightId,
+			'FightType' => $fightType,
+			'FightTime' => (int)$fight->time,
+			'FightResult' => $fight->result,
+			'TurnLimit' => (int)$fight->turn_limit,
+			'Turns' => $fight->turns,
+			'Snakes' => $snakes,
+			'SnakeStats' => $stats,
+		);
+	}
+
 //---------------------------------------------------------------------------
+
+
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------

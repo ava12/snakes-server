@@ -21,7 +21,9 @@ class Fight extends CActiveRecord {
 	const RESULT_NONE = '';
 	const RESULT_LIMIT = 'limit';
 	const RESULT_EATEN = 'eaten';
-	const RESULT_BLOCK = 'block';
+	const RESULT_BLOCK = 'blocked';
+
+	protected $newStats = array();
 
 
 //---------------------------------------------------------------------------
@@ -38,8 +40,8 @@ class Fight extends CActiveRecord {
 	public function relations() {
 		return array(
 			'player' => array(self::BELONGS_TO, 'Player', 'player_id'),
-			'snake_stats' => array(self::HAS_MANY, 'SnakeStat', 'fight_id',
-				'order' => 'snake_stats.index'),
+			'stats' => array(self::HAS_MANY, 'SnakeStat', 'fight_id',
+				'order' => 'stats.index', 'index' => 'stats.index'),
 		);
 	}
 
@@ -51,9 +53,43 @@ class Fight extends CActiveRecord {
 	}
 
 //---------------------------------------------------------------------------
+	public function isListed($playerId = NULL, $id = NULL) {
+		if (!$id) $id = $this->id;
+		if (!$playerId) $playerId = $this->player_id;
+		return (bool)$this->getDbConnection()
+			->createCommand('SELECT `can_view_fight`(:pid, :fid, :ol, :cl)')
+			->queryScalar(array(
+				':pid' => $playerId, ':fid' => $id,
+				':ol' => FightList::LIST_SIZE_ORDERED, ':cl' => FightList::LIST_SIZE_CHALLENGED,
+			));
+	}
+
 //---------------------------------------------------------------------------
+	public function getTurns() {
+		$turns = str_split($this->getAttribute('turns'), 2);
+		foreach ($turns as &$p) {
+			$p = (ord(substr($p, 0, 1)) << 8) | ord(substr($p, 1, 1));
+		}
+		return $turns;
+	}
+
 //---------------------------------------------------------------------------
+	public function setTurns($turns) {
+		foreach ($turns as &$p) {
+			$p = pack('n', $p);
+		}
+		$this->setAttribute('turn_count', count($turns);
+		$this->setAttribute('turns', implode('', $turns));
+	}
+
 //---------------------------------------------------------------------------
+	public function setSnakes($snakes) {
+		$this->newStats = array();
+		foreach ((array)$snakes as $index => $snake) {
+			
+		}
+	}
+
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 }

@@ -12,9 +12,12 @@ class FightList extends CActiveRecord {
 	const TYPE_ORDERED = 'ordered';
 	const TYPE_CHALLENGED = 'challenged';
 
+	const LIST_SIZE_ORDERED = 10;
+	const LIST_SIZE_CHALLENGED = 10;
+
 	const LIST_SIZE = array(
-		self::TYPE_ORDERED => 10,
-		self::TYPE_CHALLENGED => 10,
+		self::TYPE_ORDERED => self::LIST_SIZE_ORDERED,
+		self::TYPE_CHALLENGED => self::LIST_SIZE_CHALLENGED,
 	);
 
 //---------------------------------------------------------------------------
@@ -32,6 +35,8 @@ class FightList extends CActiveRecord {
 		return array(
 			'player' => array(self::BELONGS_TO, 'Player', 'player_id'),
 			'fight' => array(self::BELONGS_TO, 'Fight', 'fight_id'),
+			'snake_stats' => array(self::HAS_MANY, 'SnakeStat', 'fight_id',
+				'order' => 'snake_stat.index', 'index' => 'snake_stat.index'),
 		);
 	}
 
