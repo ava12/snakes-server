@@ -398,8 +398,7 @@ class Game {
 	}
 
 //---------------------------------------------------------------------------
-	protected function requestSnakeAdd() {
-		$request = $this->request;
+	protected function createSnake($request) {
 		$snake = new Snake;
 		$snake->player_id = $this->player->id;
 
@@ -420,6 +419,13 @@ class Game {
 		}
 
 		$snake->setMaps($maps);
+		return $snake;
+	}
+
+//---------------------------------------------------------------------------
+	protected function requestSnakeAdd() {
+		$snake = $this->createSnake($this->request);
+
 		if (!$snake->save()) {
 			throw new RuntimeException('не могу создать змею');
 		}
@@ -596,7 +602,59 @@ class Game {
 	}
 
 //---------------------------------------------------------------------------
+	protected function requestFightTest() {
+		$request = $this->request;
+		$request['SnakeType'] = Snake::TYPE_BOT;
+		$tempSnake = $this->createSnake($request);
+		$playerId = $this->player->id;
 
+		$transaction = $this->getDbConnection()->beginTransaction();
+
+		try {
+			$player = Player::model()->findByPk($playerId);
+			if ($player->delayed_id) {
+				throw new NackException(NackException::ERR_HAS_DELAYED, $player->delayed_id);
+			}
+
+			if (!$tempSnake->save()) {
+				throw new RuntimeException('не могу создать временную змею');
+			}
+
+			$stats = $request['OtherSnakeIds'];
+			array_unshift($stats, $tempSnake);
+
+			$fight = new Fight;
+			$fight->player_id = $this->player->id;
+			$fight->type = Fight::TYPE_TRAIN;
+			$fight->stats = $stats;
+			if (isset($request['TurnLimit'])) $fight->turn_limit = $request['TurnLimit'];
+			if (!$fight->save()) {
+				throw new RuntimeException('не могу создать бой');
+			}
+
+			$delayed = new DelayedFight;
+			$delayed->fight_id = $fight->id;
+			if (!$delayed->save()) {
+				throw new RuntimeException('не могу создать расчет боя');
+			}
+
+			$this->player->delayed_id = $fight->id;
+			if (!$this->player->save()) {
+				throw new RuntimeException('не могу выполнить расчет боя');
+			}
+
+		} catch (Exception $e) {
+			$transaction->rollback();
+			throw $e;
+		}
+
+		$transaction->commit();
+
+		return array(
+			'Response' => 'fight delayed',
+			'FightId' => $fight->id,
+		);
+	}
 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------

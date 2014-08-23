@@ -333,6 +333,20 @@ CREATE TABLE `snakestat` (
 --
 
 --
+-- Триггеры `snakestat`
+--
+
+DROP TRIGGER IF EXISTS `snakestat_after_insert_t`;
+DELIMITER //
+CREATE TRIGGER `snakestat_after_insert_t` AFTER INSERT ON `snakestat`
+ FOR EACH ROW BEGIN
+ update `snake` set `refs` = `refs` + 1
+ where `id` = new.`snake_id`;
+END
+//
+DELIMITER ;
+
+--
 -- Ограничения внешнего ключа сохраненных таблиц
 --
 

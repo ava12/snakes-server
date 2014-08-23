@@ -1,5 +1,8 @@
 <?php
 
+/**
+ *
+ */
 class DelayedFight extends CActiveRecord {
 	const BATCH_CNT = 50;
 	const DEFAULT_TIMEOUT = 30;
@@ -47,6 +50,16 @@ class DelayedFight extends CActiveRecord {
 	public function relations() {
 		return array(
 			'fight' => array(self::BELONGS_TO, 'Fight', 'fight_id'),
+			'stats' => array(self::HAS_MANY, 'SnakeStat', 'fight_id',
+				'order' => 'stats.index', 'index' => 'stats.index'),
+		);
+	}
+
+//---------------------------------------------------------------------------
+	public function rules() {
+		return array(
+			array('fight_id', 'safe', 'on' => 'insert'),
+			array('figh_id', 'required', 'on' => 'insert'),
 		);
 	}
 
@@ -141,6 +154,10 @@ class DelayedFight extends CActiveRecord {
 			}
 		}
 
+		if ($this->fight->type == Fight::TYPE_CHALLENGE) {
+			$this->computeRatings();
+		}
+
 		$this->unlock();
 		return $this->result;
 	}
@@ -162,6 +179,7 @@ class DelayedFight extends CActiveRecord {
 			$this->field[$coords[9][1]][$coords[9][0]] = self::TAIL_CELL << $index;
 
 			$snakes[$index] = array(
+				'SnakeId' => $stat->snake->id, 'PlayerId' => $stat->snake->player_id,
 				'Dir' => $index, 'Coords' => $coords, 'Result' => '', 'Debug' => array(),
 				'Maps' => $this->prepareMapVariants($stat->snake, $index),
 			);
@@ -500,5 +518,23 @@ class DelayedFight extends CActiveRecord {
 	}
 
 //---------------------------------------------------------------------------
+	protected function computeRatings() {
+		$players = array();
+		$snakes = $this->snakes;
+		foreach ($snakes as $snake) {
+			$players[] = $snake['PlayerId'];
+		}
+		$ratings = array();
+		foreach (Player::model()->findAllByPk($players) as $player) {
+			$ratings[$player->id] = $player->rating;
+		}
+
+		foreach ($snakes as &$snake) {
+			$snake['PreRating'] = $players[$snake['PlayerId']];
+		}
+
+		
+	}
+
 //---------------------------------------------------------------------------
 }

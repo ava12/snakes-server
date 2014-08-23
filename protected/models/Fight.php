@@ -23,6 +23,9 @@ class Fight extends CActiveRecord {
 	const RESULT_EATEN = 'eaten';
 	const RESULT_BLOCK = 'blocked';
 
+	const DEFAULT_TURN_LIMIT = 1000;
+	const MAX_TURN_LIMIT = 1000;
+
 	protected $newStats = array();
 
 
@@ -49,6 +52,17 @@ class Fight extends CActiveRecord {
 	public function defaultScope() {
 		return array(
 			'condition' => 't.refs > 0',
+		);
+	}
+
+//---------------------------------------------------------------------------
+	public function rules() {
+		return array(
+			array('type, player_id, turn_limit', 'safe', 'on' => 'insert'),
+			array('type, player_id', 'required', 'on' => 'insert'),
+
+			array('type', 'in', 'range' => array(self::TYPE_TRAIN, self::TYPE_CHALLENGE)),
+			array('turn_limit', 'default', 'value' => self::DEFAULT_TURN_LIMIT),
 		);
 	}
 
@@ -83,13 +97,28 @@ class Fight extends CActiveRecord {
 	}
 
 //---------------------------------------------------------------------------
-	public function setSnakes($snakes) {
+	public function setStats($snakes) {
 		$this->newStats = array();
 		foreach ((array)$snakes as $index => $snake) {
-			
+			if (!$snake) continue;
+
+			$stat = new SnakeStat();
+			$stat->setFightSnake($this, $snake, $index);
+			$this->newStats[] = $stat;
 		}
 	}
 
 //---------------------------------------------------------------------------
+	protected function onAfterInsert() {
+		if (!$this->newStats) {
+			throw new RuntimeException('требуется хотя бы одна змея');
+		}
+
+		$collection = new ActiveRecordCollection($this->newStats);
+		if (!$collection->save()) {
+			throw new RuntimeException('не могу сохранить змей');
+		}
+	}
+
 //---------------------------------------------------------------------------
 }

@@ -21,6 +21,7 @@ class Snake extends CActiveRecord {
 	protected $newMaps = array();
 	protected $needsRespawn = false;
 	protected $typeChanged = false;
+	protected $isTemp = false;
 
 //---------------------------------------------------------------------------
 	public static function model($className = __CLASS__) {
@@ -171,6 +172,11 @@ class Snake extends CActiveRecord {
 	}
 
 //---------------------------------------------------------------------------
+	public function setIsTemp($isTemp = true) {
+		$this->isTemp = $isTemp;
+	}
+
+//---------------------------------------------------------------------------
 	protected function checkCanChangeType() {
 		if (!$this->typeChanged or $this->type == self::TYPE_BOT) return;
 
@@ -204,6 +210,7 @@ class Snake extends CActiveRecord {
 				);
 			}
 
+			if ($this->isTemp) $this->refs = 0;
 			if (!parent::insert()) {
 				throw new RuntimeException('не могу создать змею');
 			}
