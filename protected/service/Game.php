@@ -527,28 +527,119 @@ class Game {
 	}
 
 //---------------------------------------------------------------------------
+	protected function updateRatings($fight) {
+		foreach ($fight->stats as $stat) {
+			$rating = (int)$stat->snake->player->rating;
+			$stat->pre_rating = $rating;
+			$stat->post_rating = $rating;
+			$stat->snake->player->rating = $rating;
+		}
+	}
+
+//---------------------------------------------------------------------------
+	protected function updateFight($fight, $delayed) {
+		$fight->result = $delayed->result;
+		$fight->turns = $delayed->turns;
+		$snakes = $delayed->snakes;
+
+		$stats = $fight->stats;
+
+		foreach ($stats as $index => $stat) {
+			$snake = $snakes[$index];
+			$stat->result = $snake['Result'];
+			$stat->length = count($snake['Coords']);
+			$stat->debug = $snake['Debug'];
+		}
+
+		$isChallenge = ($fight->type == Fight::TYPE_CHALLENGE);
+
+		if ($isChallenge) {
+			$this->updateRatings($fight);
+		}
+
+		$player = $this->player;
+
+		$transaction = $this->getDbConnection()->beginTransaction();
+
+		try {
+			if (!$fight->save()) {
+				throw new RuntimeException('не могу сохранить бой');
+			}
+
+			$fightId = $fight->id;
+			$entry = FightEntry::model();
+			$entry->addFight($fightId, FightEntry::TYPE_ORDERED, $player->id);
+
+			if ($isChallenge) {
+				$ids = array();
+				for ($index = 1; $index < 4; $index++) {
+					$ids[] = $stats[$index]->snake->player_id;
+				}
+				$entry->addFight($fightId, FightEntry::TYPE_CHALLENGED, $ids);
+			}
+
+			$player->fight_id = NULL;
+			$player->save();
+
+			DelayedFight::model()->deleteByPk($fight->id);
+
+			foreach ($fight->stats as $index => $stat) {
+				if (!$stat->save()) {
+					throw new RuntimeException('не могу сохранить статистику для змеи ' . $index);
+				}
+
+				if ($isChallenge) {
+					if (!$stat->snake->player->save()) {
+						throw new RuntimeException('не могу сохранить рейтинг для змеи ' . $index);
+					}
+				}
+			}
+
+		} catch (Exception $e) {
+			$transaction->rollback();
+			throw $e;
+		}
+
+		$transaction->commit();
+	}
+
+//---------------------------------------------------------------------------
 	protected function requestFightInfo() {
 		$fightId = $this->request['FightId'];
+		$playerId = $this->player->id;
 
 		if ($this->player->delayed_id == $fightId) {
-			return array(
-				'Response' => 'fight delayed',
-				'FightId' => $fightId,
-			);
+			$delayed = DelayedFight::model()->findByPk($fightId);
+			if (!$delayed->process()) {
+				$delayed->save();
+
+				return array(
+					'Response' => 'fight delayed',
+					'FightId' => $fightId,
+				);
+			}
+
+			$fight = Fight::model()->forPlayer($playerId)->full()->findByPk($fightId);
+			$this->updateFight($fight, $delayed);
+		} else {
+			$fight = Fight::model()->forPlayer($playerId)->full()->findByPk($fightId);
+
+			if (!$fight or !$fight->isListed($playerId)) {
+				throw new NackException(NackException::ERR_UNKNOWN_FIGHT, $fightId);
+			}
 		}
 
+		return $this->getFightInfo($fight);
+	}
+
+//---------------------------------------------------------------------------
+	protected function getFightInfo($fight) {
+		$fightId = $fight->id;
 		$playerId = $this->player->id;
-		$fight = Fight::model()->forPlayer($playerId)
-			->with('snake_stats', 'snake_stats.snake', 'snake_stats.snake.player', 'snake_stats.maps')
-			->findByPk($fightId);
-
-		if (!$fight or !$fight->isListed($playerId)) {
-			throw new NackException(NackException::ERR_UNKNOWN_FIGHT, $fightId);
-		}
-
 		$fightType = $fight->type;
 		$stats = array(NULL, NULL, NULL, NULL);
 		$snakes = $stats;
+
 		foreach ($fight->snake_stats as $index => $stat) {
 			$snake = $stat->snake;
 
@@ -602,11 +693,10 @@ class Game {
 	}
 
 //---------------------------------------------------------------------------
-	protected function requestFightTest() {
-		$request = $this->request;
-		$request['SnakeType'] = Snake::TYPE_BOT;
-		$tempSnake = $this->createSnake($request);
+	protected function createFight($snakes, $type, $turnLimit = NULL) {
 		$playerId = $this->player->id;
+		$fight = new Fight;
+		$delayed = new DelayedFight;
 
 		$transaction = $this->getDbConnection()->beginTransaction();
 
@@ -616,23 +706,14 @@ class Game {
 				throw new NackException(NackException::ERR_HAS_DELAYED, $player->delayed_id);
 			}
 
-			if (!$tempSnake->save()) {
-				throw new RuntimeException('не могу создать временную змею');
-			}
-
-			$stats = $request['OtherSnakeIds'];
-			array_unshift($stats, $tempSnake);
-
-			$fight = new Fight;
 			$fight->player_id = $this->player->id;
-			$fight->type = Fight::TYPE_TRAIN;
+			$fight->type = $type;
 			$fight->stats = $stats;
-			if (isset($request['TurnLimit'])) $fight->turn_limit = $request['TurnLimit'];
+			if ($turnLimit) $fight->turn_limit = $turnLimit;
 			if (!$fight->save()) {
 				throw new RuntimeException('не могу создать бой');
 			}
 
-			$delayed = new DelayedFight;
 			$delayed->fight_id = $fight->id;
 			if (!$delayed->save()) {
 				throw new RuntimeException('не могу создать расчет боя');
@@ -649,20 +730,183 @@ class Game {
 		}
 
 		$transaction->commit();
+		return $delayed;
+	}
+
+//---------------------------------------------------------------------------
+	protected function requestFightTest() {
+		$request = $this->request;
+		$request['SnakeType'] = Snake::TYPE_BOT;
+		$tempSnake = $this->createSnake($request);
+		$tempSnake->isTemp = true;
+		if (!$tempSnake->save()) {
+			throw new RuntimeException('не могу создать временную змею');
+		}
+
+		$stats = $request['OtherSnakeIds'];
+		array_unshift($stats, $tempSnake);
+
+		$delayedFight = $this->createFight($stats, Fight::TYPE_TRAIN, @$request['TurnLimit']);
 
 		return array(
 			'Response' => 'fight delayed',
-			'FightId' => $fight->id,
+			'FightId' => $delayedFight->fight_id,
 		);
 	}
 
 //---------------------------------------------------------------------------
+	protected function requestFightTrain() {
+		$request = $this->request;
+		$snakeIds = $request['SnakeIds'];
+		$turnLimit = @$request['TurnLimit'];
+
+		$delayedFight = $this->createFight($stats, Fight::TYPE_TRAIN, @$request['TurnLimit']);
+
+		return array(
+			'Response' => 'fight delayed',
+			'FightId' => $delayedFight->fight_id,
+		);
+	}
+
 //---------------------------------------------------------------------------
+	protected function requestFightChallenge() {
+		if (!$this->player->fighter) {
+			throw new NackException(NackException::ERR_CANNOT_CHALLENGE, $this->player->id);
+		}
+
+		$playerIds = $this->request['PlayerIds'];
+		$players = Player::model()->with('fighter')->findAllByPk($playerIds);
+		$playerIds = array_flip($playerIds);
+		$fighters = array($this->player->fighter);
+
+		foreach ($players as $player) {
+			$playerId = $player->id;
+			$fighters[$playerIds[$playerId] + 1] = $player->fighter;
+			unset($playerIds[$playerId]);
+		}
+
+		if ($playerIds) {
+			$playerIds = array_keys($playerIds);
+			throw new NackException(NackException::ERR_CANNOT_CHALLENGE, $playerIds[0]);
+		}
+
+		$delayedFight = $this->createFight($fighters, Fight::TYPE_CHALLENGE);
+
+		return array(
+			'Response' => 'fight delayed',
+			'FightId' => $delayedFight->fight_id,
+		);
+	}
+
 //---------------------------------------------------------------------------
+	protected function requestFightCancel() {
+		$fightId = $this->player->fight_id;
+		if (!$fightId) return $this->ack;
+
+		$this->player->fight_id = NULL;
+
+		$transaction = $this->getDbConnection()->beginTransaction();
+		try {
+			DelayedFight::model()->deleteByPk($fightId);
+			$this->player->save();
+		} catch (Exception $e) {
+			$transaction->rollback();
+			throw $e;
+		}
+		$transaction->commit();
+
+		return $this->ack();
+	}
+
 //---------------------------------------------------------------------------
+	protected function requestSlotList() {
+		$slots = FightSlot::model()->forPlayer($this->player->id)->with('fight')->findAll();
+		$list = array_fill(0, 10, NULL);
+		foreach ($slots as $index => $slot) {
+			$fight = $slot->fight();
+			$list[$index] = array(
+				'SlotName' => $slot->name,
+				'FightId' => $slot->fightId,
+				'FightType' => $fight->type,
+				'FightTime' => (int)$fight->time,
+			);
+		}
+
+		return array(
+			'Response' => 'slot list',
+			'SlotList' => $list,
+		);
+	}
+
 //---------------------------------------------------------------------------
+	protected function requestSlotView() {
+		$slotIndex = (int)$this->request['SlotIndex'];
+		$slot = FightSlot::model()->forPlayer($this->player->id)->byIndex($slotIndex)
+			->with('fight')->find();
+		if (!$slot) {
+			throw new NackException(NackException::ERR_UNKNOWN_SLOT, $slotIndex);
+		}
+
+		$response = $this->getFightInfo($slot->fight);
+		$response['Response'] = 'slot view';
+		$response['SlotIndex'] = $slotIndex;
+		$response['SlotName'] = $slot->name;
+		unset($response['FightId']);
+
+		return $response;
+	}
+
 //---------------------------------------------------------------------------
+	protected function requestSlotRename() {
+		$slotIndex = (int)$this->request['SlotIndex'];
+		$slot = FightSlot::model()->forPlayer($this->player->id)->byIndex($slotIndex)->find();
+		if (!$slot) {
+			throw new NackException(NackException::ERR_UNKNOWN_SLOT, $slotIndex);
+		}
+
+		$slot->name = $this->request['SlotName'];
+		$slot->save();
+		return $this->ack;
+	}
+
 //---------------------------------------------------------------------------
+	protected function requestSlotDelete() {
+		FightSlot::model()->forPlayer($this->player->id)->byIndex($slotIndex)->deleteAll();
+		return $this->ack;
+	}
+
 //---------------------------------------------------------------------------
+	protected function requestSlotSave() {
+		$request = $this->request;
+		$index = (int)$request['SlotIndex'];
+		$name = $request['SlotName'];
+		$fightId = $request['FightId'];
+		$playerId = $this->player->id;
+
+		$transaction = $this->getDbConnection()->beginTransaction();
+
+		try {
+			if (!Fight::model()->isListed($playerId, $fightId)) {
+				throw new NackException(NackException::ERR_UNKNOWN_FIGHT, $fightId);
+			}
+
+			FightSlot::model()->forPlayer($playerId)->byIndex($index)->dleteAll();
+
+			$slot = new FightSlot;
+			$slot->player_id = $playerId;
+			$slot->index = $index;
+			$slot->name = $name;
+			$slot->fight_id = $fightId;
+			$slot->save();
+
+		} catch (Exception $e) {
+			$transaction->rollback();
+			throw $e;
+		}
+
+		$transaction->commit();
+		return $this->ack;
+	}
+
 //---------------------------------------------------------------------------
 }

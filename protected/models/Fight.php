@@ -56,6 +56,13 @@ class Fight extends CActiveRecord {
 	}
 
 //---------------------------------------------------------------------------
+	public function scopes() {
+		return array(
+			'full' => array('with' => 'stats, stats.snake, stats.snake.maps, stats.snake.player'),
+		);
+	}
+
+//---------------------------------------------------------------------------
 	public function rules() {
 		return array(
 			array('type, player_id, turn_limit', 'safe', 'on' => 'insert'),

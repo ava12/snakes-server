@@ -1,7 +1,9 @@
 <?php
 
 /**
- *
+ * @property int $fight_id
+ * @property int $delay_till
+ * @property string $state
  */
 class DelayedFight extends CActiveRecord {
 	const BATCH_CNT = 50;
@@ -28,11 +30,11 @@ class DelayedFight extends CActiveRecord {
 	protected $startY = array(15, 12, 9, 12);
 
 	protected $isSolitaire = NULL;
-
-	protected $result;
 	protected $field;
-	protected $turns;
-	protected $snakes = array(NULL, NULL, NULL, NULL);
+
+	public $result;
+	public $turns;
+	public $snakes = array(NULL, NULL, NULL, NULL);
 
 	protected $isLocked = false;
 
@@ -65,6 +67,7 @@ class DelayedFight extends CActiveRecord {
 
 //---------------------------------------------------------------------------
 	protected function onBeforeSave() {
+		$this->delay_till = 0;
 		$this->fold();
 		return true;
 	}
@@ -154,11 +157,6 @@ class DelayedFight extends CActiveRecord {
 			}
 		}
 
-		if ($this->fight->type == Fight::TYPE_CHALLENGE) {
-			$this->computeRatings();
-		}
-
-		$this->unlock();
 		return $this->result;
 	}
 
@@ -509,31 +507,6 @@ class DelayedFight extends CActiveRecord {
 			$coords = $enemy['Coords'][count($enemy['Coords']) - 1];
 			$this->field[$coords[1]][$coords[0]] = self::TAIL_CELL << $enemyIndex;
 		}
-	}
-
-//---------------------------------------------------------------------------
-	public function saveResult() {
-		$fight = $this->fight;
-		foreach ($fight->stats
-	}
-
-//---------------------------------------------------------------------------
-	protected function computeRatings() {
-		$players = array();
-		$snakes = $this->snakes;
-		foreach ($snakes as $snake) {
-			$players[] = $snake['PlayerId'];
-		}
-		$ratings = array();
-		foreach (Player::model()->findAllByPk($players) as $player) {
-			$ratings[$player->id] = $player->rating;
-		}
-
-		foreach ($snakes as &$snake) {
-			$snake['PreRating'] = $players[$snake['PlayerId']];
-		}
-
-		
 	}
 
 //---------------------------------------------------------------------------

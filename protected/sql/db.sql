@@ -63,6 +63,9 @@ begin
    (SELECT `fight_id` FROM `fightlist`
     WHERE `player_id` = @`player_id` AND `type` = 'challenged'
     ORDER BY `time` DESC LIMIT `@challenged_limit`)
+   UNION
+   (SELECT `fight_id` FROM `fightslot`
+	 WHERE `player_id` = @`player_id` AND `fight_id` = @`fight_id`)
   )
 	WHERE `fight_id` = `@fight_id`
  );
@@ -79,10 +82,23 @@ DELIMITER ;
 DROP TABLE IF EXISTS `delayedfight`;
 CREATE TABLE `delayedfight` (
   `fight_id` int(11) NOT NULL,
-  `delay_till` timestamp NULL DEFAULT NULL,
+  `delay_till` timestamp NOT NULL,
   `state` text CHARACTER SET ascii COLLATE ascii_bin,
   PRIMARY KEY (`fight_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Триггеры `delayedfight`
+--
+DROP TRIGGER IF EXISTS `delayedfight_before_delete_t`;
+DELIMITER //
+CREATE TRIGGER `delayedfight_before_delete_t` BEFORE DELETE ON `delayedfight`
+ FOR EACH ROW BEGIN
+ update `fight` set `refs` = `refs` - 1
+ where `id` = old.`fight_id`;
+END
+//
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -94,29 +110,16 @@ DROP TABLE IF EXISTS `fight`;
 CREATE TABLE `fight` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `refs` int(11) NOT NULL DEFAULT '1',
-  `type` char(9) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `type` enum('train', 'challenge') NOT NULL,
   `time` timestamp NULL DEFAULT NULL,
   `player_id` int(11) NOT NULL,
   `turn_limit` smallint(6) NOT NULL,
   `turn_count` smallint(6) NOT NULL,
   `turns` varbinary(2000) DEFAULT NULL,
-  `result` char(7) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,
+  `result` enum('', 'limit', 'eaten', 'blocked') NOT NULL,
   PRIMARY KEY (`id`),
   KEY `refs` (`refs`,`player_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
-
---
--- Триггеры `fight`
---
-DROP TRIGGER IF EXISTS `fight_before_delete_t`;
-DELIMITER //
-CREATE TRIGGER `fight_before_delete_t` BEFORE DELETE ON `fight`
- FOR EACH ROW BEGIN
- update `snake` set `refs` = `refs` - 1
- where `id` in (SELECT `snake_id` FROM `snakestat` WHERE `fight_id` = old.`id`);
-END
-//
-DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -126,16 +129,26 @@ DELIMITER ;
 
 DROP TABLE IF EXISTS `fightlist`;
 CREATE TABLE `fightlist` (
+  `type` enum('ordered', 'challenged') NOT NULL,
   `player_id` int(11) NOT NULL,
   `time` timestamp NOT NULL,
-  `type` char(10) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
   `fight_id` int(11) NOT NULL,
-  PRIMARY KEY (`player_id`, `time`)
+  PRIMARY KEY (`type`, `player_id`, `time`, `fight_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 --
 -- Триггеры `fightlist`
 --
+DROP TRIGGER IF EXISTS `fightlist_after_insert_t`;
+DELIMITER //
+CREATE TRIGGER `fightlist_after_insert_t` AFTER INSERT ON `fightlist`
+ FOR EACH ROW BEGIN
+ update `fight` set `refs` = `refs` + 1
+ where `id` = new.`fight_id`;
+END
+//
+DELIMITER ;
+
 DROP TRIGGER IF EXISTS `fightlist_before_delete_t`;
 DELIMITER //
 CREATE TRIGGER `fightlist_before_delete_t` BEFORE DELETE ON `fightlist`
@@ -164,12 +177,36 @@ CREATE TABLE `fightslot` (
 --
 -- Триггеры `fightslot`
 --
+DROP TRIGGER IF EXISTS `fightslot_after_insert_t`;
+DELIMITER //
+CREATE TRIGGER `fightslot_after_insert_t` AFTER INSERT ON `fightslot`
+ FOR EACH ROW BEGIN
+ update `fight` set `refs` = `refs` + 1
+ where `id` = new.`fight_id`;
+END
+//
+DELIMITER ;
+
 DROP TRIGGER IF EXISTS `fightslot_before_delete_t`;
 DELIMITER //
 CREATE TRIGGER `fightslot_before_delete_t` BEFORE DELETE ON `fightslot`
  FOR EACH ROW BEGIN
  update `fight` set `refs` = `refs` - 1
  where `id` = old.`fight_id`;
+END
+//
+DELIMITER ;
+
+DROP TRIGGER IF EXISTS `fightslot_after_update_t`;
+DELIMITER //
+CREATE TRIGGER `fightslot_after_update_t` AFTER UPDATE ON `fightslot`
+FOR EACH ROW BEGIN
+ CASE
+  WHEN new.`fight_id` <> old.`fight_id`
+	THEN
+   update `fight` set `refs` = `refs` + 1 where `id` = new.`fight_id`;
+   update `fight` set `refs` = `refs` - 1 where `id` = old.`fight_id`;
+ END CASE;
 END
 //
 DELIMITER ;
@@ -315,7 +352,7 @@ CREATE TABLE `snakestat` (
   `fight_id` int(11) NOT NULL,
   `index` tinyint(1) NOT NULL,
   `snake_id` int(11) NOT NULL,
-  `result` char(7) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `result` enum('', 'free', 'eaten', 'blocked') NOT NULL,
   `length` tinyint(4) NOT NULL,
   `pre_rating` int(11) DEFAULT NULL,
   `post_rating` int(11) DEFAULT NULL,
@@ -335,13 +372,22 @@ CREATE TABLE `snakestat` (
 --
 -- Триггеры `snakestat`
 --
-
 DROP TRIGGER IF EXISTS `snakestat_after_insert_t`;
 DELIMITER //
 CREATE TRIGGER `snakestat_after_insert_t` AFTER INSERT ON `snakestat`
  FOR EACH ROW BEGIN
  update `snake` set `refs` = `refs` + 1
  where `id` = new.`snake_id`;
+END
+//
+DELIMITER ;
+
+DROP TRIGGER IF EXISTS `snakestat_before_delete_t`;
+DELIMITER //
+CREATE TRIGGER `snakestat_before_delete_t` BEFORE DELETE ON `snakestat`
+ FOR EACH ROW BEGIN
+ update `snake` set `refs` = `refs` - 1
+ where `id` = old.`snake_id`;
 END
 //
 DELIMITER ;
@@ -360,8 +406,8 @@ ALTER TABLE `map`
 -- Ограничения внешнего ключа таблицы `player`
 --
 ALTER TABLE `player`
-  ADD CONSTRAINT `player_ibfk_1` FOREIGN KEY (`delayed_id`) REFERENCES `fight` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `player_ibfk_2` FOREIGN KEY (`viewed_id`) REFERENCES `fight` (`id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `player_ibfk_1` FOREIGN KEY (`delayed_id`) REFERENCES `fight` (`id`),
+  ADD CONSTRAINT `player_ibfk_2` FOREIGN KEY (`viewed_id`) REFERENCES `fight` (`id`);
 
 --
 -- Ограничения внешнего ключа таблицы `snake`
@@ -374,7 +420,6 @@ ALTER TABLE `snake`
 -- Ограничения внешнего ключа таблицы `snakestat`
 --
 ALTER TABLE `snakestat`
-  ADD CONSTRAINT `snakestat_ibfk_2` FOREIGN KEY (`snake_id`) REFERENCES `snake` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `snakestat_ibfk_1` FOREIGN KEY (`fight_id`) REFERENCES `fight` (`id`) ON DELETE CASCADE;
 
 SET FOREIGN_KEY_CHECKS=1;
