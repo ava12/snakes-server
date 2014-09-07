@@ -49,17 +49,20 @@ class Fight extends CActiveRecord {
 	}
 
 //---------------------------------------------------------------------------
-	public function defaultScope() {
+	public function scopes() {
 		return array(
-			'condition' => 't.refs > 0',
+			'live' => array('condition' => 't.refs > 0'),
+			'full' => array('with' => array('stats', 'stats.snake', 'stats.snake.maps', 'stats.snake.player')),
 		);
 	}
 
 //---------------------------------------------------------------------------
-	public function scopes() {
-		return array(
-			'full' => array('with' => 'stats, stats.snake, stats.snake.maps, stats.snake.player'),
-		);
+	public function forPlayer($playerId) {
+		if (is_object($playerId)) $playerId = $playerId->id;
+		$this->getDbCriteria()->mergeWith(array(
+			'condition' => 't.player_id = ' . (int)$playerId,
+		));
+		return $this;
 	}
 
 //---------------------------------------------------------------------------
@@ -99,7 +102,7 @@ class Fight extends CActiveRecord {
 		foreach ($turns as &$p) {
 			$p = pack('n', $p);
 		}
-		$this->setAttribute('turn_count', count($turns);
+		$this->setAttribute('turn_count', count($turns));
 		$this->setAttribute('turns', implode('', $turns));
 	}
 

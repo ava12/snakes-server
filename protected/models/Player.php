@@ -31,9 +31,9 @@ class Player extends CActiveRecord {
 	public function relations() {
 		return array(
 			'fighter' => array(self::BELONGS_TO, 'Snake', array('fighter_id' => 'base_id'),
-				'scopes' => 'current'),
+				'condition' => 'fighter.current'),
 			'snakes' => array(self::HAS_MANY, 'Snake', 'player_id',
-				'order' => 'name ASC', 'scopes' => 'current'),
+				'order' => 'snakes.name ASC', 'condition' => 'snakes.current'),
 		);
 	}
 
@@ -62,5 +62,9 @@ class Player extends CActiveRecord {
 	}
 
 //---------------------------------------------------------------------------
+	public function getRandomSalt() {
+		return substr(md5(mt_rand(0, 0x7fffffff)), 0, self::SALT_LENGTH);
+	}
+
 //---------------------------------------------------------------------------
 }

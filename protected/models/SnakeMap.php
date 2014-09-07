@@ -25,7 +25,7 @@ class SnakeMap extends CActiveRecord {
 //---------------------------------------------------------------------------
 	public function relations() {
 		return array(
-			'snake' => aray(self::BELONGS_TO, 'Snake', 'snake_id'),
+			'snake' => array(self::BELONGS_TO, 'Snake', 'snake_id'),
 		);
 	}
 

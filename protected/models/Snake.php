@@ -34,13 +34,6 @@ class Snake extends CActiveRecord {
 	}
 
 //---------------------------------------------------------------------------
-	public function defaultScope() {
-		return array(
-			'condition' => 't.refs > 0',
-		);
-	}
-
-//---------------------------------------------------------------------------
 	public function relations() {
 		return array(
 			'maps' => array(self::HAS_MANY, 'SnakeMap', 'snake_id', 'order' => 'maps.index'),
@@ -93,7 +86,8 @@ class Snake extends CActiveRecord {
 //---------------------------------------------------------------------------
 	public function scopes() {
 		return array(
-			'current' => 'current > 0',
+			'live' => array('condition' => 't.refs > 0'),
+			'current' => array('condition' => 't.current > 0'),
 		);
 	}
 
@@ -107,7 +101,7 @@ class Snake extends CActiveRecord {
 
 //---------------------------------------------------------------------------
 	public function byBaseId($baseId) {
-		$this->getDbCriteria()->addColumnCondition('base_id', $baseId);
+		$this->getDbCriteria()->addColumnCondition(array('base_id' => $baseId));
 		return $this;
 	}
 
@@ -259,6 +253,9 @@ class Snake extends CActiveRecord {
 			}
 
 			if ($this->newMaps and !$mapCollection->save()) {
+				foreach ($this->newMaps as $map) {
+					if ($map->hasErrors()) throw Util::makeValidateException($map);
+				}
 				throw new RuntimeException('не могу обновить карты');
 			}
 

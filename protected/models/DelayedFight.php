@@ -21,7 +21,7 @@ class DelayedFight extends CActiveRecord {
 	const BODY_MASK = 0xF00;
 	const TAIL_MASK = 0xF000;
 	const RATE_MASK = 0x700000;
-	const ALLOWED_MASK = self::TAIL_MASK | self::FREE_CELL;
+	const ALLOWED_MASK = 0xF001; // self::TAIL_MASK | self::FREE_CELL
 	const ANY_MASK = 0xFFF3;
 
 	protected $dirX = array(0, 1, 0, -1);
@@ -61,19 +61,19 @@ class DelayedFight extends CActiveRecord {
 	public function rules() {
 		return array(
 			array('fight_id', 'safe', 'on' => 'insert'),
-			array('figh_id', 'required', 'on' => 'insert'),
+			array('fight_id', 'required', 'on' => 'insert'),
 		);
 	}
 
 //---------------------------------------------------------------------------
-	protected function onBeforeSave() {
+	public function onBeforeSave() {
 		$this->delay_till = 0;
 		$this->fold();
 		return true;
 	}
 
 //---------------------------------------------------------------------------
-	protected function onAfterSave() {
+	public function onAfterSave() {
 		$this->unlock();
 	}
 
@@ -233,7 +233,7 @@ class DelayedFight extends CActiveRecord {
 			$template = str_split($templates[$i]);
 			$mask = 0;
 			foreach ($template as $t) $mask |= $result[$t];
-			$mask = ($mask & ~self::RATE_MASK) | ((7 - count($template) << self::RATE_SHIFT);
+			$mask = ($mask & ~self::RATE_MASK) | ((7 - count($template) << self::RATE_SHIFT));
 			$result[$name] = $mask;
 		}
 
@@ -280,8 +280,8 @@ class DelayedFight extends CActiveRecord {
 				$lineIndex += dy;
 				for ($x = 0; $x < 7; $x++) {
 					$masks[$j] = $baseMasks[$pos];
-					$j++
-					$pos += dx;
+					$j++;
+					$pos += $dx;
 				}
 			}
 
@@ -323,7 +323,7 @@ class DelayedFight extends CActiveRecord {
 		}
 
 		if (!$snakesMoved) {
-			this->result = Fight::RESULT_BLOCKED;
+			$this->result = Fight::RESULT_BLOCKED;
 			return false;
 		}
 
@@ -371,7 +371,7 @@ class DelayedFight extends CActiveRecord {
 				return 0;
 			}
 
-			$dir = $allowedDirs[0]
+			$dir = $allowedDirs[0];
 			$i = ($dir - $snake['Dir'] + 2) & 3;
 			$this->moveSnake($snakeIndex, $dir);
 			$snake['Debug'][] = $this->encodeDebug(0, 2);
@@ -437,7 +437,7 @@ class DelayedFight extends CActiveRecord {
 				$group = ($mask >> self::GROUP_SHIFT) & 7;
 				if (!isset($results[$group])) $results[$group] = 0;
 				if (!($cell & $mask)) {
-					if ($group < 4) $results[$group] = -1
+					if ($group < 4) $results[$group] = -1;
 					continue;
 				}
 

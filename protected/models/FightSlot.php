@@ -31,8 +31,8 @@ class FightSlot extends CActiveRecord {
 //---------------------------------------------------------------------------
 	public function defaultScope() {
 		return array(
-			'order' => 'index',
-			'index' => 'index',
+			'order' => 't.index',
+			'index' => 't.index',
 		);
 	}
 

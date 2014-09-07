@@ -4,7 +4,7 @@
  * @group validate
  * @group nodb
  */
-final class RequestValidatorTest extends PHPUnit_Framework_TestCase {
+final class RequestValidatorTest extends CTestCase {
 
 //- базовая проверка валидации запросов -------------------------------------
 

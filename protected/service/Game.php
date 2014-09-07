@@ -17,18 +17,41 @@ class Game {
 		'Description' => 'description', 'HeadX' => 'head_x', 'HeadY' => 'head_y',
 	);
 
+	public $debug = false;
+
 //---------------------------------------------------------------------------
-	public function __construct($request = NULL) {
+	public function __construct($request = NULL, $debug = false) {
 		$this->request = ($request ? $request : $_POST);
+		$this->debug = $debug;
+	}
+
+//---------------------------------------------------------------------------
+	public function setPlayer($player) {
+		if (!$player) return;
+
+		if (is_scalar($player)) {
+			$playerId = $player;
+			$player = Player::model()->findByPk($player);
+			if (!$player) throw new RuntimeException('unknown player id: ' . $playerId);
+		}
+
+		$this->player = $player;
+		return $this;
+	}
+
+//---------------------------------------------------------------------------
+	public function setRequest($request) {
+		$this->request = $request;
+		return $this;
 	}
 
 //---------------------------------------------------------------------------
 	protected function process() {
 		try {
-			RequestValidator::validate($this->request);
+			$request = RequestValidator::validate($this->request);
+			$this->request = $request;
 
-			$request = $this->request;
-			if (isset($request['Sid'])) {
+			if (isset($request['Sid']) and !$this->player) {
 				$this->player = Yii::app()->user->open($request['Sid'], true);
 				if (!$this->player) return array('Response' => 'relogin');
 			}
@@ -37,9 +60,13 @@ class Game {
 			return $this->$funcName();
 		}
 		catch (NackException $e) {
+			if ($this->debug) throw $e;
+
 			return $e->asArray();
 		}
 		catch (Exception $e) {
+			if ($this->debug) throw $e;
+
 			return array(
 				'Response' => 'error',
 				'ErrorCode' => $e->getCode(),
@@ -450,7 +477,7 @@ class Game {
 		}
 
 		foreach ($this->snakeFields as $requestName => $dbName) {
-			if (array_key_exists($requestName, $request) {
+			if (array_key_exists($requestName, $request)) {
 				$snake->$dbName = $request[$requestName];
 			}
 		}
@@ -476,7 +503,7 @@ class Game {
 		}
 
 		if (!$snake->save()) {
-			throw new RuntimeException('не могу отредактировать змею');
+			throw Util::makeValidateException($snake, 'не могу отредактировать змею');
 		}
 
 		return $this->ack;
@@ -622,12 +649,15 @@ class Game {
 			$fight = Fight::model()->forPlayer($playerId)->full()->findByPk($fightId);
 			$this->updateFight($fight, $delayed);
 		} else {
-			$fight = Fight::model()->forPlayer($playerId)->full()->findByPk($fightId);
+			$fight = Fight::model()->live()->forPlayer($playerId)->full()->findByPk($fightId);
 
 			if (!$fight or !$fight->isListed($playerId)) {
 				throw new NackException(NackException::ERR_UNKNOWN_FIGHT, $fightId);
 			}
 		}
+
+		$this->player->viewed_id = $fightId;
+		$this->player->save();
 
 		return $this->getFightInfo($fight);
 	}
@@ -698,7 +728,7 @@ class Game {
 		$fight = new Fight;
 		$delayed = new DelayedFight;
 
-		$transaction = $this->getDbConnection()->beginTransaction();
+		$transaction = Yii::app()->db->beginTransaction();
 
 		try {
 			$player = Player::model()->findByPk($playerId);
@@ -805,7 +835,7 @@ class Game {
 
 		$this->player->fight_id = NULL;
 
-		$transaction = $this->getDbConnection()->beginTransaction();
+		$transaction = Yii::app()->db->beginTransaction();
 		try {
 			DelayedFight::model()->deleteByPk($fightId);
 			$this->player->save();
@@ -883,7 +913,7 @@ class Game {
 		$fightId = $request['FightId'];
 		$playerId = $this->player->id;
 
-		$transaction = $this->getDbConnection()->beginTransaction();
+		$transaction = Yii::app()->db->beginTransaction();
 
 		try {
 			if (!Fight::model()->isListed($playerId, $fightId)) {

@@ -48,26 +48,26 @@ begin
 end$$
 
 DROP FUNCTION IF EXISTS `can_view_fight`$$
-CREATE FUNCTION `can_view_fight`(IN `@player_id` INT, IN `@fight_id` INT,
-    IN `@ordered_limit` INT, IN `@challenged_limit` INT)
+CREATE FUNCTION `can_view_fight`(`@player_id` INT, `@fight_id` INT,
+    `@ordered_limit` INT, `@challenged_limit` INT)
 RETURNS INT
     READS SQL DATA
     SQL SECURITY INVOKER
 begin
  RETURN (
-  SELECT COUNT(DISTINCT *) FROM (
-   (SELECT `fight_id` FROM `fightlist`
+  SELECT COUNT(*) FROM (
+   (SELECT `fight_id` FROM `fightlist` AS `lo`
     WHERE `player_id` = @`player_id` AND `type` = 'ordered'
-    ORDER BY `time` DESC LIMIT `@ordered_limit`)
+    ORDER BY `time` DESC LIMIT 10)
    UNION
-   (SELECT `fight_id` FROM `fightlist`
+   (SELECT `fight_id` FROM `fightlist` AS `lc`
     WHERE `player_id` = @`player_id` AND `type` = 'challenged'
-    ORDER BY `time` DESC LIMIT `@challenged_limit`)
+    ORDER BY `time` DESC LIMIT 10)
    UNION
-   (SELECT `fight_id` FROM `fightslot`
+   (SELECT `fight_id` FROM `fightslot` AS `fs`
 	 WHERE `player_id` = @`player_id` AND `fight_id` = @`fight_id`)
-  )
-	WHERE `fight_id` = `@fight_id`
+  ) AS `total`
+	WHERE `fight_id` = @`fight_id`
  );
 end$$
 
@@ -180,7 +180,7 @@ CREATE TABLE `fightslot` (
 DROP TRIGGER IF EXISTS `fightslot_after_insert_t`;
 DELIMITER //
 CREATE TRIGGER `fightslot_after_insert_t` AFTER INSERT ON `fightslot`
- FOR EACH ROW BEGIN
+FOR EACH ROW BEGIN
  update `fight` set `refs` = `refs` + 1
  where `id` = new.`fight_id`;
 END
@@ -190,7 +190,7 @@ DELIMITER ;
 DROP TRIGGER IF EXISTS `fightslot_before_delete_t`;
 DELIMITER //
 CREATE TRIGGER `fightslot_before_delete_t` BEFORE DELETE ON `fightslot`
- FOR EACH ROW BEGIN
+FOR EACH ROW BEGIN
  update `fight` set `refs` = `refs` - 1
  where `id` = old.`fight_id`;
 END
@@ -201,11 +201,10 @@ DROP TRIGGER IF EXISTS `fightslot_after_update_t`;
 DELIMITER //
 CREATE TRIGGER `fightslot_after_update_t` AFTER UPDATE ON `fightslot`
 FOR EACH ROW BEGIN
- CASE
-  WHEN new.`fight_id` <> old.`fight_id`
-	THEN
-   update `fight` set `refs` = `refs` + 1 where `id` = new.`fight_id`;
-   update `fight` set `refs` = `refs` - 1 where `id` = old.`fight_id`;
+ CASE WHEN new.`fight_id` <> old.`fight_id` THEN
+  update `fight` set `refs` = `refs` + 1 where `id` = new.`fight_id`;
+  update `fight` set `refs` = `refs` - 1 where `id` = old.`fight_id`;
+ ELSE BEGIN END;
  END CASE;
 END
 //
@@ -250,8 +249,8 @@ CREATE TABLE `player` (
   `sequence` int(11) NOT NULL DEFAULT '0',
   `fighter_id` int(11) DEFAULT NULL,
   `rating` int(11) DEFAULT NULL,
-  `delayed_id` int(11) DEFAULT NULL,
-  `viewed_id` int(11) DEFAULT NULL,
+  `delayed_id` int(11) NOT NULL,
+  `viewed_id` int(11) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `login_k` (`login`),
   UNIQUE KEY `name_k` (`name`),
@@ -267,6 +266,22 @@ CREATE TABLE `player` (
 --   `viewed_id`
 --       `fight` -> `id`
 --
+
+--
+-- Триггеры `player`
+--
+DROP TRIGGER IF EXISTS `player_after_update_t`;
+DELIMITER //
+CREATE TRIGGER `player_after_update_t` AFTER UPDATE ON `player`
+FOR EACH ROW BEGIN
+ CASE WHEN new.`viewed_id` <> old.`viewed_id` THEN
+  update `fight` set `refs` = `refs` + 1 where `id` = new.`viewed_id`;
+  update `fight` set `refs` = `refs` - 1 where `id` = old.`viewed_id`;
+ ELSE BEGIN END;
+ END CASE;
+END
+//
+DELIMITER ;
 
 -- --------------------------------------------------------
 

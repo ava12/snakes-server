@@ -22,6 +22,7 @@ class NackException extends RuntimeException {
 	const ERR_NOT_MY_SNAKE = 16;
 	const ERR_HAS_DELAYED = 17;
 	const ERR_NO_FOES = 18;
+	const ERR_INVALID_INPUT = 19;
 
 
 	protected static $messages = array(
@@ -48,6 +49,7 @@ class NackException extends RuntimeException {
 		'змея "%s" принадлежит другому игроку',
 		'имеется незавершенный бой: "%s"',
 		'в бою должны участвовать не менее двух змей',
+		'некорректные данные: %s',
 	);
 
 

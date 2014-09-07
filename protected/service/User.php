@@ -68,12 +68,13 @@ class User extends CApplicationComponent implements IWebUser {
 		);
 
 		$request = Yii::app()->getRequest();
-		if (isset($request[self::$serverSessionName])) {
-			$this->sid = $request[self::$serverSessionName];
+		$sid = $request->getParam($this->serverSessionName);
+		if ($sid) {
+			$this->sid = $sid;
 			$this->player = $this->open($this->sid, false);
 			$this->isClient = false;
-		} else if (isset($request['Sid'])){
-			$this->sid = $request['Sid'];
+		} elseif ($request->getParam('Sid')) {
+			$this->sid = $request->getParam('Sid');
 			$this->player = $this->open($this->sid, true);
 		}
 	}

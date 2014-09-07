@@ -274,8 +274,8 @@ class RequestValidator {
 
 
 //---------------------------------------------------------------------------
-	public static function validate(&$request) {
-		if(!@$request['Request']) {
+	public static function validate($request) {
+		if(empty($request['Request'])) {
 			throw new NackException(NackException::ERR_MISSING_FIELD, 'Request');
 		}
 
@@ -290,11 +290,11 @@ class RequestValidator {
 
 		$t = static::$requestTypes[$requestType];
 		$requestFields = array();
-		if(@$t[0]) {
-			$requestFields += array_combine((array)$t[1], array_fill(0, count((array)$t[1]), true));
+		if(!empty($t[0])) {
+			$requestFields += array_combine((array)$t[0], array_fill(0, count((array)$t[0]), true));
 		}
-		if(@$t[1]) {
-			$requestFields += array_combine((array)$t[2], array_fill(0, count((array)$t[2]), false));
+		if(!empty($t[1])) {
+			$requestFields += array_combine((array)$t[1], array_fill(0, count((array)$t[1]), false));
 		}
 		$requestFields += static::$defaultFields;
 
@@ -323,6 +323,8 @@ class RequestValidator {
 				$request[$name] = static::ValidateField($request[$name], $name, $name);
 			}
 		}
+
+		return $request;
 	}
 
 //---------------------------------------------------------------------------
