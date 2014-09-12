@@ -15,7 +15,7 @@ class FightEntry extends CActiveRecord {
 	const LIST_SIZE_ORDERED = 10;
 	const LIST_SIZE_CHALLENGED = 10;
 
-	const LIST_SIZE = array(
+	protected static $listSize = array(
 		self::TYPE_ORDERED => self::LIST_SIZE_ORDERED,
 		self::TYPE_CHALLENGED => self::LIST_SIZE_CHALLENGED,
 	);
@@ -36,7 +36,7 @@ class FightEntry extends CActiveRecord {
 			'player' => array(self::BELONGS_TO, 'Player', 'player_id'),
 			'fight' => array(self::BELONGS_TO, 'Fight', 'fight_id'),
 			'stats' => array(self::HAS_MANY, 'SnakeStat', 'fight_id',
-				'order' => 'stats.index', 'index' => 'stats.index'),
+				'order' => 'stats.index', 'index' => 'index'),
 		);
 	}
 
@@ -49,13 +49,13 @@ class FightEntry extends CActiveRecord {
 
 //---------------------------------------------------------------------------
 	public function byType($type) {
-		$limit = @self::LIST_SIZE[$type];
-		if (!$limit) {
+		if (!isset(self::$listSize[$type])) {
 			throw new UnexpectedValueException('unknown list type: "' . $type . '"');
 		}
 
+		$limit = self::$listSize[$type];
 		$this->getDbCriteria()->mergeWith(array(
-			'condition' => 't.type = ' . $type,
+			'condition' => 't.type = \'' . $type . '\'',
 			'limit' => $limit,
 		));
 		return $this;
@@ -65,7 +65,7 @@ class FightEntry extends CActiveRecord {
 	public function forPlayer($playerId) {
 		if (is_object($playerId)) $playerId = $playerId->id;
 		$this->getDbCriteria()->mergeWith(array(
-			'condition' => 'player_id = :pid',
+			'condition' => 't.player_id = :pid',
 			'params' => array(':pid' => $playerId),
 		));
 		return $this;

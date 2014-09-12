@@ -20,7 +20,8 @@ final class Util {
 
 		foreach ($values as &$row) {
 			foreach ($row as &$p) {
-				$p = $db->quoteValue($p);
+				if (!isset($p)) $p = 'DEFAULT';
+				else $p = $db->quoteValue($p);
 			}
 			$row = '(' . implode(', ', $row) . ')';
 		}
@@ -32,7 +33,7 @@ final class Util {
 //---------------------------------------------------------------------------
 	public static function compareArrays($expect, $got, $path = '') {
 		if (count($expect) <> count($got)) {
-			$message = $path . ': длины массивов (' . $path . ') не совпадают, ' . count($expect) . ' и ' . count($got);
+			$message = $path . ': длины массивов (' . $path . ') не совпадают, ' . count($got) . ' вместо ' . count($expect);
 			throw new RuntimeException($message);
 		}
 
@@ -74,7 +75,7 @@ final class Util {
 	}
 
 //---------------------------------------------------------------------------
-	public function makeValidateException($model, $message) {
+	public static function makeValidationException($model, $message) {
 		$errors = $model->getErrors();
 		if (!$errors) return new RuntimeException($message);
 

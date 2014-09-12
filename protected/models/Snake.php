@@ -14,9 +14,12 @@
  * @property string $description
  * @property array $templates
  */
-class Snake extends CActiveRecord {
+class Snake extends ActiveRecord {
 	const TYPE_BOT = 'B';
 	const TYPE_NORMAL = 'N';
+
+	protected $magicGetters = array('templates' => false, 'needsRespawn' => false);
+	protected $magicSetters = array('templates' => false, 'maps' => false, 'type' => false);
 
 	protected $newMaps = array();
 	protected $needsRespawn = false;
@@ -65,21 +68,24 @@ class Snake extends CActiveRecord {
 
 //---------------------------------------------------------------------------
 	public function setTemplates($templates) {
-		if (!is_array($templates) or count($templates) <> 4) return false;
+		if (is_array($templates)) {
+			if (count($templates) <> 4) return false;
 
-		foreach ($templates as &$p) {
-			if (strspn($p, 'ABCDSTVWXYZ') <> strlen($p)) return false;
+			foreach ($templates as &$p) {
+				if (strspn($p, 'ABCDSTVWXYZ') <> strlen($p)) return false;
 
-			$p = array_unique(str_split($p));
-			sort($p);
-			$p = implode('', $p);
+				$p = array_unique(str_split($p));
+				sort($p);
+				$p = implode('', $p);
+			}
+			unset($p);
+
+			$templates = implode(',', $templates);
 		}
-		unset($p);
 
-		$templates = implode(',', $templates);
 		if ($templates == $this->attributes['templates']) return;
 
-		$this->attributes['templates'] = $templates;
+		$this->setAttribute('templates', $templates);
 		$this->needsRespawn = true;
 	}
 
@@ -101,7 +107,9 @@ class Snake extends CActiveRecord {
 
 //---------------------------------------------------------------------------
 	public function byBaseId($baseId) {
-		$this->getDbCriteria()->addColumnCondition(array('base_id' => $baseId));
+		$this->getDbCriteria()->mergeWith(array(
+			'condition' => 't.base_id = ' . (int)$baseId . ' AND t.current',
+		));
 		return $this;
 	}
 
@@ -114,10 +122,12 @@ class Snake extends CActiveRecord {
 
 //---------------------------------------------------------------------------
 	public function setMaps($maps) {
+		$id = $this->id;
 		$maps = array_values($maps);
+		foreach ($maps as $map) $map->snake_id = NULL;
 		$this->newMaps = $maps;
 		$oldMaps = array_values($this->maps);
-		$this->needsRespawn = (count($maps) == count($oldMaps));
+		if (count($maps) <> count($oldMaps)) $this->needsRespawn = true;
 		if (!$this->needsRespawn) {
 			foreach ($oldMaps as $index => $oldMap) {
 				if (!$oldMap->sameAs($maps[$index])) {
@@ -134,9 +144,9 @@ class Snake extends CActiveRecord {
 			throw new UnexpectedValueException('неверный тип змеи');
 		}
 
-		if ($type == $this->type) return true;
+		if ($type == $this->type) return;
 
-		$this->type = $type;
+		$this->setAttribute('type', $type);
 		$this->typeChanged = true;
 		$this->needsRespawn = true;
 	}
@@ -151,7 +161,7 @@ class Snake extends CActiveRecord {
 
 //---------------------------------------------------------------------------
 	public function getNeedsRespawn() {
-		return ($this->needsRespawn and $this->getIsNewRecord());
+		return ($this->needsRespawn and !$this->getIsNewRecord());
 	}
 
 //---------------------------------------------------------------------------
@@ -159,8 +169,18 @@ class Snake extends CActiveRecord {
 		if (!$this->needsRespawn or $this->getIsNewRecord()) return $this;
 
 		$snake = new Snake();
-		$snake->attributes = $this->attributes;
-		$snake->newMaps = ($this->newMaps ? $this->newMaps : $this->maps);
+
+		$attr = $this->getAttributes();
+		unset($attr['id']);
+		unset($attr['refs']);
+		$snake->setAttributes($attr, false);
+
+		$sourceMaps = ($this->newMaps ? $this->newMaps : $this->maps);
+		$maps = array();
+		foreach ($sourceMaps as $map) {
+			$maps[] = $map->copy();
+		}
+		$snake->setMaps($maps);
 
 		return $snake;
 	}
@@ -180,14 +200,14 @@ class Snake extends CActiveRecord {
 	}
 
 //---------------------------------------------------------------------------
-	public function insert() {
+	public function insert($attributes = NULL) {
 		if (!$this->newMaps) {
 			throw new RuntimeException('требуется хотя бы одна карта');
 		}
 
 		$mapCollection = new ActiveRecordCollection($this->newMaps);
 		$mapCollection->number('index');
-		$this->current = 1;
+		$this->current = ($this->isTemp ? 0 : 1);
 		$this->refs = 1;
 		$baseId = $this->base_id;
 
@@ -199,12 +219,12 @@ class Snake extends CActiveRecord {
 
 				$this->updateAll(
 					array('current' => 0, 'refs' => new CDbExpression('refs - 1')),
-					array('condition' => 'base_id = :id AND current'),
+					'base_id = :id AND current',
 					array(':id' => $this->base_id)
 				);
 			}
 
-			if ($this->isTemp) $this->refs = 0;
+//			if ($this->isTemp) $this->refs = 0; // release manually
 			if (!parent::insert()) {
 				throw new RuntimeException('не могу создать змею');
 			}
@@ -212,7 +232,14 @@ class Snake extends CActiveRecord {
 			$snakeId = $this->id;
 			$mapCollection->setDefaults(array('snake_id' => $snakeId));
 			if (!$mapCollection->save()) {
-				throw new RuntimeException('не могу сохранить карты');
+				foreach ($mapCollection->getItems() as $index => $map) {
+					$errors = $map->getErrors();
+					if (!$errors) continue;
+
+					$name = key($errors);
+					$message = $errors[$name][0];
+					throw new RuntimeException("не могу сохранить карту $index - $name: $message");
+				}
 			}
 
 			if (!$this->base_id) {
@@ -237,7 +264,7 @@ class Snake extends CActiveRecord {
 	}
 
 //---------------------------------------------------------------------------
-	public function update() {
+	public function update($attributes = NULL) {
 		if ($this->needsRespawn) return false;
 
 		if ($this->newMaps) {
@@ -253,8 +280,10 @@ class Snake extends CActiveRecord {
 			}
 
 			if ($this->newMaps and !$mapCollection->save()) {
-				foreach ($this->newMaps as $map) {
-					if ($map->hasErrors()) throw Util::makeValidateException($map);
+				foreach ($this->newMaps as $index => $map) {
+					if ($map->hasErrors()) {
+						throw Util::makeValidationException($map, 'не могу обновить карту ' . $index);
+					}
 				}
 				throw new RuntimeException('не могу обновить карты');
 			}
@@ -274,6 +303,11 @@ class Snake extends CActiveRecord {
 	}
 
 //---------------------------------------------------------------------------
+	public function release($id = NULL) {
+		if (!$id) $id = $this->id;
+		$this->updateCounters(array('refs' => -1), 'id = ' . (int)$id);
+	}
+
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------

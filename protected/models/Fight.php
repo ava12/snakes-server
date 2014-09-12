@@ -44,7 +44,7 @@ class Fight extends CActiveRecord {
 		return array(
 			'player' => array(self::BELONGS_TO, 'Player', 'player_id'),
 			'stats' => array(self::HAS_MANY, 'SnakeStat', 'fight_id',
-				'order' => 'stats.index', 'index' => 'stats.index'),
+				'order' => 'stats.index', 'index' => 'index'),
 		);
 	}
 
@@ -81,11 +81,8 @@ class Fight extends CActiveRecord {
 		if (!$id) $id = $this->id;
 		if (!$playerId) $playerId = $this->player_id;
 		return (bool)$this->getDbConnection()
-			->createCommand('SELECT `can_view_fight`(:pid, :fid, :ol, :cl)')
-			->queryScalar(array(
-				':pid' => $playerId, ':fid' => $id,
-				':ol' => FightList::LIST_SIZE_ORDERED, ':cl' => FightList::LIST_SIZE_CHALLENGED,
-			));
+			->createCommand('SELECT `can_view_fight`(:pid, :fid)')
+			->queryScalar(array(':pid' => $playerId, ':fid' => $id));
 	}
 
 //---------------------------------------------------------------------------

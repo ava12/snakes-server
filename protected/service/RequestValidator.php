@@ -74,9 +74,9 @@ class RequestValidator {
 		'PlayerId' => array('_string', NULL, 1),
 		'PlayerIds' => array('_array', NULL, 'PlayerId', 3, 3),
 		'PlayerName' => array('_string', NULL, 1, 30),
-		'ProgramDescription' => array('_string', '', 0, 1024),
+		'ProgramDescription' => array('_string', NULL, 0, 1024),
 		'Request' => '_string',
-		'Sid' => array('_string', ''),
+		'Sid' => array('_string', NULL),
 		'SkinId' => array('_int', NULL, 1),
 		'SlotIndex' => array('_int', NULL, 0, 9),
 		'SlotName' => array('_string', '', 0, 255),
@@ -148,7 +148,7 @@ class RequestValidator {
 
 
 //---------------------------------------------------------------------------
-	protected function getDefaultValue($type) {
+	protected static function getDefaultValue($type) {
 		$typeDef = (array)static::$fieldTypes[$type];
 		if(isset($typeDef[1])) {
 			$result = $typeDef[1];
@@ -170,7 +170,7 @@ class RequestValidator {
 
 
 //---------------------------------------------------------------------------
-	protected function validateField($value, $typeDef, $name, $path = array()) {
+	protected static function validateField($value, $typeDef, $name, $path = array()) {
 		$path[] = $name;
 		$typeDef = (array)$typeDef;
 		$type = $typeDef[0];
@@ -180,7 +180,8 @@ class RequestValidator {
 		}
 
 		if(is_array($value) <> in_array($type, static::$arrayFieldTypes)) {
-			throw new NackException(NackException::ERR_WRONG_FORMAT, array($path, (string)$value));
+			$params = array($path, (string)$value, gettype($value));
+			throw new NackException(NackException::ERR_WRONG_FORMAT, $params);
 		}
 
 		switch($type) {
@@ -269,7 +270,8 @@ class RequestValidator {
 			break; }
 		}
 
-		throw new NackException(NackException::ERR_WRONG_FORMAT, array($path, (string)$value));
+		$params = array($path, (string)$value, gettype($value));
+		throw new NackException(NackException::ERR_WRONG_FORMAT, $params);
 	}
 
 
@@ -281,7 +283,8 @@ class RequestValidator {
 
 		$requestType = $request['Request'];
 		if(!is_string($requestType)) {
-			throw new NackException(NackException::ERR_WRONG_FORMAT, array('Request', $requestType));
+			$params = array('Request', (string)$requestType, gettype($value));
+			throw new NackException(NackException::ERR_WRONG_FORMAT, $params);
 		}
 
 		if(!isset(static::$requestTypes[$requestType])) {

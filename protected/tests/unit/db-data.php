@@ -44,7 +44,7 @@ return array(
 			'id', 'refs', 'type', 'time', 'player_id', 'turn_limit', 'turn_count', 'turns', 'result'
 		),
 		array(
-			array(1, 5, 'challenge', date('Y-m-d H:i:s', 1000000000), 1, 1, 1, chr(0x2a).chr(0xa4), 'limit'),
+			array(1, 5, 'challenge', 1000000000, 1, 1, 1, chr(0x2a).chr(0xa4), 'limit'),
 			array(2, 1, 'train', NULL, 2, 2, 0, NULL, NULL),
 		)
 	),
@@ -70,7 +70,7 @@ return array(
 	'delayedfight' => array(
 		array('fight_id', 'delay_till'),
 		array(
-			array(2, date('Y-m-d H:i:s', 2000000000)),
+			array(2, 2000000000),
 		)
 	),
 

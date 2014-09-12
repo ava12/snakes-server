@@ -33,14 +33,13 @@ class SnakeStat extends CActiveRecord {
 		return array(
 			'snake' => array(self::BELONGS_TO, 'Snake', 'snake_id'),
 			'fight' => array(self::BELONGS_TO, 'Fight', 'fight_id'),
-			'maps' => array(self::HAS_MANY, 'SnakeMap', 'snake_id', 'order' => 'maps.index'),
 		);
 	}
 
 //---------------------------------------------------------------------------
 	public function rules() {
 		return array(
-			array('snake_id', 'exist', 'className' => 'Snake', 'attributeName' => 'id'),
+			array('snake_id', 'exists', 'className' => 'Snake', 'attributeName' => 'id'),
 		);
 	}
 

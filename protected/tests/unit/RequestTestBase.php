@@ -52,10 +52,12 @@ class RequestTestBase extends CTestCase {
 
 		if (!$response) $response = array('Response' => 'ack');
 
+		$result = NULL;
 		try {
 			$result = $game->run();
 			Util::compareArrays($response, $result);
 		} catch (Exception $e) {
+			echo PHP_EOL;
 //			var_dump($response);
 			var_dump($result);
 			throw $e;
@@ -78,7 +80,8 @@ class RequestTestBase extends CTestCase {
 			if ($code <> $e->getCode()) {
 				$msg = 'NackException: код ошибки ' . $e->getCode() . ' не совпадает с ожидаемым ' . $code;
 				$msg .= ', сообщение: ' . $e->getMessage();
-				throw new RuntimeException($msg);
+				echo $msg, PHP_EOL;
+				throw $e;
 			}
 		}
 	}

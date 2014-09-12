@@ -13,6 +13,7 @@ final class RequestModTest extends RequestTestBase {
 	public function testSnakeNew() {
 		$request = array(
 			'Request' => 'snake new',
+			'Sid' => '1',
 			'SnakeName' => '1питон',
 			'SnakeType' => 'B',
 			'SkinId' => 1,
@@ -22,9 +23,10 @@ final class RequestModTest extends RequestTestBase {
 				'Description' => '', 'HeadX' => 3, 'HeadY' => 3, 'Lines' => array(),
 			)),
 		);
-		$game = new Game($request);
+		$game = new Game($request, true);
 		$response = $game->setPlayer(2)->run();
 		$this->assertEquals('snake new', $response['Response']);
+		$snake = Snake::model()->byBaseId($response['SnakeId'])->find();
 		return $response['SnakeId'];
 	}
 
@@ -46,9 +48,7 @@ final class RequestModTest extends RequestTestBase {
 		self::checkValidRequest($request, $response, 2);
 
 		$snake = Snake::model()->byBaseId($snakeId)->find();
-//		$this->assertEquals(1, $snake->refs);
 		$this->assertEquals($snakeId, $snake->base_id);
-//		$this->assertEquals(1, $snake->current);
 		return $snakeId;
 	}
 
@@ -58,7 +58,7 @@ final class RequestModTest extends RequestTestBase {
 	public function testSnakeEdit($snakeId) {
 		$request = array(
 			'Request' => 'snake edit',
-			'SnakeId' => $SnakeId,
+			'SnakeId' => $snakeId,
 			'SnakeName' => 'snn',
 			'SnakeType' => 'N',
 		);
@@ -107,9 +107,9 @@ final class RequestModTest extends RequestTestBase {
 	 */
 	public function testSnakeDelete($snakeId) {
 		$request = array('Request' => 'snake delete', 'SnakeId' => $snakeId);
-		self::checkInvalidRequest($request, NackException::ERR_UNKNOWN_SNAKE);
+		self::checkInvalidRequest($request, NackException::ERR_NOT_MY_SNAKE, 1);
 		self::checkInvalidRequest($request, NackException::ERR_CANNOT_REMOVE_FIGHTER, 2);
-		self::checkValidRequest(array('Request' => 'snake assign', 'SnakeId' => 2), NULL, 2);
+		self::checkValidRequest(array('Request' => 'snake assign', 'SnakeId' => '2'), NULL, 2);
 		self::checkValidRequest($request, NULL, 2);
 	}
 
@@ -162,7 +162,7 @@ final class RequestModTest extends RequestTestBase {
 				NULL, NULL
 			),
 		);
-//var_dump($response['Turns']);exit;
+
 		Util::compareArrays($expected, $response);
 		return $fightId;
 	}

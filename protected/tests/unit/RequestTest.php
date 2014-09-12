@@ -46,7 +46,7 @@ final class RequestTest extends RequestTestBase {
 				),
 			),
 		);
-		self::checkInvalidRequest($request, NackException::ERR_INVALID_INPUT);
+		self::checkInvalidRequest($request, NackException::ERR_INVALID_MAP_LINE);
 	}
 
 	public function testInvalidMapLine() {
@@ -62,7 +62,7 @@ final class RequestTest extends RequestTestBase {
 				),
 			),
 		);
-		self::checkInvalidRequest($request, NackException::ERR_WRONG_VALUE);
+		self::checkInvalidRequest($request, NackException::ERR_INVALID_MAP_LINE);
 	}
 
 	public function testInvalidChallengeOrdered() {
@@ -114,14 +114,14 @@ final class RequestTest extends RequestTestBase {
 			'Response' => 'whoami',
 			'PlayerId' => '5',
 			'PlayerName' => $player->name,
-			'FightId' => 0,
+			'FightId' => '0',
 		);
 		self::checkValidRequest($request, $response, 5);
 	}
 
 	public function testLogin() {
 		$salt = 'abcdefgh';
-		$hash - sha1(sha1('login:password'), $salt);
+		$hash = sha1(sha1('login:password') . $salt);
 		$player = new Player;
 		$errors = Util::saveModel($player, array(
 			'name' => 'игрок',
@@ -130,6 +130,7 @@ final class RequestTest extends RequestTestBase {
 			'salt' => $salt,
 		));
 		if ($errors) {
+			echo PHP_EOL;
 			var_dump($errors);
 			$this->assertTrue(false, 'ошибка при регистрации игрока');
 		}
@@ -153,7 +154,13 @@ final class RequestTest extends RequestTestBase {
 			'PlayerName' => 'игрок',
 			'Sid' => $response['Sid'],
 		);
-		Util::compareArrays($expected, $response);
+		try {
+			Util::compareArrays($expected, $response);
+		} catch (Exception $e) {
+			echo PHP_EOL;
+			var_dump($response);
+			throw $e;
+		}
 
 		$player->delete();
 	}
@@ -171,13 +178,13 @@ final class RequestTest extends RequestTestBase {
 		);
 		$response = array(
 			'Response' => 'player list',
-			'FirstIndex' => 1,
+			'FirstIndex' => 0,
 			'SortBy' => array('>PlayerName'),
 			'TotalCount' => 5,
 			'PlayerList' => array(
+				array('PlayerId' => '5', 'PlayerName' => 'p', 'Rating' => 0),
 				array('PlayerId' => '4', 'PlayerName' => 'ch4', 'Rating' => 40),
 				array('PlayerId' => '3', 'PlayerName' => 'ch3', 'Rating' => 30),
-				array('PlayerId' => '2', 'PlayerName' => 'ch2', 'Rating' => 20),
 			),
 		);
 		self::checkValidRequest($request, $response, 1);
@@ -192,14 +199,16 @@ final class RequestTest extends RequestTestBase {
 		);
 		$response = array(
 			'Response' => 'ratings',
-			'FirstIndex' => 2,
+			'FirstIndex' => 0,
 			'SortBy' => array('<Rating'),
 			'TotalCount' => 4,
 			'Ratings' => array(
+				array('PlayerId' => '1', 'PlayerName' => 'ch1', 'Rating' => 10,
+					'SnakeId' => '1', 'SnakeName' => 'sn', 'SkinId' => 1),
+				array('PlayerId' => '2', 'PlayerName' => 'ch2', 'Rating' => 20,
+					'SnakeId' => '2', 'SnakeName' => 'sn2', 'SkinId' => 1),
 				array('PlayerId' => '3', 'PlayerName' => 'ch3', 'Rating' => 30,
 					'SnakeId' => '3', 'SnakeName' => 'sn3', 'SkinId' => 1),
-				array('PlayerId' => '4', 'PlayerName' => 'ch4', 'Rating' => 40,
-					'SnakeId' => '4', 'SnakeName' => 'sn4', 'SkinId' => 1),
 			),
 		);
 		self::checkValidRequest($request, $response, 1);
@@ -224,7 +233,7 @@ final class RequestTest extends RequestTestBase {
 			'Request' => 'snake list',
 			'SnakeTypes' => 'BN',
 			'FirstIndex' => 3,
-			'Count' => 10,
+			'Count' => 3,
 			'SortBy' => array('>SnakeName', '>PlayerName'),
 		);
 		$response = array(
@@ -337,7 +346,7 @@ final class RequestTest extends RequestTestBase {
 	}
 
 	public function testFightInfoRequest() {
-		$request = array('Request' => 'fight info', 'FightId' => 1);
+		$request = array('Request' => 'fight info', 'FightId' => '1');
 		$response = array(
 			'Response' => 'fight info',
 			'FightId' => '1',
@@ -389,7 +398,6 @@ final class RequestTest extends RequestTestBase {
 			'Response' => 'slot view',
 			'SlotIndex' => 1,
 			'SlotName' => 'test',
-			'FightId' => '1',
 			'FightType' => 'challenge',
 			'FightTime' => 1000000000,
 			'FightResult' => 'limit',

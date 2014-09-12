@@ -183,8 +183,8 @@ class Game {
 		$result = (is_array($response) ? $response : array('Response' => $response));
 		$totalCount = $provider->totalItemCount;
 		return $result + array(
-			'TotalCount' => $totalCount,
-			'FirstIndex' => $provider->pagination->offset,
+			'TotalCount' => (int)$totalCount,
+			'FirstIndex' => (int)$provider->pagination->offset,
 			'SortBy' => $this->request['SortBy'],
 		);
 	}
@@ -195,18 +195,19 @@ class Game {
 		$provider = $this->makeDataProvider($model, '>Rating',
 			array('Rating' => 'rating', 'PlayerName' => 'name'));
 		$data = $provider->getData();
-		$response = array('ratings', $provider);
+		$response = $this->makeListResponse('ratings', $provider);
 
 		$ratings = array();
 		foreach($data as $player) {
 			$fighter = $player->fighter;
+			$rating = $player->rating;
 			$ratings[] = array(
 				'PlayerId' => $player->id,
 				'PlayerName' => $player->name,
-				'Rating' => $player->rating,
+				'Rating' => (isset($rating) ? (int)$rating : NULL),
 				'SnakeId' => $fighter->base_id,
 				'SnakeName' => $fighter->name,
-				'SkinId' => $fighter->skin_id,
+				'SkinId' => (int)$fighter->skin_id,
 			);
 		}
 
@@ -225,8 +226,8 @@ class Game {
 
 		foreach($data as $player) {
 			$list[] = array(
-				'Id' => $player->id,
-				'Name' => $player->name,
+				'PlayerId' => $player->id,
+				'PlayerName' => $player->name,
 				'Rating' => (int)$player->rating,
 			);
 		}
@@ -253,11 +254,12 @@ class Game {
 			);
 		}
 
+		$rating = $player->rating;
 		return array(
 			'Response' => 'player info',
 			'PlayerId' => $player->id,
 			'PlayerName' => $player->name,
-			'Rating' => (int)$player->rating,
+			'Rating' => (isset($rating) ? (int)$rating : NULL),
 			'PlayerSnakes' => $snakes,
 		);
 	}
@@ -279,13 +281,11 @@ class Game {
 
 //---------------------------------------------------------------------------
 	protected function requestSnakeList() {
-		$model = Snake::model()
-			->current()
-			->types($this->request['SnakeTypes'])
-			->with('player');
+		$types = array_unique(str_split($this->request['SnakeTypes']));
+		$model = Snake::model()->current()->types($types)->with('player');
 
-		$provider = $this->makeDataProvider($model, '<SnakeName',
-			array('SnakeName' => 'name'));
+		$provider = $this->makeDataProvider($model, array('<SnakeName', '<PlayerName'),
+			array('SnakeName' => 't.name', 'PlayerName' => 'player.name'));
 
 		$data = $provider->getData();
 		$response = $this->makeListResponse('snake list', $provider);
@@ -293,16 +293,17 @@ class Game {
 
 		foreach($data as $snake) {
 			$list[] = array(
-				'Id' => $snake->base_id,
-				'Name' => $snake->name,
-				'Type' => $snake->type,
-				'Skin' => (int)$snake->skin_id,
+				'SnakeId' => $snake->base_id,
+				'SnakeName' => $snake->name,
+				'SnakeType' => $snake->type,
+				'SkinId' => (int)$snake->skin_id,
 				'PlayerId' => $snake->player_id,
 				'PlayerName' => $snake->player->name,
 			);
 		}
 
 		$response['SnakeList'] = $list;
+		$response['SnakeTypes'] = implode('', $types);
 		return $response;
 	}
 
@@ -311,17 +312,20 @@ class Game {
 		$lines = $map->lines;
 		$offset = strspn($lines, '-') >> 1;
 
+		if ($offset >= 49) $lines = array();
+		else $lines = array(
+			array(
+				'X' => $offset % 7,
+				'Y' => (int)($offset / 7),
+				'Line' => str_replace('--', '', $lines),
+			),
+		);
+
 		return array(
 			'Description' => $map->description,
 			'HeadX' => (int)$map->head_x,
 			'HeadY' => (int)$map->head_y,
-			'Lines' => array(
-				array(
-					'X' => $offset % 7,
-					'Y' => (int)($offset / 7),
-					'Line' => str_replace('--', '', $lines),
-				),
-			),
+			'Lines' => $lines,
 		);
 	}
 
@@ -383,7 +387,10 @@ class Game {
 				throw new NackException(NackException::ERR_CANNOT_ASSIGN_BOT, $snakeId);
 			}
 
-			$this->player->update(array('fighter_id' => $snakeId));
+			$this->player->fighter_id = $snakeId;
+			if (!$this->player->save()) {
+				throw new RuntimeException('не могу назначить бойца');
+			}
 		} catch (Exception $e) {
 			$transaction->rollback();
 			throw $e;
@@ -425,33 +432,37 @@ class Game {
 	}
 
 //---------------------------------------------------------------------------
-	protected function createSnake($request) {
-		$snake = new Snake;
-		$snake->player_id = $this->player->id;
-
+	protected function editSnake($snake, $request) {
 		foreach ($this->snakeFields as $requestName => $dbName) {
-			$snake->$dbName = $request[$requestName];
+			if (array_key_exists($requestName, $request)) {
+				$snake->$dbName = $request[$requestName];
+			}
 		}
 
-		$maps = array();
-		foreach ($request['Maps'] as $mapFields) {
-			$map = new SnakeMap();
-			foreach ($this->mapNames as $requestName => $dbName) {
-				$map->$dbName = $mapFields[$requestName];
+		if (isset($request['Maps'])) {
+			$maps = array();
+			foreach ($request['Maps'] as $mapIndex => $mapFields) {
+				$map = new SnakeMap;
+				foreach ($this->mapNames as $requestName => $dbName) {
+					$map->$dbName = $mapFields[$requestName];
+				}
+				foreach ($mapFields['Lines'] as $index => $line) {
+					if (!$map->addLine($line['X'], $line['Y'], $line['Line'])) {
+						$params = array($mapIndex, $index, $line['Line']);
+						throw new NackException(NackException::ERR_INVALID_MAP_LINE, $params);
+					}
+				}
+				$maps[] = $map;
 			}
-			foreach ($mapFields['Lines'] as $line) {
-				$map->addLine($line['X'], $line['Y'], $line['Line']);
-			}
-			$maps[] = $map;
+			$snake->setMaps($maps);
 		}
-
-		$snake->setMaps($maps);
-		return $snake;
 	}
 
 //---------------------------------------------------------------------------
-	protected function requestSnakeAdd() {
-		$snake = $this->createSnake($this->request);
+	protected function requestSnakeNew() {
+		$snake = new Snake;
+		$snake->player_id = $this->player->id;
+		$this->editSnake($snake, $this->request);
 
 		if (!$snake->save()) {
 			throw new RuntimeException('не могу создать змею');
@@ -476,34 +487,14 @@ class Game {
 			throw new NackException(NackException::ERR_NOT_MY_SNAKE, $snakeId);
 		}
 
-		foreach ($this->snakeFields as $requestName => $dbName) {
-			if (array_key_exists($requestName, $request)) {
-				$snake->$dbName = $request[$requestName];
-			}
-		}
-
-		if (isset($request['Maps'])) {
-			$maps = array();
-			foreach ($request['Maps'] as $mapFields) {
-				$map = new SnakeMap();
-				foreach ($this->mapNames as $requestName => $dbName) {
-					$map->$dbName = $mapFields[$requestName];
-				}
-				foreach ($mapFields['Lines'] as $line) {
-					$map->addLine($line['X'], $line['Y'], $line['Line']);
-				}
-				$maps[] = $map;
-			}
-
-			$snake->setMaps($maps);
-		}
+		$this->editSnake($snake, $request);
 
 		if ($snake->needsRespawn) {
 			$snake = $snake->respawn();
 		}
 
 		if (!$snake->save()) {
-			throw Util::makeValidateException($snake, 'не могу отредактировать змею');
+			throw Util::makeValidationException($snake, 'не могу отредактировать змею');
 		}
 
 		return $this->ack;
@@ -513,18 +504,16 @@ class Game {
 	protected function requestFightList() {
 		$listType = $this->request['FightListType'];
 
-		$fightList = FightList::model()->forPlayer($this->player->id)->byType($listType)
-			->with(
-				'fight', 'fight.player', 'snake_stats', 'snake_stats.snake',
-				'snake_stats.snake.player'
-			)->findAll();
+		$fightList = FightEntry::model()->forPlayer($this->player->id)->byType($listType)
+			->with('fight', 'fight.player', 'stats', 'stats.snake', 'stats.snake.player')
+			->findAll();
 
 		$list = array();
 		foreach ($fightList as $item) {
 			$fight = $item->fight;
 
 			$snakes = array(NULL, NULL, NULL, NULL);
-			foreach ($item->snake_stats as $index => $stat) {
+			foreach ($item->stats as $index => $stat) {
 				$snake = $stat->snake;
 				$snakes[$index] = array(
 					'SnakeId' => $snake->id,
@@ -566,7 +555,7 @@ class Game {
 //---------------------------------------------------------------------------
 	protected function updateFight($fight, $delayed) {
 		$fight->result = $delayed->result;
-		$fight->turns = $delayed->turns;
+		$fight->setTurns($delayed->turns);
 		$snakes = $delayed->snakes;
 
 		$stats = $fight->stats;
@@ -649,8 +638,7 @@ class Game {
 			$fight = Fight::model()->forPlayer($playerId)->full()->findByPk($fightId);
 			$this->updateFight($fight, $delayed);
 		} else {
-			$fight = Fight::model()->live()->forPlayer($playerId)->full()->findByPk($fightId);
-
+			$fight = Fight::model()->live()->full()->findByPk($fightId);
 			if (!$fight or !$fight->isListed($playerId)) {
 				throw new NackException(NackException::ERR_UNKNOWN_FIGHT, $fightId);
 			}
@@ -670,7 +658,7 @@ class Game {
 		$stats = array(NULL, NULL, NULL, NULL);
 		$snakes = $stats;
 
-		foreach ($fight->snake_stats as $index => $stat) {
+		foreach ($fight->stats as $index => $stat) {
 			$snake = $stat->snake;
 
 			$snakes[$index] = array(
@@ -684,7 +672,7 @@ class Game {
 
 			$entry = array(
 				'Status' => $stat->result,
-				'FinalLength' => (int)$length,
+				'FinalLength' => (int)$stat->length,
 			);
 
 			if ($fightType == Fight::TYPE_CHALLENGE) $entry += array(
@@ -694,19 +682,20 @@ class Game {
 
 			if ($snake->player_id == $playerId or $snake->type == Snake::TYPE_BOT) {
 				$maps = array();
-				foreach($stat->maps as $map) {
+				foreach($stat->snake->maps as $map) {
 					$maps[] = $this->makeResponseMap($map);
 				}
 
 				$entry += array(
 					'ProgramDescription' => $snake->description,
-					'Templates' => $snake->templates,
+					'Templates' => $snake->getTemplates(),
 					'Maps' => $maps,
 					'DebugData' => $stat->debug,
 				);
 
-				$stats[$index] = $entry;
 			}
+
+			$stats[$index] = $entry;
 		} // foreach stats
 
 		return array(
@@ -716,7 +705,7 @@ class Game {
 			'FightTime' => (int)$fight->time,
 			'FightResult' => $fight->result,
 			'TurnLimit' => (int)$fight->turn_limit,
-			'Turns' => $fight->turns,
+			'Turns' => $fight->getTurns(),
 			'Snakes' => $snakes,
 			'SnakeStats' => $stats,
 		);
@@ -778,6 +767,7 @@ class Game {
 
 		$delayedFight = $this->createFight($stats, Fight::TYPE_TRAIN, @$request['TurnLimit']);
 
+		$tempSnake->release();
 		return array(
 			'Response' => 'fight delayed',
 			'FightId' => $delayedFight->fight_id,
@@ -856,7 +846,7 @@ class Game {
 			$fight = $slot->fight();
 			$list[$index] = array(
 				'SlotName' => $slot->name,
-				'FightId' => $slot->fightId,
+				'FightId' => $slot->fight_id,
 				'FightType' => $fight->type,
 				'FightTime' => (int)$fight->time,
 			);

@@ -12,6 +12,10 @@ return array(
 			'clientLifetime' => 600,
 			'serverLifetime' => 365 * 86400,
 		),
+		'db' => array(
+			'tablePrefix' => '',
+			'charset' => 'UTF8',
+		),
 	),
 	'params' => array(
 		'MaxTimestampDiff' => 3 * 60,

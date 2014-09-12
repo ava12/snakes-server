@@ -3,12 +3,12 @@
 /**
  * Карта
  *
- * @property int snake_id
- * @property int index
- * @property string description
- * @property int head_x
- * @property int head_y
- * @property string lines
+ * @property int $snake_id
+ * @property int $index
+ * @property string $description
+ * @property int $head_x
+ * @property int $head_y
+ * @property string $lines
  */
 class SnakeMap extends CActiveRecord {
 
@@ -20,6 +20,11 @@ class SnakeMap extends CActiveRecord {
 //---------------------------------------------------------------------------
 	public function tableName() {
 		return '{{map}}';
+	}
+
+//---------------------------------------------------------------------------
+	public function init() {
+		$this->setAttribute('lines', str_repeat('--', 49));
 	}
 
 //---------------------------------------------------------------------------
@@ -38,12 +43,12 @@ class SnakeMap extends CActiveRecord {
 			array('index', 'numerical', 'integerOnly' => true, 'min' => 0, 'max' => 9),
 			array('description', 'length', 'max' => 1024),
 			array('head_x, head_y', 'numerical', 'integerOnly' => true, 'min' => 0, 'max' => 6),
-			array('lines', 'line'),
+			array('lines', 'validateLines'),
 		);
 	}
 
 //---------------------------------------------------------------------------
-	public function validateLine($attribute) {
+	public function validateLines($attribute) {
 		$value = $this->$attribute;
 		if (
 			!preg_match('/^(?:--|[A-DSTV-Z][0-7]){49}$/i', $value) or
@@ -63,7 +68,10 @@ class SnakeMap extends CActiveRecord {
 
 		$lines = $this->lines;
 		if (!$lines) $lines = str_repeat('-', 78);
-		$this->lines = substr($lines, 0, $offset) . $line . substr($lines, $offset + strlen($line));
+		$len = strlen($line);
+		if (substr($lines, $offset, $len) <> str_repeat('-', $len)) return false;
+
+		$this->lines = substr($lines, 0, $offset) . $line . substr($lines, $offset + $len);
 		return true;
 	}
 
@@ -77,5 +85,11 @@ class SnakeMap extends CActiveRecord {
 	}
 
 //---------------------------------------------------------------------------
+	public function copy() {
+		$map = new SnakeMap;
+		$map->setAttributes($this->getAttributes(), false);
+		return $map;
+	}
+
 //---------------------------------------------------------------------------
 }

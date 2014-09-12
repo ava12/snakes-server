@@ -6,7 +6,7 @@ class ActiveRecordCollection {
 	protected $dbConnection;
 	protected $table = '';
 	protected $defaults = array();
-	protected $columns = null;
+	protected $columns = array();
 
 //---------------------------------------------------------------------------
 	public function __construct($items, $model = NULL) {
@@ -21,6 +21,7 @@ class ActiveRecordCollection {
 
 		$this->dbConnection = $model->getDbConnection();
 		$this->table = Util::unescapeTableName($model->tableName());
+		$this->items = $items;
 	}
 
 //---------------------------------------------------------------------------
@@ -64,6 +65,8 @@ class ActiveRecordCollection {
 
 //---------------------------------------------------------------------------
 	public function getColumns() {
+		if ($this->columns) return $this->columns;
+
 		$columns = array();
 		foreach ($this->items as $item) {
 			if (is_object($item)) $item = $item->getAttributes();
@@ -71,7 +74,8 @@ class ActiveRecordCollection {
 				if (isset($value)) $columns[$name] = true;
 			}
 		}
-		return array_keys(array_intersect_key(array_flip($this->columns), $columns));
+		$this->columns = array_keys($columns);
+		return $this->columns;
 	}
 
 //---------------------------------------------------------------------------
@@ -90,7 +94,7 @@ class ActiveRecordCollection {
 		}
 
 		$db = $this->dbConnection;
-		$columns = $this->getColumns();
+		$columns = array_keys(array_flip($this->getColumns()) + $this->defaults);
 		$values = array();
 
 		foreach ($this->items as $item) {
@@ -129,19 +133,20 @@ class ActiveRecordCollection {
 
 //---------------------------------------------------------------------------
 	public function setDefaults($defaults) {
-		foreach ($defaults as $name => $value) {
-			if (!in_array($name, $this->columns)) {
-				$this->columns[] = $name;
-			}
-			$this->defaults[$name] = $value;
-		}
+		$this->defaults = $defaults + $this->defaults;
 	}
 
 //---------------------------------------------------------------------------
 	public function number($column, $base = 0) {
 		foreach ($this->items as $index => $item) {
-			$item[$column] = $index + $base;
+			if (is_array($item)) $item[$column] = $index + $base;
+			else $item->$column = $index + $base;
 		}
+	}
+
+//---------------------------------------------------------------------------
+	public function getItems() {
+		return $this->items;
 	}
 
 //---------------------------------------------------------------------------

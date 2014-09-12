@@ -89,7 +89,7 @@ class User extends CApplicationComponent implements IWebUser {
 		$db = Yii::app()->getDb();
 		$row = $db->createCommand()
 			->from($this->sessionTable)
-			->where('and', "$fieldName = '$sid'", 'expires <= NOW()')
+			->where('and', "$fieldName = '$sid'", 'expires <= ' . time())
 			->queryRow();
 		if (!$row) return NULL;
 
@@ -104,9 +104,8 @@ class User extends CApplicationComponent implements IWebUser {
 		$seconds = ($row['flags'] & self::FLAG_IS_CLIENT ? $this->clientLifetime : $this->serverLifetime);
 		$db->createCommand()
 			->update($this->sessionTable,
-				array('expires' => 'NOW() + INTERVAL :sec SECOND'),
-				"$fieldName = '$sid'", array(':sec' => $seconds));
-
+				array('expires' => time() + $seconds),
+				"$fieldName = '$sid'");
 
 		if (!$isClientSid) $this->refreshCookie();
 		return $player;
@@ -123,15 +122,16 @@ class User extends CApplicationComponent implements IWebUser {
 			'player_id' => $player->id,
 			'sequence' => $player->sequence,
 			'flags' => ($isClient ? self::FLAG_IS_CLIENT : 0),
-			'expires' => new CDbExpression('NOW() + INTERVAL ' . (int)$seconds . ' SECOND'),
+			'expires' => time() + (int)$seconds,
 			'sid' => '', 'cid' => ''
 		);
-		$sm = Yii::app()->getSecurityManager();
+//		$sm = Yii::app()->getSecurityManager();
 
 		for($retry = 5; $retry > 0; $retry++) {
 			try {
 				foreach(array('sid', 'cid') as $name) {
-					$cols[$name] = md5($cols[$name] . $sm->generateRandomBytes(16));
+//					$cols[$name] = md5($cols[$name] . $sm->generateRandomBytes(16));
+					$cols[$name] = md5($cols[$name] . microtime(true) . mt_rand());
 				}
 				$cmd->insert($this->sessionTable, $cols);
 

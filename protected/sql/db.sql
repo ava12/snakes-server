@@ -48,27 +48,26 @@ begin
 end$$
 
 DROP FUNCTION IF EXISTS `can_view_fight`$$
-CREATE FUNCTION `can_view_fight`(`@player_id` INT, `@fight_id` INT,
-    `@ordered_limit` INT, `@challenged_limit` INT)
+CREATE FUNCTION `can_view_fight`(`@player_id` INT, `@fight_id` INT)
 RETURNS INT
     READS SQL DATA
     SQL SECURITY INVOKER
 begin
- RETURN (
-  SELECT COUNT(*) FROM (
-   (SELECT `fight_id` FROM `fightlist` AS `lo`
-    WHERE `player_id` = @`player_id` AND `type` = 'ordered'
-    ORDER BY `time` DESC LIMIT 10)
-   UNION
-   (SELECT `fight_id` FROM `fightlist` AS `lc`
-    WHERE `player_id` = @`player_id` AND `type` = 'challenged'
-    ORDER BY `time` DESC LIMIT 10)
-   UNION
-   (SELECT `fight_id` FROM `fightslot` AS `fs`
-	 WHERE `player_id` = @`player_id` AND `fight_id` = @`fight_id`)
-  ) AS `total`
-	WHERE `fight_id` = @`fight_id`
- );
+ SELECT COUNT(*) FROM (
+  (SELECT `fight_id` FROM `fightlist` AS `lo`
+   WHERE `player_id` = `@player_id` AND `type` = 'ordered'
+   ORDER BY `time` DESC LIMIT 10)
+  UNION
+  (SELECT `fight_id` FROM `fightlist` AS `lc`
+   WHERE `player_id` = `@player_id` AND `type` = 'challenged'
+   ORDER BY `time` DESC LIMIT 10)
+  UNION
+  (SELECT `fight_id` FROM `fightslot` AS `fs`
+  WHERE `player_id` = `@player_id` AND `fight_id` = `@fight_id`)
+ ) AS `total`
+ WHERE `fight_id` = `@fight_id`
+ INTO @`result`;
+ RETURN @`result`;
 end$$
 
 DELIMITER ;
@@ -82,7 +81,7 @@ DELIMITER ;
 DROP TABLE IF EXISTS `delayedfight`;
 CREATE TABLE `delayedfight` (
   `fight_id` int(11) NOT NULL,
-  `delay_till` timestamp NOT NULL,
+  `delay_till` int NOT NULL,
   `state` text CHARACTER SET ascii COLLATE ascii_bin,
   PRIMARY KEY (`fight_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -111,7 +110,7 @@ CREATE TABLE `fight` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `refs` int(11) NOT NULL DEFAULT '1',
   `type` enum('train', 'challenge') NOT NULL,
-  `time` timestamp NULL DEFAULT NULL,
+  `time` int NULL DEFAULT NULL,
   `player_id` int(11) NOT NULL,
   `turn_limit` smallint(6) NOT NULL,
   `turn_count` smallint(6) NOT NULL,
@@ -131,7 +130,7 @@ DROP TABLE IF EXISTS `fightlist`;
 CREATE TABLE `fightlist` (
   `type` enum('ordered', 'challenged') NOT NULL,
   `player_id` int(11) NOT NULL,
-  `time` timestamp NOT NULL,
+  `time` int NOT NULL,
   `fight_id` int(11) NOT NULL,
   PRIMARY KEY (`type`, `player_id`, `time`, `fight_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
@@ -296,7 +295,7 @@ CREATE TABLE `session` (
   `flags` tinyint(1) NOT NULL,
   `player_id` int(11) NOT NULL,
   `sequence` int(11) NOT NULL,
-  `expires` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `expires` int NOT NULL,
   UNIQUE KEY `sid_k` (`sid`),
   UNIQUE KEY `cid_k` (`cid`),
   KEY `expires_k` (`expires`)
@@ -416,20 +415,6 @@ DELIMITER ;
 --
 ALTER TABLE `map`
   ADD CONSTRAINT `map_ibfk_1` FOREIGN KEY (`snake_id`) REFERENCES `snake` (`id`) ON DELETE CASCADE;
-
---
--- Ограничения внешнего ключа таблицы `player`
---
-ALTER TABLE `player`
-  ADD CONSTRAINT `player_ibfk_1` FOREIGN KEY (`delayed_id`) REFERENCES `fight` (`id`),
-  ADD CONSTRAINT `player_ibfk_2` FOREIGN KEY (`viewed_id`) REFERENCES `fight` (`id`);
-
---
--- Ограничения внешнего ключа таблицы `snake`
---
-ALTER TABLE `snake`
-  ADD CONSTRAINT `snake_ibfk_1` FOREIGN KEY (`player_id`) REFERENCES `player` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `snake_ibfk_2` FOREIGN KEY (`skin_id`) REFERENCES `skin` (`id`);
 
 --
 -- Ограничения внешнего ключа таблицы `snakestat`

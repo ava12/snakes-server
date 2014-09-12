@@ -23,6 +23,7 @@ class NackException extends RuntimeException {
 	const ERR_HAS_DELAYED = 17;
 	const ERR_NO_FOES = 18;
 	const ERR_INVALID_INPUT = 19;
+	const ERR_INVALID_MAP_LINE = 20;
 
 
 	protected static $messages = array(
@@ -40,7 +41,7 @@ class NackException extends RuntimeException {
 		'неизвестный идентификатор боя: "%s"',
 		'игрок с идентификатором "%s" не участвует в рейтинге',
 
-		'некорректный формат поля [%1$s]: "%2$s"',
+		'некорректный формат поля [%1$s]: (%3$s)"%2$s"',
 		'невозможно удалить бойца "%s" или сменить его тип',
 		'некорректная окраска (%1$s) змеи "%2$s"',
 		'невозможно назначить бойцом бота "%s"',
@@ -50,6 +51,8 @@ class NackException extends RuntimeException {
 		'имеется незавершенный бой: "%s"',
 		'в бою должны участвовать не менее двух змей',
 		'некорректные данные: %s',
+
+		'некорректная линия %2$d (%3$s) для карты %1$d',
 	);
 
 

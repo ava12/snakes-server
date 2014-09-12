@@ -40,7 +40,17 @@ class Player extends CActiveRecord {
 //---------------------------------------------------------------------------
 	public function scopes() {
 		return array(
-			'hasRating' => 'rating IS NOT NULL',
+			'hasRating' => array('condition' => 'rating IS NOT NULL'),
+		);
+	}
+
+//---------------------------------------------------------------------------
+	public function rules() {
+		return array(
+			array('login, name, hash, salt', 'safe', 'on' => 'insert'),
+			array('name, rating, fighter_id, delayed_id, viewed_id', 'safe', 'on' => 'insert'),
+			array('login, name, hash, salt', 'required', 'on' => 'insert'),
+			array('login', 'unique'),
 		);
 	}
 
