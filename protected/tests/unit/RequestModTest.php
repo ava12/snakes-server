@@ -120,8 +120,9 @@ final class RequestModTest extends RequestTestBase {
 			'Request' => 'fight train',
 			'TurnLimit' => 1,
 			'SnakeIds' => array('3', '4'),
+			'Sid' => '1',
 		);
-		$game = new Game($request);
+		$game = new Game($request, true);
 		$response = $game->setPlayer(4)->run();
 		$this->assertEquals('fight delayed', $response['Response']);
 		$fightId = $response['FightId'];
@@ -132,8 +133,8 @@ final class RequestModTest extends RequestTestBase {
 	 * @depends testFightTrain
 	 */
 	public function testFightDelayed($fightId) {
-		$request = array('Request' => 'fight info', 'FightId' => $fightId);
-		$game = new Game($request);
+		$request = array('Request' => 'fight info', 'FightId' => $fightId, 'Sid' => '1');
+		$game = new Game($request, true);
 		$response = $game->setPlayer(4)->run();
 		//$response['Turns'][0] &= 0x3fc0;
 		$response['FightTime'] = 0;
@@ -163,7 +164,13 @@ final class RequestModTest extends RequestTestBase {
 			),
 		);
 
-		Util::compareArrays($expected, $response);
+		try {
+			Util::compareArrays($expected, $response);
+		} catch (Exception $e) {
+			var_dump($response);
+			throw $e;
+		}
+
 		return $fightId;
 	}
 
@@ -171,7 +178,7 @@ final class RequestModTest extends RequestTestBase {
 	 * @depends testFightDelayed
 	 */
 	public function testFightList($fightId) {
-		$request = array('Request' => 'fight list', 'FightListType' => 'ordered');
+		$request = array('Request' => 'fight list', 'FightListType' => 'ordered', 'Sid' => '1');
 		$expected = array(
 			'Response' => 'fight list',
 			'FightListType' => 'ordered',
@@ -190,7 +197,7 @@ final class RequestModTest extends RequestTestBase {
 				),
 			)),
 		);
-		$game = new Game($Request);
+		$game = new Game($request, true);
 		$response = $game->setPlayer(4)->run();
 		$response['FightList'][0]['FightTime'] = 0;
 		Util::compareArrays($expected, $response);

@@ -64,10 +64,9 @@ class SnakeMap extends CActiveRecord {
 		if (!preg_match('/^(?:--|[A-DSTV-Z][0-7])+$/i', $line)) return false;
 
 		$offset = ($y * 7 + $x) << 1;
-		if ($offset + strlen($line) > 78) return false;
+		if ($offset + strlen($line) > 98) return false;
 
 		$lines = $this->lines;
-		if (!$lines) $lines = str_repeat('-', 78);
 		$len = strlen($line);
 		if (substr($lines, $offset, $len) <> str_repeat('-', $len)) return false;
 

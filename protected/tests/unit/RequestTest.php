@@ -46,7 +46,7 @@ final class RequestTest extends RequestTestBase {
 				),
 			),
 		);
-		self::checkInvalidRequest($request, NackException::ERR_INVALID_MAP_LINE);
+		self::checkInvalidRequest($request, NackException::ERR_INVALID_MAP);
 	}
 
 	public function testInvalidMapLine() {

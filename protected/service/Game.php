@@ -727,7 +727,7 @@ class Game {
 
 			$fight->player_id = $this->player->id;
 			$fight->type = $type;
-			$fight->stats = $stats;
+			$fight->setStats($snakes);
 			if ($turnLimit) $fight->turn_limit = $turnLimit;
 			if (!$fight->save()) {
 				throw new RuntimeException('не могу создать бой');
@@ -780,7 +780,7 @@ class Game {
 		$snakeIds = $request['SnakeIds'];
 		$turnLimit = @$request['TurnLimit'];
 
-		$delayedFight = $this->createFight($stats, Fight::TYPE_TRAIN, @$request['TurnLimit']);
+		$delayedFight = $this->createFight($snakeIds, Fight::TYPE_TRAIN, @$request['TurnLimit']);
 
 		return array(
 			'Response' => 'fight delayed',

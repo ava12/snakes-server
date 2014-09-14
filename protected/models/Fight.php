@@ -116,7 +116,7 @@ class Fight extends CActiveRecord {
 	}
 
 //---------------------------------------------------------------------------
-	protected function onAfterInsert() {
+	protected function afterInsert() {
 		if (!$this->newStats) {
 			throw new RuntimeException('требуется хотя бы одна змея');
 		}

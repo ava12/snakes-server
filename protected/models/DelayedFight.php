@@ -66,14 +66,14 @@ class DelayedFight extends CActiveRecord {
 	}
 
 //---------------------------------------------------------------------------
-	public function onBeforeSave() {
+	protected function beforeSave() {
 		$this->delay_till = 0;
 		$this->fold();
 		return true;
 	}
 
 //---------------------------------------------------------------------------
-	public function onAfterSave() {
+	protected function afterSave() {
 		$this->unlock();
 	}
 
@@ -82,7 +82,7 @@ class DelayedFight extends CActiveRecord {
 //---------------------------------------------------------------------------
 	public function free() {
 		$this->getDbCriteria()->mergeWith(array(
-			'condition' => 't.delay_till < NOW()',
+			'condition' => 't.delay_till < ' . time(),
 		));
 		return $this;
 	}
@@ -91,13 +91,14 @@ class DelayedFight extends CActiveRecord {
 	protected function lock($timeout) {
 		if ($this->isLocked) return true;
 
+		$time = time();
 		$timeout += 20;
 		$table = Util::unescapeTableName($this->tableName());
 		$sql = 'UPDATE ' . $table .
-			' SET delay_till = DATE_ADD(INTERVAL NOW() PLUS :timeout SECOND)' .
-			' WHERE fight_id = :id AND delay_till < NOW()';
+			' SET delay_till = ' . ($time + $timeout) .
+			' WHERE fight_id = :id AND delay_till < ' . $time;
 		$this->isLocked = (bool)$this->getDbConnection()->createCommand($sql)
-			->exec(array(':id' => $this->fight_id, ':timeout' => $timeout));
+			->execute(array(':id' => $this->fight_id));
 
 		return $this->isLocked;
 	}
@@ -109,9 +110,9 @@ class DelayedFight extends CActiveRecord {
 		$table = Util::unescapeTableName($this->tableName());
 		$sql = 'UPDATE ' . $table .
 			' SET delay_till = 0' .
-			' WHERE fight_id = :id AND delay_till > NOW()';
+			' WHERE fight_id = :id AND delay_till >= ' . time();
 		$result = (bool)$this->getDbConnection()->createCommand($sql)
-			->exec(array(':id' => $this->fight_id));
+			->execute(array(':id' => $this->fight_id));
 
 		$this->isLocked = false;
 		return $result;
@@ -143,7 +144,7 @@ class DelayedFight extends CActiveRecord {
 		if ($this->isNewRecord) $this->prepare();
 		else $this->unfold();
 
-		$turnLimit = $this->fight->turnLimit;
+		$turnLimit = $this->fight->turn_limit;
 		$finishTime = time() + $timeout;
 		$batchCnt = self::BATCH_CNT;
 

@@ -9,4 +9,7 @@ if (function_exists('iconv')) {
 	}
 }
 Yii::$enableIncludePath = false;
+
 error_reporting(-1);
+
+date_default_timezone_set(@date_default_timezone_get());

@@ -54,7 +54,8 @@ class Snake extends ActiveRecord {
 			array('skin_id', 'exists', 'className' => 'SnakeSkin', 'attributeName' => 'id'),
 			array('name', 'length', 'min' => 1, 'max' => 40),
 			array('name', 'unique', 'criteria' => array(
-				'condition' => 'player_id = :pid', 'params' => array(':pid' => $this->player_id)
+				'condition' => 'player_id = :pid AND current AND base_id <> :baseId',
+				'params' => array(':pid' => $this->player_id, ':baseId' => (int)$this->base_id)
 			)),
 			array('type', 'in', 'range' => array(self::TYPE_BOT, self::TYPE_NORMAL)),
 			array('description', 'length', 'min' => 0, 'max' => 1024),
@@ -174,6 +175,7 @@ class Snake extends ActiveRecord {
 		unset($attr['id']);
 		unset($attr['refs']);
 		$snake->setAttributes($attr, false);
+		$snake->typeChanged = $this->typeChanged;
 
 		$sourceMaps = ($this->newMaps ? $this->newMaps : $this->maps);
 		$maps = array();
@@ -238,8 +240,10 @@ class Snake extends ActiveRecord {
 
 					$name = key($errors);
 					$message = $errors[$name][0];
-					throw new RuntimeException("не могу сохранить карту $index - $name: $message");
+					throw new NackException(NackException::ERR_INVALID_MAP, array($index, $message));
 				}
+
+				throw new RuntimeException('не могу сохранить карты');
 			}
 
 			if (!$this->base_id) {
