@@ -44,9 +44,9 @@ class SnakeStat extends CActiveRecord {
 	}
 
 //---------------------------------------------------------------------------
-	public function setFightSnake($fightId, $snakeId, $index) {
-		$this->fight_id = (is_object($fightId) ? $fightId->id : $fightId);
-		$this->snake_id = (is_object($snakeId) ? $snakeId->id : $snakeId);
+	public function setFightSnake($fight, $snake, $index) {
+		$this->fight_id = (is_object($fight) ? $fight->id : $fight);
+		$this->snake_id = (is_object($snake) ? $snake->id : $snake);
 		$this->index = $index;
 		$this->length = 10;
 	}

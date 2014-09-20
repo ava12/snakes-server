@@ -505,7 +505,7 @@ class Game {
 		$listType = $this->request['FightListType'];
 
 		$fightList = FightEntry::model()->forPlayer($this->player->id)->byType($listType)
-			->with('fight', 'fight.player', 'stats', 'stats.snake', 'stats.snake.player')
+			->with('fight', 'fight.player', 'fight.stats', 'fight.stats.snake', 'fight.stats.snake.player')
 			->findAll();
 
 		$list = array();
@@ -513,10 +513,10 @@ class Game {
 			$fight = $item->fight;
 
 			$snakes = array(NULL, NULL, NULL, NULL);
-			foreach ($item->stats as $index => $stat) {
+			foreach ($item->fight->stats as $index => $stat) {
 				$snake = $stat->snake;
 				$snakes[$index] = array(
-					'SnakeId' => $snake->id,
+					'SnakeId' => $snake->base_id,
 					'SnakeName' => $snake->name,
 					'SnakeType' => $snake->type,
 					'SkinId' => (int)$snake->skin_id,
@@ -564,7 +564,7 @@ class Game {
 			$snake = $snakes[$index];
 			$stat->result = $snake['Result'];
 			$stat->length = count($snake['Coords']);
-			$stat->debug = $snake['Debug'];
+			$stat->debug = implode('', $snake['Debug']);
 		}
 
 		$isChallenge = ($fight->type == Fight::TYPE_CHALLENGE);
@@ -575,7 +575,7 @@ class Game {
 
 		$player = $this->player;
 
-		$transaction = $this->getDbConnection()->beginTransaction();
+		$transaction = Yii::app()->db->beginTransaction();
 
 		try {
 			if (!$fight->save()) {
@@ -588,13 +588,13 @@ class Game {
 
 			if ($isChallenge) {
 				$ids = array();
-				for ($index = 1; $index < 4; $index++) {
+				for ($index = 0; $index < 3; $index++) {
 					$ids[] = $stats[$index]->snake->player_id;
 				}
 				$entry->addFight($fightId, FightEntry::TYPE_CHALLENGED, $ids);
 			}
 
-			$player->fight_id = NULL;
+			$player->delayed_id = NULL;
 			$player->save();
 
 			DelayedFight::model()->deleteByPk($fight->id);
@@ -662,7 +662,7 @@ class Game {
 			$snake = $stat->snake;
 
 			$snakes[$index] = array(
-				'SnakeId' => $snake->id,
+				'SnakeId' => $snake->base_id,
 				'SnakeName' => $snake->name,
 				'SnakeType' => $snake->type,
 				'SkinId' => (int)$snake->skin_id,
@@ -765,7 +765,7 @@ class Game {
 		$stats = $request['OtherSnakeIds'];
 		array_unshift($stats, $tempSnake);
 
-		$delayedFight = $this->createFight($stats, Fight::TYPE_TRAIN, @$request['TurnLimit']);
+		$delayedFight = $this->createFight($stats, Fight::TYPE_TRAIN, $request['TurnLimit']);
 
 		$tempSnake->release();
 		return array(
@@ -778,7 +778,7 @@ class Game {
 	protected function requestFightTrain() {
 		$request = $this->request;
 		$snakeIds = $request['SnakeIds'];
-		$turnLimit = @$request['TurnLimit'];
+		$turnLimit = $request['TurnLimit'];
 
 		$delayedFight = $this->createFight($snakeIds, Fight::TYPE_TRAIN, @$request['TurnLimit']);
 

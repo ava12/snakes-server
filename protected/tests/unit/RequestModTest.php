@@ -119,7 +119,7 @@ final class RequestModTest extends RequestTestBase {
 		$request = array(
 			'Request' => 'fight train',
 			'TurnLimit' => 1,
-			'SnakeIds' => array('3', '4'),
+			'SnakeIds' => array('', '3', '', '4'),
 			'Sid' => '1',
 		);
 		$game = new Game($request, true);
@@ -135,9 +135,11 @@ final class RequestModTest extends RequestTestBase {
 	public function testFightDelayed($fightId) {
 		$request = array('Request' => 'fight info', 'FightId' => $fightId, 'Sid' => '1');
 		$game = new Game($request, true);
+
 		$response = $game->setPlayer(4)->run();
-		//$response['Turns'][0] &= 0x3fc0;
+		$response['Turns'][0] &= 0x3fc0;
 		$response['FightTime'] = 0;
+
 		$expected = array(
 			'Response' => 'fight info',
 			'FightId' => $fightId,
@@ -145,22 +147,24 @@ final class RequestModTest extends RequestTestBase {
 			'FightTime' => 0,
 			'FightResult' => 'limit',
 			'TurnLimit' => 1,
-			'Turns' => array(0x2a4),
+			'Turns' => array(0x2200),
 			'Snakes' => array(
+				NULL,
 				array('SnakeId' => '3', 'SnakeName' => 'sn3', 'SnakeType' => 'N',
 					'SkinId' => 1, 'PlayerId' => '3', 'PlayerName' => 'ch3'),
+				NULL,
 				array('SnakeId' => '4', 'SnakeName' => 'sn4', 'SnakeType' => 'N',
 					'SkinId' => 1, 'PlayerId' => '4', 'PlayerName' => 'ch4'),
-				NULL, NULL
 			),
 			'SnakeStats' => array(
+				NULL,
 				array('Status' => 'free', 'FinalLength' => 10),
+				NULL,
 				array('Status' => 'free', 'FinalLength' => 10, 'ProgramDescription' => '',
 					'Templates' => array('S', 'S', 'S', 'S'), 'Maps' => array(
 						array('Description' => '', 'HeadX' => 3, 'HeadY' => 3, 'Lines' => array(
 							array('X' => 3, 'Y' => 4, 'Line' => 'S0'))),
-					), 'DebugData' => chr(41)),
-				NULL, NULL
+					), 'DebugData' => chr(32 + 0xB)),
 			),
 		);
 
@@ -189,11 +193,12 @@ final class RequestModTest extends RequestTestBase {
 				'PlayerId' => '4',
 				'PlayerName' => 'ch4',
 				'Snakes' => array(
+					NULL,
 					array('SnakeId' => '3', 'SnakeName' => 'sn3', 'SnakeType' => 'N',
 						'SkinId' => 1, 'PlayerId' => '3', 'PlayerName' => 'ch3'),
+					NULL,
 					array('SnakeId' => '4', 'SnakeName' => 'sn4', 'SnakeType' => 'N',
 						'SkinId' => 1, 'PlayerId' => '4', 'PlayerName' => 'ch4'),
-					NULL, NULL,
 				),
 			)),
 		);

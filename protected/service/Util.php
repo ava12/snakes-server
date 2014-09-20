@@ -54,7 +54,9 @@ final class Util {
 				if ($v !== $got[$k]) {
 					$te = gettype($v);
 					$tg = gettype($got[$k]);
-					$message = "вместо {$path}{$k}=($te)\"$v\" получено ($tg)\"$got[$k]\"";
+					$gotString = $got[$k];
+					if (is_array($gotString)) $gotString = implode(', ', $gotString);
+					$message = "вместо {$path}{$k}=($te)\"$v\" получено ($tg)\"$gotString\"";
 					throw new RuntimeException($message);
 				}
 			}

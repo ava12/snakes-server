@@ -35,8 +35,6 @@ class FightEntry extends CActiveRecord {
 		return array(
 			'player' => array(self::BELONGS_TO, 'Player', 'player_id'),
 			'fight' => array(self::BELONGS_TO, 'Fight', 'fight_id'),
-			'stats' => array(self::HAS_MANY, 'SnakeStat', 'fight_id',
-				'order' => 'stats.index', 'index' => 'index'),
 		);
 	}
 

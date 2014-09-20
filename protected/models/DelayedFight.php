@@ -53,7 +53,7 @@ class DelayedFight extends CActiveRecord {
 		return array(
 			'fight' => array(self::BELONGS_TO, 'Fight', 'fight_id'),
 			'stats' => array(self::HAS_MANY, 'SnakeStat', 'fight_id',
-				'order' => 'stats.index', 'index' => 'stats.index'),
+				'order' => 'stats.index', 'index' => 'index'),
 		);
 	}
 
@@ -67,6 +67,7 @@ class DelayedFight extends CActiveRecord {
 
 //---------------------------------------------------------------------------
 	protected function beforeSave() {
+		if (!$this->field) $this->prepare();
 		$this->delay_till = 0;
 		$this->fold();
 		return true;
@@ -78,7 +79,10 @@ class DelayedFight extends CActiveRecord {
 	}
 
 //---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
+	protected function afterFind() {
+		$this->unfold();
+	}
+
 //---------------------------------------------------------------------------
 	public function free() {
 		$this->getDbCriteria()->mergeWith(array(
@@ -127,6 +131,7 @@ class DelayedFight extends CActiveRecord {
 
 //---------------------------------------------------------------------------
 	protected function fold() {
+		if (!$this->field) $this->prepare();
 		$state = array_flip(array('result', 'field', 'snakes', 'turns', 'isSolitaire'));
 		foreach ($state as $name => &$p) {
 			$p = $this->$name;
@@ -141,14 +146,12 @@ class DelayedFight extends CActiveRecord {
 		if (!$timeout) $timeout = static::DEFAULT_TIMEOUT;
 		if (!$this->lock($timeout)) return '';
 
-		if ($this->isNewRecord) $this->prepare();
-		else $this->unfold();
-
+		if (!$this->field) $this->prepare();
 		$turnLimit = $this->fight->turn_limit;
 		$finishTime = time() + $timeout;
 		$batchCnt = self::BATCH_CNT;
 
-		for ($turn = 1; $turn < $turnLimit; $turn++) {
+		for ($turn = count($this->turns); $turn < $turnLimit; $turn++) {
 			if (!$this->processTurn()) break;
 
 			$batchCnt--;
@@ -158,13 +161,16 @@ class DelayedFight extends CActiveRecord {
 			}
 		}
 
+		if ($turn >= $turnLimit) $this->result = Fight::RESULT_LIMIT;
+
 		return $this->result;
 	}
 
 //---------------------------------------------------------------------------
 	protected function prepare() {
-		$this->field - array_fill(0, 25, array_fill(0, 25, self::FREE_CELL));
+		$this->field = array_fill(0, 25, array_fill(0, 25, self::FREE_CELL));
 		$this->turns = array();
+		$this->fight_id = $this->fight->id;
 
 		$snakes = array(NULL, NULL, NULL, NULL);
 		foreach ($this->fight->stats as $index => $stat) {
@@ -178,7 +184,7 @@ class DelayedFight extends CActiveRecord {
 			$this->field[$coords[9][1]][$coords[9][0]] = self::TAIL_CELL << $index;
 
 			$snakes[$index] = array(
-				'SnakeId' => $stat->snake->id, 'PlayerId' => $stat->snake->player_id,
+				'SnakeId' => $stat->snake->base_id, 'PlayerId' => $stat->snake->player_id,
 				'Dir' => $index, 'Coords' => $coords, 'Result' => '', 'Debug' => array(),
 				'Maps' => $this->prepareMapVariants($stat->snake, $index),
 			);
@@ -249,8 +255,8 @@ class DelayedFight extends CActiveRecord {
 //---------------------------------------------------------------------------
 	protected function makeMapVariants($map, $templates, $index) {
 		$result = array_fill(0, 8, NULL);
-		$baseMasks = $this->fillMapVariant($map.lines, $templates);
-		$headCoords = array($map.head_x, $map.head_y);
+		$baseMasks = $this->fillMapVariant($map->lines, $templates);
+		$headCoords = array($map->head_x, $map->head_y);
 		$result[0] = array($headCoords[0], $headCoords[1], array_chunk($baseMasks, 7));
 
 		// [индекс_X_головы, множитель_X, смещение_X,
@@ -278,7 +284,7 @@ class DelayedFight extends CActiveRecord {
 
 			for ($y = 0; $y < 7; $y++) {
 				$pos = $lineIndex;
-				$lineIndex += dy;
+				$lineIndex += $dy;
 				for ($x = 0; $x < 7; $x++) {
 					$masks[$j] = $baseMasks[$pos];
 					$j++;
@@ -351,7 +357,7 @@ class DelayedFight extends CActiveRecord {
 		$snake = &$this->snakes[$snakeIndex];
 		if (!$snake or count($snake['Coords']) < 2) return 0;
 
-		$headx = $snake['Coords'][0][0];
+		$headX = $snake['Coords'][0][0];
 		$headY = $snake['Coords'][0][1];
 		$dir = ($snake['Dir'] - 1) & 3;
 		$allowedDirs = array();

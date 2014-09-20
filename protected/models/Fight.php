@@ -21,7 +21,7 @@ class Fight extends CActiveRecord {
 	const RESULT_NONE = '';
 	const RESULT_LIMIT = 'limit';
 	const RESULT_EATEN = 'eaten';
-	const RESULT_BLOCK = 'blocked';
+	const RESULT_BLOCKED = 'blocked';
 
 	const DEFAULT_TURN_LIMIT = 1000;
 	const MAX_TURN_LIMIT = 1000;
@@ -116,12 +116,15 @@ class Fight extends CActiveRecord {
 	}
 
 //---------------------------------------------------------------------------
-	protected function afterInsert() {
+	protected function afterSave() {
+		if (!$this->getIsNewRecord()) return;
+
 		if (!$this->newStats) {
 			throw new RuntimeException('требуется хотя бы одна змея');
 		}
 
 		$collection = new ActiveRecordCollection($this->newStats);
+		$collection->setDefaults(array('fight_id' => $this->id));
 		if (!$collection->save()) {
 			throw new RuntimeException('не могу сохранить змей');
 		}

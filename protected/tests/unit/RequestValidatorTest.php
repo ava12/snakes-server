@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @group validate
+ * @group validator
  * @group nodb
  */
 final class RequestValidatorTest extends CTestCase {
@@ -78,26 +78,26 @@ final class RequestValidatorTest extends CTestCase {
 	/**
 	 * Генерирует запросы, в каждом из которых отсутствует одно из необходимых полей, и проверяет реакцию валидатора.
 	 *
-	 * @param array $Fields запрос, содержащий все необходимые поля, {имя => корректное_значение}
+	 * @param array $fields запрос, содержащий все необходимые поля, {имя => корректное_значение}
 	 */
-	private function CheckRequiredFieldValidation($Fields) {
-		$Type = $Fields['Request'];
-		foreach($Fields as $Name => $v) {
-			if($Name == 'Request') continue;
+	private function CheckRequiredFieldValidation($fields) {
+		$type = $fields['Request'];
+		foreach($fields as $name => $v) {
+			if($name == 'Request') continue;
 
-			$Request = $Fields;
-			unset($Request[$Name]);
+			$request = $fields;
+			unset($request[$name]);
 
-			$Flag = false;
+			$flag = false;
 			try {
-				RequestValidator::validate($Request);
+				RequestValidator::validate($request);
 			}
 			catch(NackException $e) {
-				$Flag = true;
+				$flag = true;
 				$this->assertEquals(NackException::ERR_MISSING_FIELD, $e->getCode(), $e->getMessage());
 			}
-			$Message = ' ! допущен запрос "' . $Type . '" с отсутствующим полем "' . $Name . '"';
-			$this->assertTrue($Flag, $Message);
+			$message = ' ! допущен запрос "' . $type . '" с отсутствующим полем "' . $name . '"';
+			$this->assertTrue($flag, $message);
 		}
 	}
 
@@ -105,25 +105,25 @@ final class RequestValidatorTest extends CTestCase {
 	/**
 	 * Генерирует запросы с альтернативными корректными значениями полей и проверяет реакцию валидатора.
 	 *
-	 * @param array $Fields корректные поля запроса {имя => значение}
-	 * @param array $Valid альтернативные корректные значения полей [[путь, значение]*]
+	 * @param array $fields корректные поля запроса {имя => значение}
+	 * @param array $valid альтернативные корректные значения полей [[путь, значение]*]
 	 */
-	private function CheckValidFieldValidation($Fields, $Valid) {
-		$Type = $Fields['Request'];
-		foreach($Valid as $Entry) {
-			$Request = $Fields;
-			$p = &$Request;
-			foreach(explode('.', $Entry[0]) as $n) {
+	private function CheckValidFieldValidation($fields, $valid) {
+		$type = $fields['Request'];
+		foreach($valid as $entry) {
+			$request = $fields;
+			$p = &$request;
+			foreach(explode('.', $entry[0]) as $n) {
 				$p = &$p[$n];
 			}
-			$p = $Entry[1];
+			$p = $entry[1];
 
 			try {
-				RequestValidator::validate($Request);
+				RequestValidator::validate($request);
 			}
 			catch(NackException $e) {
-				$Message = ' ! запрос "' . $Type . '": отвергнуто корректное поле : ' . $e->getMessage();
-				$this->fail($Message);
+				$message = ' ! запрос "' . $type . '": отвергнуто корректное поле : ' . $e->getMessage();
+				$this->fail($message);
 			}
 		}
 	}
@@ -132,38 +132,49 @@ final class RequestValidatorTest extends CTestCase {
 	/**
 	 * Генерирует запросы, в каждом из которых одно из полей имеет некорректный формат, и проверяет реакцию валидатора.
 	 *
-	 * @param array $Fields корректные поля запроса {имя => значение}
-	 * @param array $Invalid список некорректных значений, [[путь, значение, ожидаемый _код?, путь.к.некорректному.полю?]*]
-	 * @param int $DefaultCode ожидаемый по умолчанию код исключения, NackException::ERR_*
+	 * @param array $fields корректные поля запроса {имя => значение}
+	 * @param array $invalid список некорректных значений, [[путь, значение, ожидаемый _код?, путь.к.некорректному.полю?]*]
+	 * @param int $defaultCode ожидаемый по умолчанию код исключения, NackException::ERR_*
 	 */
-	private function CheckInvalidFieldValidation($Fields, $Invalid, $DefaultCode) {
-		$Type = $Fields['Request'];
-		foreach($Invalid as $Entry) {
-			$Request = $Fields;
-			$p = &$Request;
-			foreach(explode('.', $Entry[0]) as $n) {
+	private function CheckInvalidFieldValidation($fields, $invalid, $defaultCode) {
+		$type = $fields['Request'];
+		foreach($invalid as $entry) {
+			$request = $fields;
+			$p = &$request;
+			foreach(explode('.', $entry[0]) as $n) {
 				$p = &$p[$n];
 			}
-			$p = $Entry[1];
-			$Path = (isset($Entry[3]) ? $Entry[3] : $Entry[0]);
+			$p = $entry[1];
+			$path = (isset($entry[3]) ? $entry[3] : $entry[0]);
 
-			$Flag = false;
-			$Code = (isset($Entry[2]) ? $Entry[2] : $DefaultCode);
+			$flag = false;
+			$code = (isset($entry[2]) ? $entry[2] : $defaultCode);
 
 			try {
-				RequestValidator::validate($Request);
+				RequestValidator::validate($request);
 			}
 			catch(NackException $e) {
-				$Flag = true;
-				$Msg = $e->getMessage();
-				$this->assertEquals($Code, $e->getCode(), $Msg);
-				preg_match('/[A-Za-z]+(?:\\.[A-Za-z]+)*/', $Msg, $Matches);
-				if($Matches[0] <> $Path) {
-					$Message = ' ! запрос "' . $Type . '": выдано некорректное поле "' . $Matches[0] . '" вместо "' . $Path . '"';
+				$flag = true;
+				$msg = $e->getMessage();
+				$this->assertEquals($code, $e->getCode(), $msg);
+				preg_match('/[A-Za-z]+(?:\\.[A-Za-z]+)*/', $msg, $matches);
+				if($matches[0] <> $path) {
+					$message = ' ! запрос "' . $type . '": выдано некорректное поле "' . $matches[0] . '" вместо "' . $path . '"';
 				}
 			}
-			$Message = ' ! допущен запрос "' . $Type . '" с некорректным полем "' . $Path . '" = ' . $Entry[1];
-			$this->assertTrue($Flag, $Message);
+			$value = $entry[1];
+			if (is_array($value)) {
+				foreach ($value as &$p) {
+					if (is_array($p)) {
+						$value = array('array[' . count($value) . ']');
+						break;
+					}
+				}
+
+				$value = implode(', ', $value);
+			}
+			$message = ' ! допущен запрос "' . $type . '" с некорректным полем "' . $path . '" = "' . $value . '"';
+			$this->assertTrue($flag, $message);
 		}
 	}
 
@@ -171,27 +182,27 @@ final class RequestValidatorTest extends CTestCase {
 	/**
 	 * Генерирует корректные и некорректные запросы и проверяет реакцию валидатора.
 	 *
-	 * @param string $Type тип запроса (поле Request)
-	 * @param array $Fields полный набор полей корректного запроса (кроме Request и Sid), {имя => корректное_значение}
-	 * @param array $Required список обязательных полей (кроме Request), [имя_поля*]
-	 * @param array $Valid список альтернативных корректных значений, [[путь, значение]*]
-	 * @param array $Invalid список возможных некорректных значений, [[путь, значение, ожидаемый_код?, путь.к.некорректному.полю?]*]
-	 * @param array $Unknown список недопустимых полей запроса, [[путь, значение, путь.к.некорректному.полю?]*]
+	 * @param string $type тип запроса (поле Request)
+	 * @param array $fields полный набор полей корректного запроса (кроме Request и Sid), {имя => корректное_значение}
+	 * @param array $required список обязательных полей (кроме Request), [имя_поля*]
+	 * @param array $valid список альтернативных корректных значений, [[путь, значение]*]
+	 * @param array $invalid список возможных некорректных значений, [[путь, значение, ожидаемый_код?, путь.к.некорректному.полю?]*]
+	 * @param array $unknown список недопустимых полей запроса, [[путь, значение, путь.к.некорректному.полю?]*]
 	 */
-	private function CheckRequestValidation($Type, $Fields, $Required, $Valid = array(), $Invalid = array(), $Unknown = array()) {
-		if(in_array('Sid', $Required)) $Fields['Sid'] = '1';
+	private function CheckRequestValidation($type, $fields, $required, $valid = array(), $invalid = array(), $unknown = array()) {
+		if(in_array('Sid', $required)) $fields['Sid'] = '1';
 
-		if(!$Required) $RequiredFields = array();
+		if(!$required) $requiredFields = array();
 		else {
-			$RequiredFields = array_intersect_key($Fields, array_combine($Required, $Required));
+			$requiredFields = array_intersect_key($fields, array_combine($required, $required));
 		}
-		$Fields['Request'] = $Type;
-		$RequiredFields['Request'] = $Type;
+		$fields['Request'] = $type;
+		$requiredFields['Request'] = $type;
 
 
 		// все требуемые поля присутствуют
 		try {
-			RequestValidator::validate($RequiredFields);
+			RequestValidator::validate($requiredFields);
 		}
 		catch(NackException $e) {
 			$this->fail($e->getMessage());
@@ -199,42 +210,42 @@ final class RequestValidatorTest extends CTestCase {
 
 		// все поля присутствуют
 		try {
-			RequestValidator::validate($Fields);
+			RequestValidator::validate($fields);
 		}
 		catch(NackException $e) {
 			$this->fail($e->getMessage());
 		}
 
 		// отсутствует одно из требуемых полей
-		$this->CheckRequiredFieldValidation($RequiredFields);
+		$this->CheckRequiredFieldValidation($requiredFields);
 
-		if($Valid) {
+		if($valid) {
 			// альтернативное корректное значение
-			$this->CheckValidFieldValidation($Fields, $Valid);
+			$this->CheckValidFieldValidation($fields, $valid);
 		}
 
-		if($Invalid) {
+		if($invalid) {
 			// некорректно одно из полей или элементов полей
-			$this->CheckInvalidFieldValidation($Fields, $Invalid, NackException::ERR_WRONG_FORMAT);
+			$this->CheckInvalidFieldValidation($fields, $invalid, NackException::ERR_WRONG_FORMAT);
 		}
 
-		if($Unknown) {
+		if($unknown) {
 			// неизвестное имя поля или элемента поля
-			$this->CheckInvalidFieldValidation($Fields, $Unknown, NackException::ERR_UNKNOWN_FIELD);
+			$this->CheckInvalidFieldValidation($fields, $unknown, NackException::ERR_UNKNOWN_FIELD);
 		}
 	}
 
 
 //- детальная проверка валидации запросов -----------------------------------
 
-	private static $DefaultMap = array(
+	private static $defaultMap = array(
 		'Description' => '',
 		'HeadX' => '0',
 		'HeadY' => '0',
 		'Lines' => array(array('X' => '0', 'Y' => '0', 'Line' => 'A4--c6'))
 	);
 
-	private static $DefaultSnake = array(
+	private static $defaultSnake = array(
 		'Id' => '1',
 		'Name' => 'ы',
 		'Type' => 'N',
@@ -243,7 +254,7 @@ final class RequestValidatorTest extends CTestCase {
 		'PlayerName' => 'я'
 	);
 
-	private static $DefaultProgram = array(
+	private static $defaultProgram = array(
 		'Description' => 'ы',
 		'Templates' => array('S', 'S', 'S', 'S'),
 		'Maps' => array()
@@ -252,7 +263,7 @@ final class RequestValidatorTest extends CTestCase {
 //---------------------------------------------------------------------------
 
 	public static function setUpBeforeClass() {
-		self::$DefaultProgram['Maps'][] = self::$DefaultMap;
+		self::$defaultProgram['Maps'][] = self::$defaultMap;
 	}
 
 
@@ -265,26 +276,26 @@ final class RequestValidatorTest extends CTestCase {
 	}
 
 	public function testLoginDataValidation() {
-		$Fields = array('Login' => 'foo');
-		$Required = array('Login');
-		$Valid = array();
-		$Invalid = array(
+		$fields = array('Login' => 'foo');
+		$required = array('Login');
+		$valid = array();
+		$invalid = array(
 			array('Login', 'ab'),
 			array('Login', 'foobarbazfoobarbaz', NackException::ERR_TOO_LONG),
 			array('Login', array('foo' => 'bar')),
 		);
-		$this->CheckRequestValidation('login data', $Fields, $Required, $Valid, $Invalid);
+		$this->CheckRequestValidation('login data', $fields, $required, $valid, $invalid);
 	}
 
 	public function testLoginValidation() {
-		$Fields = array(
+		$fields = array(
 			'Login' => 'foo',
 			'Timestamp' => '1234567890',
 			'Hash' => 'f0123456789abcdef0123456789abcdef0123456'
 		);
-		$Required = array('Login', 'Timestamp', 'Hash');
-		$Valid = array();
-		$Invalid = array(
+		$required = array('Login', 'Timestamp', 'Hash');
+		$valid = array();
+		$invalid = array(
 			// Login проверяется в login data
 			array('Timestamp', ''),
 			array('Timestamp', '1.2'),
@@ -294,7 +305,7 @@ final class RequestValidatorTest extends CTestCase {
 			array('Hash', '0123456789ABCDEF0123456789abcdef01234567'),
 			array('Hash', '0123456789abcdeg0123456789abcdef01234567'),
 		);
-		$this->CheckRequestValidation('login', $Fields, $Required, $Valid, $Invalid);
+		$this->CheckRequestValidation('login', $fields, $required, $valid, $invalid);
 	}
 
 	public function testLogoutValidation() {
@@ -306,16 +317,16 @@ final class RequestValidatorTest extends CTestCase {
 	}
 
 	public function testRatingsValidation() {
-		$Fields = array(
+		$fields = array(
 			'FirstIndex' => '0',
 			'Count' => '30',
 			'SortBy' => array('>Rating')
 		);
-		$Required = array('Sid');
-		$Valid = array(
+		$required = array('Sid');
+		$valid = array(
 			array('SortBy.0', '<Rating'),
 		);
-		$Invalid = array(
+		$invalid = array(
 			array('FirstIndex', ''),
 			array('FirstIndex', '-1'),
 			array('FirstIndex', 'a'),
@@ -329,53 +340,53 @@ final class RequestValidatorTest extends CTestCase {
 			array('SortBy.0', '<a_1'),
 			array('SortBy.0', '>'),
 		);
-		$this->CheckRequestValidation('ratings', $Fields, $Required, $Valid, $Invalid);
+		$this->CheckRequestValidation('ratings', $fields, $required, $valid, $invalid);
 	}
 
 	public function testPlayerListValidation() {
-		$Fields = array(
+		$fields = array(
 			'FirstIndex' => '0',
 			'Count' => '30',
 			'SortBy' => array('>Rating')
 		);
-		$Required = array('Sid');
-		$Valid = array();
-		$Invalid = array(
+		$required = array('Sid');
+		$valid = array();
+		$invalid = array(
 			// все поля проверяются в ratings
 		);
-		$this->CheckRequestValidation('player list', $Fields, $Required, $Valid, $Invalid);
+		$this->CheckRequestValidation('player list', $fields, $required, $valid, $invalid);
 	}
 
 	public function testPlayerInfoValidation() {
-		$Fields = array('PlayerId' => '1');
-		$Required = array('Sid', 'PlayerId');
-		$Valid = array();
-		$Invalid = array(
+		$fields = array('PlayerId' => '1');
+		$required = array('Sid', 'PlayerId');
+		$valid = array();
+		$invalid = array(
 			array('PlayerId', ''),
 		);
-		$this->CheckRequestValidation('player info', $Fields, $Required, $Valid, $Invalid);
+		$this->CheckRequestValidation('player info', $fields, $required, $valid, $invalid);
 	}
 
 	public function testSnakeListValidation() {
-		$Fields = array(
+		$fields = array(
 			'SnakeTypes' => 'BN',
 			'FirstIndex' => '0',
 			'Count' => '30',
 			'SortBy' => array('<SnakeName')
 		);
-		$Required = array('Sid');
-		$Valid = array(
+		$required = array('Sid');
+		$valid = array(
 			array('SnakeTypes', 'B'),
 			array('SnakeTypes', 'N'),
 		);
-		$Invalid = array(
+		$invalid = array(
 			array('SnakeTypes', ''),
 			array('SnakeTypes', 'BNB', NackException::ERR_TOO_LONG),
 			array('SnakeTypes', 'bn'),
 			array('SnakeTypes', 'A'),
 			// FirstIndex, Count и SortBy проверяются в ratings
 		);
-		$this->CheckRequestValidation('snake list', $Fields, $Required, $Valid, $Invalid);
+		$this->CheckRequestValidation('snake list', $fields, $required, $valid, $invalid);
 	}
 
 	public function testSkinListValidation() {
@@ -383,35 +394,35 @@ final class RequestValidatorTest extends CTestCase {
 	}
 
 	public function testSnakeInfoValidation() {
-		$Fields = array('SnakeId' => '1');
-		$Required = array('Sid', 'SnakeId');
-		$Valid = array();
-		$Invalid = array(
+		$fields = array('SnakeId' => '1');
+		$required = array('Sid', 'SnakeId');
+		$valid = array();
+		$invalid = array(
 			array('SnakeId', ''),
 		);
-		$this->CheckRequestValidation('snake info', $Fields, $Required, $Valid, $Invalid);
+		$this->CheckRequestValidation('snake info', $fields, $required, $valid, $invalid);
 	}
 
 	public function testSnakeNewValidation() {
-		$Fields = array(
+		$fields = array(
 			'SnakeName' => 'ы',
 			'SnakeType' => 'B',
 			'SkinId' => '1',
 			'ProgramDescription' => '',
 			'Templates' => array('S', 'S', 'S', 'S'),
-			'Maps' => array(self::$DefaultMap)
+			'Maps' => array(self::$defaultMap)
 		);
-		$Required = array('Sid', 'SnakeName', 'SnakeType', 'SkinId', 'ProgramDescription', 'Templates', 'Maps');
+		$required = array('Sid', 'SnakeName', 'SnakeType', 'SkinId', 'ProgramDescription', 'Templates', 'Maps');
 
-		$Valid = array(
+		$valid = array(
 			array('SnakeType', 'N'),
 			array('Templates.0', 'STVWXY'),
-			array('Maps', array_fill(0, 9, self::$DefaultMap)),
+			array('Maps', array_fill(0, 9, self::$defaultMap)),
 			array('Maps.0.HeadX', '6'),
 			array('Maps.0.HeadY', '6'),
 			array('Maps.0.Lines', array()),
 		);
-		$Invalid = array(
+		$invalid = array(
 			array('SnakeType', ''),
 			array('SnakeType', 'BN'),
 			array('SnakeType', 'n'),
@@ -419,7 +430,7 @@ final class RequestValidatorTest extends CTestCase {
 			array('Templates.0', 's'),
 			array('Templates.0', 'STVWXYZ', NackException::ERR_TOO_LONG),
 			array('Maps', array()),
-			array('Maps', array_fill(0, 10, self::$DefaultMap)),
+			array('Maps', array_fill(0, 10, self::$defaultMap)),
 			array('Maps.0.HeadX', ''),
 			array('Maps.0.HeadX', '-1'),
 			array('Maps.0.HeadX', '7'),
@@ -440,89 +451,89 @@ final class RequestValidatorTest extends CTestCase {
 			array('Maps.0.Lines.0.Line', 'A8'),
 			array('Maps.0.Lines.0.Line', 'E0'),
 		);
-		$this->CheckRequestValidation('snake new', $Fields, $Required, $Valid, $Invalid);
+		$this->CheckRequestValidation('snake new', $fields, $required, $valid, $invalid);
 	}
 
 	public function testSnakeDeleteValidation() {
-		$Fields = array('SnakeId' => '1');
-		$Required = array('Sid', 'SnakeId');
-		$Valid = array();
-		$Invalid = array(
+		$fields = array('SnakeId' => '1');
+		$required = array('Sid', 'SnakeId');
+		$valid = array();
+		$invalid = array(
 			// SnakeId проверяется в snake info
 		);
-		$this->CheckRequestValidation('snake delete', $Fields, $Required, $Valid, $Invalid);
+		$this->CheckRequestValidation('snake delete', $fields, $required, $valid, $invalid);
 	}
 
 	public function testSnakeEditValidation() {
-		$Fields = array(
+		$fields = array(
 			'SnakeId' => '1',
 			'SnakeName' => 'ы',
 			'SnakeType' => 'B',
 			'SkinId' => '1',
 			'ProgramDescription' => '',
 			'Templates' => array('S', 'S', 'S', 'S'),
-			'Maps' => array(self::$DefaultMap)
+			'Maps' => array(self::$defaultMap)
 		);
-		$Required = array('Sid', 'SnakeId');
-		$Valid = array();
-		$Invalid = array(
+		$required = array('Sid', 'SnakeId');
+		$valid = array();
+		$invalid = array(
 			// SnakeId проверяется в snake info
 			// SnakeName, SnakeType, SkinId, ProgramDescription, Templates, Maps
 			// проверяются в snake new
 		);
-		$this->CheckRequestValidation('snake edit', $Fields, $Required, $Valid, $Invalid);
+		$this->CheckRequestValidation('snake edit', $fields, $required, $valid, $invalid);
 	}
 
 	public function testSnakeAssignValidation() {
-		$Fields = array('SnakeId' => '1');
-		$Required = array('Sid', 'SnakeId');
-		$Valid = array();
-		$Invalid = array(
+		$fields = array('SnakeId' => '1');
+		$required = array('Sid', 'SnakeId');
+		$valid = array();
+		$invalid = array(
 			// SnakeId проверяется в snake info
 		);
-		$this->CheckRequestValidation('snake assign', $Fields, $Required, $Valid, $Invalid);
+		$this->CheckRequestValidation('snake assign', $fields, $required, $valid, $invalid);
 	}
 
 	public function testFightListValidation() {
-		$Fields = array('FightListType' => 'ordered');
-		$Required = array('Sid', 'FightListType');
-		$Valid = array(
+		$fields = array('FightListType' => 'ordered');
+		$required = array('Sid', 'FightListType');
+		$valid = array(
 			array('FightListType', 'challenged'),
 		);
-		$Invalid = array(
+		$invalid = array(
 			array('FightListType', ''),
 			array('FightListType', 'foo'),
 			array('FightListType', 'ORDERED'),
 		);
-		$this->CheckRequestValidation('fight list', $Fields, $Required, $Valid, $Invalid);
+		$this->CheckRequestValidation('fight list', $fields, $required, $valid, $invalid);
 	}
 
 	public function testFightInfoValidation() {
-		$Fields = array('FightId' => '1');
-		$Required = array('Sid', 'FightId');
-		$Valid = array();
-		$Invalid = array(
+		$fields = array('FightId' => '1');
+		$required = array('Sid', 'FightId');
+		$valid = array();
+		$invalid = array(
 			array('FightId', ''),
 		);
-		$this->CheckRequestValidation('fight info', $Fields, $Required, $Valid, $Invalid);
+		$this->CheckRequestValidation('fight info', $fields, $required, $valid, $invalid);
 	}
 
 	public function testFightTestValidation() {
-		$Fields = array(
+		$fields = array(
 			'TurnLimit' => '1000',
 			'SnakeName' => 'ы',
 			'SkinId' => '1',
 			'ProgramDescription' => '',
 			'Templates' => array('S', 'S', 'S', 'S'),
-			'Maps' => array(self::$DefaultMap),
+			'Maps' => array(self::$defaultMap),
 			'OtherSnakeIds' => array('', '', '')
 		);
-		$Required = array('Sid', 'SnakeName', 'SkinId', 'ProgramDescription', 'Templates', 'Maps', 'OtherSnakeIds');
-		$Valid = array(
+		$required = array('Sid', 'SnakeName', 'SkinId', 'ProgramDescription', 'Templates', 'Maps', 'OtherSnakeIds');
+		$valid = array(
 			array('TurnLimit', '1'),
 			array('OtherSnakeIds', array('1', '2', '2')),
 		);
-		$Invalid = array(
+		$invalid = array(
 			array('TurnLimit', ''),
 			array('TurnLimit', '0'),
 			array('TurnLimit', '1001'),
@@ -532,36 +543,36 @@ final class RequestValidatorTest extends CTestCase {
 			// SnakeName, SnakeType, SkinId, ProgramDescription, Templates, Maps
 			// проверяются в snake new
 		);
-		$this->CheckRequestValidation('fight test', $Fields, $Required, $Valid, $Invalid);
+		$this->CheckRequestValidation('fight test', $fields, $required, $valid, $invalid);
 	}
 
 	public function testFightTrainValidation() {
-		$Fields = array(
+		$fields = array(
 			'TurnLimit' => '1000',
 			'SnakeIds' => array('1', '', '', '')
 		);
-		$Required = array('Sid', 'SnakeIds');
-		$Valid = array(
+		$required = array('Sid', 'SnakeIds');
+		$valid = array(
 			array('SnakeIds', array('1', '1', '1', '1')),
 		);
-		$Invalid = array(
+		$invalid = array(
 			array('SnakeIds', array('', '', '')),
 			array('SnakeIds', array('', '', '', '', '')),
 			// TurnLimit проверяется в fight test
 		);
-		$this->CheckRequestValidation('fight train', $Fields, $Required, $Valid, $Invalid);
+		$this->CheckRequestValidation('fight train', $fields, $required, $valid, $invalid);
 	}
 
 	public function testFightChallengeValidation() {
-		$Fields = array('PlayerIds' => array('1', '2', '3'));
-		$Required = array('Sid', 'PlayerIds');
-		$Valid = array();
-		$Invalid = array(
+		$fields = array('PlayerIds' => array('1', '2', '3'));
+		$required = array('Sid', 'PlayerIds');
+		$valid = array();
+		$invalid = array(
 			array('PlayerIds.1', ''),
 			array('PlayerIds', array('1', '2')),
 			array('PlayerIds', array('1', '2', '3', '4')),
 		);
-		$this->CheckRequestValidation('fight challenge', $Fields, $Required, $Valid, $Invalid);
+		$this->CheckRequestValidation('fight challenge', $fields, $required, $valid, $invalid);
 	}
 
 	public function testSlotListValidation() {
@@ -569,65 +580,65 @@ final class RequestValidatorTest extends CTestCase {
 	}
 
 	public function testSlotViewValidation() {
-		$Fields = array('SlotIndex' => '0');
-		$Required = array('Sid', 'SlotIndex');
-		$Valid = array(
+		$fields = array('SlotIndex' => '0');
+		$required = array('Sid', 'SlotIndex');
+		$valid = array(
 			array('SlotIndex', '9'),
 		);
-		$Invalid = array(
+		$invalid = array(
 			array('SlotIndex', ''),
 			array('SlotIndex', '10'),
 			array('SlotIndex', '-1'),
 			array('SlotIndex', 'a'),
 		);
-		$this->CheckRequestValidation('slot view', $Fields, $Required, $Valid, $Invalid);
+		$this->CheckRequestValidation('slot view', $fields, $required, $valid, $invalid);
 	}
 
 	public function testSlotSaveValidation() {
-		$Fields = array(
+		$fields = array(
 			'SlotIndex' => '0',
 			'SlotName' => '',
 			'FightId' => '1',
 		);
-		$Required = array('Sid', 'SlotIndex', 'SlotName', 'FightId');
-		$Valid = array();
-		$Invalid = array(
+		$required = array('Sid', 'SlotIndex', 'SlotName', 'FightId');
+		$valid = array();
+		$invalid = array(
 			array('FightId', ''),
 		);
-		$this->CheckRequestValidation('slot save', $Fields, $Required, $Valid, $Invalid);
+		$this->CheckRequestValidation('slot save', $fields, $required, $valid, $invalid);
 	}
 
 	public function testSlotRenameValidation() {
-		$Fields = array(
+		$fields = array(
 			'SlotIndex' => '0',
 			'SlotName' => '',
 		);
-		$Required = array('Sid', 'SlotIndex', 'SlotName');
-		$Valid = array();
-		$Invalid = array(
+		$required = array('Sid', 'SlotIndex', 'SlotName');
+		$valid = array();
+		$invalid = array(
 		);
-		$this->CheckRequestValidation('slot rename', $Fields, $Required, $Valid, $Invalid);
+		$this->CheckRequestValidation('slot rename', $fields, $required, $valid, $invalid);
 	}
 
 	public function testSlotDeleteValidation() {
-		$Fields = array('SlotIndex' => '0');
-		$Required = array('Sid', 'SlotIndex');
-		$Valid = array();
-		$Invalid = array(
+		$fields = array('SlotIndex' => '0');
+		$required = array('Sid', 'SlotIndex');
+		$valid = array();
+		$invalid = array(
 		);
-		$this->CheckRequestValidation('slot delete', $Fields, $Required, $Valid, $Invalid);
+		$this->CheckRequestValidation('slot delete', $fields, $required, $valid, $invalid);
 	}
 
 /*
 	public function testValidation() {
-		$Fields = array();
-		$Required = array();
-		$Valid = array();
-		$Invalid = array(
+		$fields = array();
+		$required = array();
+		$valid = array();
+		$invalid = array(
 			array('', ''),
 			array('', ''),
 		);
-		$this->CheckRequestValidation('', $Fields, $Required, $Valid, $Invalid);
+		$this->CheckRequestValidation('', $fields, $required, $valid, $invalid);
 	}
 
 */

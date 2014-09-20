@@ -81,7 +81,7 @@ class RequestValidator {
 		'SlotIndex' => array('_int', NULL, 0, 9),
 		'SlotName' => array('_string', '', 0, 255),
 		'SnakeId' => array('_string', NULL, 1),
-		'SnakeIds' => array('_narray', NULL, 'SnakeId', 1, 4),
+		'SnakeIds' => array('_narray', NULL, 'SnakeId', 4, 4),
 		'SnakeName' => array('_string', NULL, 1, 40),
 		'Snakes' => array('_narray', NULL, '.Snake', 4, 4),
 		'SnakeStats' => array('_narray', NULL, '.SnakeStat', 1, 4),
@@ -283,7 +283,9 @@ class RequestValidator {
 
 		$requestType = $request['Request'];
 		if(!is_string($requestType)) {
-			$params = array('Request', (string)$requestType, gettype($value));
+			$type = gettype($requestType);
+			if (is_array($requestType)) $requestType = implode(', ', $requestType);
+			$params = array('Request', (string)$requestType, $type);
 			throw new NackException(NackException::ERR_WRONG_FORMAT, $params);
 		}
 
