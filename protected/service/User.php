@@ -135,6 +135,11 @@ class User extends CApplicationComponent implements IWebUser {
 				}
 				$cmd->insert($this->sessionTable, $cols);
 
+				if (!$player->isConfirmed()) {
+					$player->confirm();
+					$player->save();
+				}
+
 				$this->player = $player;
 				$this->isClient = $isClient;
 				$this->sid = $cols['sid'];
@@ -162,6 +167,17 @@ class User extends CApplicationComponent implements IWebUser {
 			$this->sid = NULL;
 			$this->player = NULL;
 		}
+	}
+
+//---------------------------------------------------------------------------
+	public function getPlayer() {
+		return $this->player;
+	}
+
+//---------------------------------------------------------------------------
+	public function getGroups() {
+		if (!$this->player) return Player::GROUP_ANON;
+		else return $this->player->getGroups();
 	}
 
 //---------------------------------------------------------------------------

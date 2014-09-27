@@ -1,0 +1,15 @@
+* { margin: 0px; padding: 0px; }
+body { font-family: verdana, sans-serif; line-height: 1.3em; }
+#header { height: 1.8em; line-height: 1.5em; border-bottom: 1px solid; padding: 0.5ex 1ex 0px; }
+#login-link { float: right; }
+#content { padding: 1ex; }
+input[type=text], input[type=password] { font-family: monospace; padding: 0.1em 0.2em; }
+input[type=button] { padding: 0.3em; }
+input#f-captcha { width: 5em; }
+.error { color: #933; font-size: 80%; }
+.form { width: 31em; padding: 1em; margin: auto; border: 1px solid; }
+.form * { vertical-align: middle; }
+.form input[type=text], .form input[type=password] { width: 30em; }
+img.captcha { border: 1px solid; cursor: pointer; }
+label { line-height: 1.7em; }
+.form #f-captcha { margin-left: 2em; }
