@@ -72,7 +72,7 @@ class Player extends CActiveRecord {
 
 			array('login, name, hash, salt', 'required', 'on' => 'insert',
 				'message' => 'требуется поле "{attribute}"'),
-			array('login', 'match', 'pattern' => '/^[a-z0-9_.-]{1,30}$/',
+			array('login', 'match', 'pattern' => '/^[a-z0-9_.-]{2,30}$/',
 				'message' => 'логин может содержать только символы a-z0-9_.-'),
 			array('login', 'unique',
 				'message' => 'пользователь с таким логином уже зарегистрирован'),
@@ -90,7 +90,8 @@ class Player extends CActiveRecord {
 
 //---------------------------------------------------------------------------
 	public function validateCaptcha() {
-		if (empty($_SESSION['captcha']) or $_SESSION['captcha'] <> $this->captcha) {
+		$session = Yii::app()->session;
+		if (empty($session['captcha']) or $session['captcha'] <> $this->captcha) {
 			$this->addError('captcha', 'неверный проверочный код');
 		}
 	}

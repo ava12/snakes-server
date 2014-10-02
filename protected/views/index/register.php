@@ -8,7 +8,12 @@ function RefreshCaptcha() {
 }
 
 function SetError(Name, Message) {
-	document.getElementById('e-' + Name).innerHTML = Message
+	var Dom = document.getElementById('e-' + Name)
+	if (!Dom) {
+		Dom = document.getElementById('e-other')
+		if (Message) Message = Dom.innerHTML + Message + '<br>'
+	}
+	Dom.innerHTML = Message
 }
 
 function GetValues() {
@@ -24,6 +29,7 @@ function GetValues() {
 	var Values = {}
 	var HasErrors = false
 
+	SetError('other', '')
 	for (var i in Fields) {
 		var Name = Fields[i][0]
 		SetError(Name, '')
@@ -52,39 +58,47 @@ function Register() {
 	var Values = GetValues()
 	if (!Values) return
 
-	var Hash = MakeRegistrationHash(Values.login, Values.password, MakeSalt())
+	var Salt = MakeSalt()
+	var Hash = MakeRegistrationHash(Values.login, Values.password, Salt)
 	var Data = {login: 1, name: 1, forum_login: 1, captcha: 1}
 	for (var Name in Data) Data[Name] = Values[Name]
 	Data.hash = Hash
-	Ajax.Post('', Data, 30,
+	Data.salt = Salt
+	Data.Request = 'register'
+
+	PostRequest('', Data, 20,
 		function (Data) {
-			try {
-				Data = JSON.parse(Data)
-				if (Data.Response && Data.Response == 'ack') {
-					LoginRegistered(Data, Hash)
-					return
-				}
-
-				if (Data.Errors) {
-					for (var Name in Data.Errors) {
-						SetError(Name, Data.Errors[Name][0])
-					}
-				}
-
-				if (Data.Message) {
-					alert(Data.Message)
-				}
-			} catch (e) {
-				alert('Ошибка: некорректный формат ответа сервера')
-			}
+			LoginRegistered(Values.login, Hash, Data.Timestamp)
 		},
-		function (Status, Message) {
-			alert('Ошибка ' + Status + ': ' + Message)
+		function (Status, Message, Data) {
+			if (!Status) return
+
+			if (Data.Errors) {
+				for (var Name in Data.Errors) {
+					SetError(Name, Data.Errors[Name][0])
+				}
+			}
+
+			if (Data.Error) {
+				alert(Data.Error)
+			} else if (!Data.Errors) {
+				alert('Ошибка ' + Status + ':' + Message)
+			}
 		}
 	)
 }
 
-function LoginRegistered(Data, Hash) {
+function LoginRegistered(Login, Hash, Timestamp) {
+	var Data = {
+		'Request': 'login',
+		'Login': Login,
+		'Hash': Hash,
+		'Timestamp': Timestamp
+	}
+	PostRequest(BaseUrl + 'login', Data, 20, function () {
+		location.path = '.'
+		location.refresh()
+	})
 }
 
 
@@ -126,6 +140,7 @@ foreach ($fieldDef as $name => $def) {
 <img id="f-img" class="captcha" alt="контрольный код" title="сменить картинку" onclick="RefreshCaptcha()">
 <input type="text" id="f-captcha"><br>
 <div class="error" id="e-captcha"></div>
+<div class="error" id="e-other"></div>
 <br>
 <input class="fr" type="button" value="Зарегистрировать" onclick="Register()">
 </div>

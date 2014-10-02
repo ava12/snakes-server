@@ -1,3 +1,7 @@
+window.onerror = function (Message, File, Line) {
+	File = File.substring(File.indexOf(BaseUrl) + BaseUrl.length)
+	alert('Ошибка: "' + Message + '" в ' + File + ' строка ' + Line)
+}
 
 //---------------------------------------------------------------------------
 String.prototype.repeat = function(Count) {
@@ -50,6 +54,11 @@ String.prototype.subst = function(Params) {
 		if (Params[Name] == undefined) return Match
 		else return Params[Name]
 	})
+}
+
+//---------------------------------------------------------------------------
+String.prototype.trim = function () {
+	return this.replace(/^\s+|\s+$/g, '')
 }
 
 //---------------------------------------------------------------------------
@@ -179,7 +188,40 @@ function ABox(x, y, w, h) {
 }
 
 //---------------------------------------------------------------------------
+function Style(Dom, Name, Value) {
+	if (typeof Dom == 'string') Dom = document.getElementById(Dom)
+	if (!Dom) return false
+
+	var Values = String(Dom.getAttribute('style')).split(';')
+	for (var i in Values) {
+		var Pair = Values[i].split(':', 2)
+		if (Name == Pair[0].trim()) {
+			var OldValue = String(Pair[1]).trim()
+			if (Value) {
+				Values[i] = Name + ':' + Value
+				Dom.setAttribute('style', Values.join(';'))
+			}
+			return OldValue
+		}
+	}
+
+	if (Value) {
+		if (!Values[0]) {
+			Values = Name + ':' + Value
+		} else {
+			Values.push(Name + ':' + Value)
+			Values = Values.join(';')
+		}
+		Dom.setAttribute('style', Values)
+	}
+
+	return null
+}
+
+//---------------------------------------------------------------------------
 var Ajax = {
+	LastRequest: null,
+
 	Get: function (Url, Data, Timeout, SuccessHandler, ErrorHandler, Context) {
 		return this.Send('GET', Url, Data, Timeout, SuccessHandler, ErrorHandler, Context)
 	},
@@ -193,6 +235,7 @@ var Ajax = {
 	},
 
 	EncodeData: function (Data, Name) {
+		if (!Name) Name = ''
 		if (Data == undefined) Data = ''
 		var t = typeof Data
 		if (t == 'boolean') return Name + '=' + Number(Data)
@@ -201,7 +244,7 @@ var Ajax = {
 
 		var Result = []
 		for (var Key in Data) {
-			Result.push(this.EncodeData(Data[Key], (Name ? Name + '[' + Key + ']' : Name)))
+			Result.push(this.EncodeData(Data[Key], (Name ? Name + '[' + Key + ']' : Key)))
 		}
 
 		return Result.join('&')
@@ -213,9 +256,9 @@ var Ajax = {
 
 		if (Timeout) {
 			var Timer = setTimeout(function () {
+				Timer = null
 				Xhr.abort()
-				ErrorHandler.call(Context, 0, 'timeout')
-			}, Timeout)
+			}, Timeout * 1000)
 		}
 
 		Xhr.onreadystatechange = function() {
@@ -225,6 +268,8 @@ var Ajax = {
 				clearTimeout(Timer)
 				Timer = null
 			}
+
+			this.LastRequest = null
 
 			if (this.status == 200) {
 				if (SuccessHandler) {
@@ -237,9 +282,31 @@ var Ajax = {
 			}
 		}
 
-		Xhr.open(Method, Url)
-		Xhr.send(Data)
+		if (Method != 'POST') {
+			if (Url.indexOf('?')) {
+				Url += '&' + Data
+			} else {
+				Url += '?' + Data
+			}
+		}
 
-		return {Xhr: Xhr, Cancel: this._Cancel}
+		Xhr.open(Method, Url)
+		if (Method == 'POST') {
+			Xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=utf-8')
+			Xhr.send(Data)
+		} else {
+			Xhr.send()
+		}
+
+		this.LastRequest = {Xhr: Xhr, Cancel: this._Cancel}
+		return this.LastRequest
+	},
+
+	Cancel: function () {
+		if (!this.LastRequest) return false
+
+		this.LastRequest.Cancel()
+		this.LastRequest = null
+		return true
 	}
 }

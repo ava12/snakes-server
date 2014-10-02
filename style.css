@@ -1,5 +1,8 @@
 * { margin: 0px; padding: 0px; }
-body { font-family: verdana, sans-serif; line-height: 1.3em; }
+body {
+	font-family: verdana, sans-serif; line-height: 1.3em;
+	position: absolute; width: 100%; height: 100%;
+}
 #header { height: 1.8em; line-height: 1.5em; border-bottom: 1px solid; padding: 0.5ex 1ex 0px; }
 #login-link { float: right; }
 #content { padding: 1ex; }
@@ -13,3 +16,15 @@ input#f-captcha { width: 5em; }
 img.captcha { border: 1px solid; cursor: pointer; }
 label { line-height: 1.7em; }
 .form #f-captcha { margin-left: 2em; }
+#json-wait {
+	position: fixed; left: 0px; top: 0px; right: 0px; bottom: 0px; display: none;
+}
+#json-wait .blackout {
+	position: absolute; left: 0px; top: 0px; right: 0px; bottom: 0px;
+	background-color: #000; opacity: 0.5;
+ }
+#json-wait .message {
+	position: relative; margin: auto; width: 10em; height: 5em; top: 7em;
+	background-color: #fff; opacity: 1; text-align: center; z-index: 10000;
+	border: 1px solid; padding: 1em;
+}

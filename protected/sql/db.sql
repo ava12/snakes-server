@@ -247,7 +247,7 @@ CREATE TABLE `player` (
   `salt` char(8) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
   `sequence` int(11) NOT NULL DEFAULT 0,
   `groups` int NOT NULL DEFAULT 0,
-  `forum_login` char(40) NOT NULL, DEFAULT '',
+  `forum_login` char(40) NOT NULL DEFAULT '',
   `fighter_id` int(11) DEFAULT NULL,
   `rating` int(11) DEFAULT NULL,
   `delayed_id` int(11) NOT NULL,

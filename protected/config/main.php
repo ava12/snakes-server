@@ -23,12 +23,13 @@ return array(
 		),
 		'session' => array(
 			'autoStart' => false,
-			'sessionName' => 'snakesid',
-			'timeout' => 60 * 60,
+			'sessionName' => 'snakestmp',
+			'timeout' => 2 * 60 * 60,
 		),
 		'urlManager' => array(
 			'urlFormat' => 'path',
 			'rules' => array(
+				'logindata' => 'index/logindata',
 				'login' => 'index/login',
 				'logout' => 'index/logout',
 				'captcha' => 'index/captcha',

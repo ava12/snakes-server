@@ -5,7 +5,7 @@ class User extends CApplicationComponent implements IWebUser {
 	public $serverLifetime;
 	public $clientLifetime;
 	public $loginUrl = '/login';
-	public $serverSessionName = 's';
+	public $serverSessionName = 'snakesid';
 	public $sessionTable = '{{session}}';
 
 	const SID_LENGTH = 32;
@@ -48,9 +48,10 @@ class User extends CApplicationComponent implements IWebUser {
 //---------------------------------------------------------------------------
 	protected function refreshCookie() {
 		$sid = $this->sid;
-		$timestamp = $time() + $this->serverLifetime;
+		$timestamp = time() + $this->serverLifetime;
 		$name = $this->serverSessionName;
 		Yii::app()->request->cookies->add(
+			$name,
 			new CHttpCookie($name, $sid, array(
 				'expire' => $timestamp, 'httpOnly' => true,
 			))
@@ -68,7 +69,7 @@ class User extends CApplicationComponent implements IWebUser {
 		);
 
 		$request = Yii::app()->getRequest();
-		$sid = $request->getParam($this->serverSessionName);
+		$sid = @$_REQUEST[$this->serverSessionName];
 		if ($sid) {
 			$this->sid = $sid;
 			$this->player = $this->open($this->sid, false);
@@ -89,7 +90,7 @@ class User extends CApplicationComponent implements IWebUser {
 		$db = Yii::app()->getDb();
 		$row = $db->createCommand()
 			->from($this->sessionTable)
-			->where('and', "$fieldName = '$sid'", 'expires <= ' . time())
+			->where("$fieldName = :sid AND expires >= " . time(), array(':sid' => $sid))
 			->queryRow();
 		if (!$row) return NULL;
 
@@ -137,7 +138,9 @@ class User extends CApplicationComponent implements IWebUser {
 
 				if (!$player->isConfirmed()) {
 					$player->confirm();
-					$player->save();
+					if (!$player->save(false)) {
+						var_dump($player->getErrors()); exit;
+					}
 				}
 
 				$this->player = $player;
