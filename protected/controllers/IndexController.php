@@ -1,6 +1,9 @@
 <?php
 
 class IndexController extends Controller {
+	protected $accessRights = array(
+		'login' => Player::GROUP_ANON,
+	);
 
 //---------------------------------------------------------------------------
 	public function actionIndex() {
@@ -82,23 +85,18 @@ class IndexController extends Controller {
 
 //---------------------------------------------------------------------------
 	public function actionRegister() {
-		Yii::app()->session->open();
-/*
-		var_dump($_COOKIES);
-		var_dump($_REQUEST);
-		var_dump(Yii::app()->session);
-		var_dump(Yii::app()->session->savePath);
-		var_dump(Yii::app()->session->sessionId);
-		var_dump(Yii::app()->session->sessionName);
-		var_dump(Yii::app()->session->keys);
-		if (!Yii::app()->session['captcha']) Yii::app()->session['captcha'] = 'foo';
-		exit;
-		/**/
+		$player = Yii::app()->user->getPlayer();
+		if ($player and !$player->hasGroup(Player::GROUP_ANON)) {
+			$this->redirect(BASE_URL);
+		}
 
 		if (!$_POST) {
+			Yii::app()->session->open();
 			$this->render('register');
 			return;
 		}
+
+		Yii::app()->session->open();
 
 		try {
 			$player = new Player;

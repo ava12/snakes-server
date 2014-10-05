@@ -92,12 +92,12 @@ function LoginRegistered(Login, Hash, Timestamp) {
 	var Data = {
 		'Request': 'login',
 		'Login': Login,
-		'Hash': Hash,
+		'Hash': MakeLoginHash(Hash, Timestamp),
 		'Timestamp': Timestamp
 	}
 	PostRequest(BaseUrl + 'login', Data, 20, function () {
 		location.path = '.'
-		location.refresh()
+		location.assign(BaseUrl)
 	})
 }
 

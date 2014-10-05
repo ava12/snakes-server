@@ -11,6 +11,7 @@ class User extends CApplicationComponent implements IWebUser {
 	const SID_LENGTH = 32;
 	const FLAG_IS_CLIENT = 1;
 
+	/** @var Player */
 	protected $player;
 	protected $sid;
 	protected $isClient = true;
@@ -173,6 +174,9 @@ class User extends CApplicationComponent implements IWebUser {
 	}
 
 //---------------------------------------------------------------------------
+	/**
+	 * @return Player
+	 */
 	public function getPlayer() {
 		return $this->player;
 	}

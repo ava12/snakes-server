@@ -45,22 +45,18 @@ function Login() {
 			)
 		}
 	)
-
-	var Salt = MakeSalt()
-	var Timestamp = Math.floor((new Date()).getTime() / 1000)
-	var Hash = MakeLoginHash(MakeRegistrationHash(Login, Password, Salt), Timestamp)
 }
 
 //---------------------------------------------------------------------------
 function PostRequest(Url, Data, Timeout, SuccessHandler, ErrorHandler, Context, Dialog) {
 	if (Dialog == undefined) Dialog = 'json-wait'
 	if (Dialog) {
-		Style(Dialog, 'display', 'block')
+		Show(Dialog)
 	}
 
 	return Ajax.Post(Url, Data, Timeout,
 		function (Text) {
-			if (Dialog) Style(Dialog, 'display', 'none')
+			if (Dialog) Show(Dialog, false)
 			try {
 				var Data = JSON.parse(Text)
 			} catch (e) {
@@ -87,7 +83,7 @@ function PostRequest(Url, Data, Timeout, SuccessHandler, ErrorHandler, Context, 
 		},
 
 		function (Status, Message, Text) {
-			if (Dialog) Style(Dialog, 'display', 'none')
+			if (Dialog) Show(Dialog, false)
 			if (ErrorHandler) {
 				ErrorHandler.call(Context, Status, Message, Text)
 			} else {

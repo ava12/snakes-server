@@ -192,7 +192,10 @@ function Style(Dom, Name, Value) {
 	if (typeof Dom == 'string') Dom = document.getElementById(Dom)
 	if (!Dom) return false
 
-	var Values = String(Dom.getAttribute('style')).split(';')
+	var Values = Dom.getAttribute('style')
+	if (Values) Values = Values.split(';')
+	else Values = []
+
 	for (var i in Values) {
 		var Pair = Values[i].split(':', 2)
 		if (Name == Pair[0].trim()) {
@@ -206,16 +209,22 @@ function Style(Dom, Name, Value) {
 	}
 
 	if (Value) {
-		if (!Values[0]) {
-			Values = Name + ':' + Value
-		} else {
+		if (Values.length) {
 			Values.push(Name + ':' + Value)
 			Values = Values.join(';')
+		} else {
+			Values = Name + ':' + Value
 		}
 		Dom.setAttribute('style', Values)
 	}
 
 	return null
+}
+
+//---------------------------------------------------------------------------
+function Show(Dom, Show) {
+	if (Show == undefined) Show = true
+	return Style(Dom, 'display', (Show ? 'block' : 'none'))
 }
 
 //---------------------------------------------------------------------------

@@ -53,7 +53,7 @@ RETURNS INT
     READS SQL DATA
     SQL SECURITY INVOKER
 begin
- SELECT COUNT(*) FROM (
+SELECT COUNT(*) FROM (
   (SELECT `fight_id` FROM `fightlist` AS `lo`
    WHERE `player_id` = `@player_id` AND `type` = 'ordered'
    ORDER BY `time` DESC LIMIT 10)

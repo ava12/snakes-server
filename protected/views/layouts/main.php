@@ -22,13 +22,13 @@
 $user = Yii::app()->user;
 if ($user->getId()) { ?>
 Привет, <?= htmlspecialchars($user->getName()) ?>
-<a id="login-link" href="<?= BASE_URL ?>logout">Выход</a>
+<a class="fl-right" href="<?= BASE_URL ?>logout">Выход</a>
 <?php } else { ?>
 Добрый день, незнакомец.
-<input type="text" id="l-login" prompt="логин">
-<input type="password" id="l-password" prompt="пароль">
+<input type="text" id="l-login" placeholder="логин">
+<input type="password" id="l-password" placeholder="пароль">
 <input type="button" value="Войти" onclick="Login()">
-<a href="<?= BASE_URL ?>register">Регистрация</a>
+<a class="fl-right" href="<?= BASE_URL ?>register">Регистрация</a>
 <?php } ?>
 </div>
 

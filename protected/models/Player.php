@@ -10,6 +10,7 @@
  * @property string $hash SHA1(SHA1(логин ":" пароль) соль)
  * @property string $salt
  * @property int $sequence ++ при смене пароля или принудительном закрытии сессии
+ * @property int $groups
  * @property int|NULL $fighter_id ид змеи-бойца
  * @property int|NULL $rating
  * @property int|NULL $delayed_id ид текущего рассчитываемого боя
@@ -27,6 +28,10 @@ class Player extends CActiveRecord {
 	protected $captcha;
 
 //---------------------------------------------------------------------------
+	/**
+	 * @param string $className
+	 * @return Player
+	 */
 	public static function model($className = __CLASS__) {
 		return parent::model($className);
 	}
@@ -133,12 +138,17 @@ class Player extends CActiveRecord {
 
 //---------------------------------------------------------------------------
 	public function isConfirmed() {
-		return (bool)($this->groups & self::GROUP_PLAYER);
+		return $this->hasGroup(self::GROUP_PLAYER);
 	}
 
 //---------------------------------------------------------------------------
 	public function confirm() {
 		$this->groups |= self::GROUP_PLAYER;
+	}
+
+//---------------------------------------------------------------------------
+	public function hasGroup($group) {
+		return (bool)($this->groups & $group);
 	}
 
 //---------------------------------------------------------------------------

@@ -1,5 +1,9 @@
 <?php
 
+if (!defined('APP_PATH')) {
+	define('APP_PATH', realpath(__DIR__ . '/..'));
+}
+
 Yii::$classMap += array(
 	'KCAPTCHA' => APP_PATH . '/vendor/kcaptcha/kcaptcha.php',
 );
