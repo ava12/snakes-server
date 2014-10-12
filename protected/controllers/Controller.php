@@ -5,6 +5,8 @@ class Controller extends CController {
 
 	protected $accessRights = array();
 
+	protected $player = null;
+
 //---------------------------------------------------------------------------
 	protected function accessAllowed($actionName) {
 		$groups = (
@@ -12,12 +14,18 @@ class Controller extends CController {
 			? $this->accessRights[$actionName]
 			: $this->allowedGroups
 		);
-		$groups &= Yii::app()->user->getGroups();
+		if ($this->player) {
+			$groups &= $this->player->getGroups();
+		} else {
+			$groups &= Player::GROUP_ANON;
+		}
 		return (bool)$groups;
 	}
 
 //---------------------------------------------------------------------------
 	protected function beforeAction() {
+		$this->player = Yii::app()->user->getPlayer();
+
 		if (!defined('BASE_URL')) {
 			$baseUrl = Yii::app()->getBaseUrl();
 			if (substr($baseUrl, -1) <> '/') {

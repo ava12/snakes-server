@@ -1,0 +1,1 @@
+<a href="<?= BASE_URL ?>admin/player">Игроки</a><br>

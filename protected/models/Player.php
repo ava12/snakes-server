@@ -90,11 +90,14 @@ class Player extends CActiveRecord {
 			array('salt', 'match', 'pattern' => '/^[0-9a-f]{8}$/',
 				'message' => 'некорректная соль хэша'),
 			array('captcha', 'validateCaptcha'),
+			array('registered', 'default', 'value' => time()),
 		);
 	}
 
 //---------------------------------------------------------------------------
 	public function validateCaptcha() {
+		if (!strlen($this->captcha)) return;
+
 		$session = Yii::app()->session;
 		if (empty($session['captcha']) or $session['captcha'] <> $this->captcha) {
 			$this->addError('captcha', 'неверный проверочный код');
@@ -149,6 +152,16 @@ class Player extends CActiveRecord {
 //---------------------------------------------------------------------------
 	public function hasGroup($group) {
 		return (bool)($this->groups & $group);
+	}
+
+//---------------------------------------------------------------------------
+	public function authChanged() {
+		$this->sequence = new CDbExpression('`sequence` + 1');
+	}
+
+//---------------------------------------------------------------------------
+	public function isAdmin() {
+		return $this->hasGroup(self::GROUP_ADMIN);
 	}
 
 //---------------------------------------------------------------------------

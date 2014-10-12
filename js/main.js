@@ -10,6 +10,16 @@ function MakeLoginHash(Hash, Timestamp) {
 }
 
 //---------------------------------------------------------------------------
+function HashXor(a, b) {
+	var Result = ''
+	for (var i = 0; i < 40; i += 5) {
+		var Fragment = parseInt(a.substr(i, 5), 16) ^ parseInt(b.substr(i, 5), 16)
+		Result += ('0000' + Fragment.toString(16)).substr(-5)
+	}
+	return Result
+}
+
+//---------------------------------------------------------------------------
 function MakeSalt() {
 	var Chars = '0123456789abcdef'
 	var Len = Chars.length

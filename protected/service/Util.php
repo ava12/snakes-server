@@ -90,4 +90,17 @@ final class Util {
 	}
 
 //---------------------------------------------------------------------------
+	public static function hashXor($a, $b) {
+		$a = pack('H*', $a);
+		$b = pack('H*', $b);
+		$result = '';
+		$len = max(strlen($a), strlen($b));
+		for ($i = 0; $i < $len; $i++) {
+			$result .= chr(ord(substr($a, $i, 1)) ^ ord(substr($b, $i, 1)));
+		}
+
+		return bin2hex($result);
+	}
+
+//---------------------------------------------------------------------------
 }

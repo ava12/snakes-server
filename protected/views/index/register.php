@@ -2,7 +2,7 @@
 
 function RefreshCaptcha() {
 	var Image = document.getElementById('f-img')
-	Image.src = ''
+	Image.src = '#'
 	Image.src = 'captcha?t=' + (new Date()).getTime()
 	document.getElementById('f-captcha').value = ''
 }

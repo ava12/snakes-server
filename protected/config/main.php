@@ -38,6 +38,7 @@ return array(
 				'logout' => 'index/logout',
 				'captcha' => 'index/captcha',
 				'register' => 'index/register',
+				'admin/player/<id:\d+>' => 'admin/player'
 			),
 		),
 	),

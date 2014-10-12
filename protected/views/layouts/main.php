@@ -21,8 +21,11 @@
 
 $user = Yii::app()->user;
 if ($user->getId()) { ?>
-Привет, <?= htmlspecialchars($user->getName()) ?>
+Привет, <a href="<?= BASE_URL ?>profile" title="профиль"><?= htmlspecialchars($user->getName()) ?></a>
 <a class="fl-right" href="<?= BASE_URL ?>logout">Выход</a>
+<?php if ($user->getPlayer()->isAdmin()) { ?>
+<span class="fl-right"><a href="<?= BASE_URL ?>admin">Админ</a>&nbsp;&nbsp;</span>
+<?php } ?>
 <?php } else { ?>
 Добрый день, незнакомец.
 <input type="text" id="l-login" placeholder="логин">

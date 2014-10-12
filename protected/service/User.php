@@ -114,6 +114,17 @@ class User extends CApplicationComponent implements IWebUser {
 	}
 
 //---------------------------------------------------------------------------
+	public function reopen() {
+		$fieldName = ($this->isClient ? 'cid' : 'sid');
+		$db = Yii::app()->getDb();
+		$db->createCommand()->update(
+			$this->sessionTable,
+			array('sequence' => new CDbExpression('`sequence` + 1')),
+			array($fieldName => $this->sid)
+		);
+	}
+
+//---------------------------------------------------------------------------
 	public function login($identity, $isClient = false) {
 		$player = $identity->getPlayer();
 		if (!$player) return false;

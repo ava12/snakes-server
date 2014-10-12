@@ -7,12 +7,24 @@ class IndexController extends Controller {
 
 //---------------------------------------------------------------------------
 	public function actionIndex() {
-		$this->render('index');
+		$model = Player::model()->hasRating();//->with('fighter');
+		$provider = new CActiveDataProvider($model, array(
+			'criteria' => array(
+				'order' => '`rating` DESC, `t`.`id` ASC',
+			),
+			'pagination' => array(
+				'currentPage' => (isset($_GET['page']) ? $_GET['page'] - 1 : 0),
+				'pageSize' => 20,
+			),
+		));
+
+		$this->render('index', array('provider' => $provider));
 	}
 
 //---------------------------------------------------------------------------
 	public function actionLogindata() {
-		if (!isset($_POST['Login']) or !preg_match('/^[a-z0-9_.-]{2,}$/', $_POST['Login'])) {
+		$player = $this->player;
+		if (!$player and (!isset($_POST['Login']) or !preg_match('/^[a-z0-9_.-]{2,}$/', $_POST['Login']))) {
 			$this->renderJson(array(
 				'Response' => 'nack',
 				'Error' => 'требуется логин',
@@ -20,7 +32,7 @@ class IndexController extends Controller {
 			return;
 		}
 
-		$login = $_POST['Login'];
+		$login = (isset($_POST['Login']) ? $_POST['Login'] : $player->login);
 		$this->renderJson(array(
 			'Response' => 'login data',
 			'Login' => $login,
@@ -85,7 +97,7 @@ class IndexController extends Controller {
 
 //---------------------------------------------------------------------------
 	public function actionRegister() {
-		$player = Yii::app()->user->getPlayer();
+		$player = $this->player;
 		if ($player and !$player->hasGroup(Player::GROUP_ANON)) {
 			$this->redirect(BASE_URL);
 		}

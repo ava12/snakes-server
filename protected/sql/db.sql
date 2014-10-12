@@ -252,7 +252,7 @@ CREATE TABLE `player` (
   `rating` int(11) DEFAULT NULL,
   `delayed_id` int(11) NOT NULL,
   `viewed_id` int(11) NOT NULL,
-  `registered` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `registered` int NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `login_k` (`login`),
   UNIQUE KEY `name_k` (`name`),

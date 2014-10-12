@@ -3,6 +3,10 @@ body {
 	font-family: verdana, sans-serif; line-height: 1.3em; font-size: 85%;
 	position: absolute; width: 100%; height: 100%;
 }
+a { color: #36f; text-decoration: underline; font-weight: bold; }
+h1 { font-weight: bold; font-size: 150%; margin-bottom: 1em; }
+.ar { text-align: right; }
+
 #header { height: 2em; line-height: 1.5em; border-bottom: 1px solid; padding: 0.5ex 1ex 0px; }
 .fl-right { float: right; }
 #content { padding: 1ex; }
@@ -10,7 +14,7 @@ input[type=text], input[type=password] { font-family: monospace; padding: 0.1em 
 input[type=button] { padding: 0.3em; }
 input#f-captcha { width: 5em; }
 .error { color: #933; font-size: 80%; }
-.form { width: 31em; padding: 1em; margin: auto; border: 1px solid; }
+.form { width: 31em; padding: 1em; margin: auto; border: 1px solid; margin-bottom: 1ex; }
 .form * { vertical-align: middle; }
 .form input[type=text], .form input[type=password] { width: 30em; }
 img.captcha { border: 1px solid; cursor: pointer; }
@@ -28,4 +32,16 @@ label { line-height: 1.7em; }
 	background-color: #fff; opacity: 1; text-align: center; z-index: 10000;
 	border: 1px solid; padding: 1em;
 }
-a { color: #36f; text-decoration: underline; font-weight: bold; }
+.list-table { width: 95%; margin-bottom: 1em; }
+.list-table td, .list-table th { padding: 0.2em 0.4em; }
+
+.skin {
+	display: inline-block; width: 48px; height: 16px; margin-right: 1em;
+	background-image: url(img/16/skins.png);
+}
+.skin1 { background-position: 0px 0px; }
+.skin2 { background-position: 0px -16px; }
+.skin3 { background-position: 0px -32px; }
+.skin4 { background-position: 0px -48px; }
+.skin5 { background-position: 0px -64px; }
+.skin6 { background-position: 0px -80px; }
