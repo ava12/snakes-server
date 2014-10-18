@@ -139,4 +139,21 @@ class IndexController extends Controller {
 	}
 
 //---------------------------------------------------------------------------
+	public function actionGame() {
+		if (!$this->player or !$this->player->isConfirmed()) {
+			$this->redirect(BASE_URL);
+		}
+
+		$this->layout = false;
+		$this->render('game');
+	}
+
+//---------------------------------------------------------------------------
+	public function actionAjax() {
+		$request = $_POST;
+		$game = new Game($request);
+		$this->renderJson($game->run());
+	}
+
+//---------------------------------------------------------------------------
 }

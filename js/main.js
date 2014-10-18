@@ -64,9 +64,14 @@ function PostRequest(Url, Data, Timeout, SuccessHandler, ErrorHandler, Context, 
 		Show(Dialog)
 	}
 
+	if (SessionId) {
+		Data.Sid = SessionId
+	}
+
 	return Ajax.Post(Url, Data, Timeout,
 		function (Text) {
 			if (Dialog) Show(Dialog, false)
+
 			try {
 				var Data = JSON.parse(Text)
 			} catch (e) {

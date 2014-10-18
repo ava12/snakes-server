@@ -18,6 +18,8 @@ class Snake extends ActiveRecord {
 	const TYPE_BOT = 'B';
 	const TYPE_NORMAL = 'N';
 
+	const MAX_SNAKES = 10;
+
 	protected $magicGetters = array('templates' => false, 'needsRespawn' => false);
 	protected $magicSetters = array('templates' => false, 'maps' => false, 'type' => false);
 
@@ -226,6 +228,8 @@ class Snake extends ActiveRecord {
 				);
 			}
 
+			$this->checkCanCreate();
+
 //			if ($this->isTemp) $this->refs = 0; // release manually
 			if (!parent::insert()) {
 				throw new RuntimeException('не могу создать змею');
@@ -313,6 +317,13 @@ class Snake extends ActiveRecord {
 	}
 
 //---------------------------------------------------------------------------
+	public function checkCanCreate($playerId = NULL) {
+		if (!$playerId) $playerId = $this->player_id;
+		if (Snake::model()->forPlayer($playerId)->current()->count() >= static::MAX_SNAKES) {
+			throw new NackException(NackException::ERR_TOO_MANY_SNAKES, static::MAX_SNAKES);
+		}
+	}
+
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 }

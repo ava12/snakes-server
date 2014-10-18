@@ -25,6 +25,7 @@ class NackException extends RuntimeException {
 	const ERR_INVALID_INPUT = 19;
 	const ERR_INVALID_MAP_LINE = 20;
 	const ERR_INVALID_MAP = 21;
+	const ERR_TOO_MANY_SNAKES = 22;
 
 
 	protected static $messages = array(
@@ -55,6 +56,7 @@ class NackException extends RuntimeException {
 
 		'некорректная линия %2$d (%3$s) для карты %1$d',
 		'некорректное описание карты %d: %s',
+		'у вас уже максимальное количество змей (%d)',
 	);
 
 

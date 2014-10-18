@@ -241,6 +241,10 @@ var Ajax = {
 
 	_Cancel: function () {
 		if (this.Xhr) this.Xhr.abort()
+		if (this.Timer) {
+			clearTimeout(this.Timer)
+			this.Timer = null
+		}
 	},
 
 	EncodeData: function (Data, Name) {
@@ -265,6 +269,7 @@ var Ajax = {
 
 		if (Timeout) {
 			var Timer = setTimeout(function () {
+				clearTimeout(Timer)
 				Timer = null
 				Xhr.abort()
 			}, Timeout * 1000)
@@ -307,7 +312,7 @@ var Ajax = {
 			Xhr.send()
 		}
 
-		this.LastRequest = {Xhr: Xhr, Cancel: this._Cancel}
+		this.LastRequest = {Xhr: Xhr, Timer: Timer, Cancel: this._Cancel}
 		return this.LastRequest
 	},
 

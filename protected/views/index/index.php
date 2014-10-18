@@ -1,3 +1,6 @@
+<?php if ($this->player and $this->player->isConfirmed()) { ?>
+<a href="<?= BASE_URL ?>game" class="fl-right">Играть</a>
+<?php } ?>
 <h1>Рекорды</h1>
 <table class="list-table" cellspacing="0" border="1">
 <tr><th>Игрок<th>Рекорд<th>Боец</tr>

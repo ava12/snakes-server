@@ -15,6 +15,7 @@ class User extends CApplicationComponent implements IWebUser {
 	protected $player;
 	protected $sid;
 	protected $isClient = true;
+	protected $session;
 
 //---------------------------------------------------------------------------
 	public function checkAccess($operation, $params = array()) {
@@ -110,6 +111,7 @@ class User extends CApplicationComponent implements IWebUser {
 				"$fieldName = '$sid'");
 
 		if (!$isClientSid) $this->refreshCookie();
+		$this->session = $row;
 		return $player;
 	}
 
@@ -159,6 +161,7 @@ class User extends CApplicationComponent implements IWebUser {
 				$this->isClient = $isClient;
 				$this->sid = $cols['sid'];
 				if (!$isClient) $this->refreshCookie();
+				$this->session = $cols;
 				return $cols['cid'];
 			}
 			catch(CDbException $e) {}
@@ -196,6 +199,12 @@ class User extends CApplicationComponent implements IWebUser {
 	public function getGroups() {
 		if (!$this->player) return Player::GROUP_ANON;
 		else return $this->player->getGroups();
+	}
+
+//---------------------------------------------------------------------------
+	public function getClientSid() {
+		if (!$this->session) return NULL;
+		else return $this->session['cid'];
 	}
 
 //---------------------------------------------------------------------------

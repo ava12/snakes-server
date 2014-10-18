@@ -462,6 +462,7 @@ class Game {
 	protected function requestSnakeNew() {
 		$snake = new Snake;
 		$snake->player_id = $this->player->id;
+		$snake->checkCanCreate();
 		$this->editSnake($snake, $this->request);
 
 		if (!$snake->save()) {
