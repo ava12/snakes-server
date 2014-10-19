@@ -1,13 +1,12 @@
 function AList() {
 	this.TabWidth = 24
 	this.Buttons = []
-	this.Fields = [] // [[имя, надпись, ширина, сорт?]*]
-	this.SortBy = []
+	this.Fields = []
 	this.BackColor = ['#ddddff', '#ddffdd']
 	this.Lists = [
-		{Label: '', Request: {}, Fields: [], Buttons: [], Pages: 0, Page: 0, SortBy: [], Items: []}
+		{ListButton: '', Request: {}, Columns: [], Fields: [], Buttons: [], Pages: 0, Page: 0, SortBy: [], Items: []}
 	]
-	this.ListIndex = 0
+	this.ListIndex = null
 	this.TabControls = {Items: []}
 	this.ItemHeight = 30
 	this.ItemWidth = 620
@@ -41,12 +40,17 @@ function AList() {
 	}
 
 //---------------------------------------------------------------------------
+	this.RenderText = function (Text, x, y, w) {
+		Canvas.RenderText(Text, ABox(x + 4, y + 1, Width, this.ItemHeight - 2))
+		return Width + 8
+	}
+
+//---------------------------------------------------------------------------
 	this.RenderPropertyText = function(Item, Index, x, y, Params) {
 		var Text = this.GetItemProperty(Item, Params.Property)
 		var Width = Params.Width
 		if (!Width) Width = Canvas.GetTextMetrics(Text).w
-		Canvas.RenderText(Text, ABox(x + 4, y + 1, Width, this.ItemHeight - 2))
-		return Width + 8
+		return this.RenderText(Text, x, y, Width)
 	}
 
 //---------------------------------------------------------------------------
@@ -73,8 +77,51 @@ function AList() {
 		var Color = this.BackColor[Index % this.BackColor.length]
 		Canvas.FillRect(ABox(x, y, this.ItemWidth, this.ItemHeight), Color)
 		var Fields = this.Fields
-		for(var i = 0; i < Fields.length; i++) {
+		for (var i = 0; i < Fields.length; i++) {
 			x += this.RenderField(Fields[i], Item, Index, x, y)
+		}
+	}
+
+//---------------------------------------------------------------------------
+	this.RenderListSelector = function (y) {
+		var x = (640 - this.ItemWidth) >> 1
+		for (var i in this.Lists) {
+			List = this.Lists[i]
+			if (!List.ListButton) continue
+
+			if (!List.ListButton.Label) {
+				List.ListButton = {
+					Label: List.ListButton,
+					Width: Canvas.GetTextMetrics(Lists[i].Label).w,
+					Data: {cls: 'list'}
+				}
+			}
+
+			if (i == this.ListIndex) {
+				x += this.RenderText(List.ListButton.Label, x, y, List.ListButton.Width)
+			} else {
+				x += this.RenderTextButton(List, i, x, y, List.ListButton)
+			}
+		}
+	}
+
+//---------------------------------------------------------------------------
+	this.RenderListButtons = function (List, y) {
+		var x = (640 - this.ItemWidth) >> 1
+		for (var i in this.Buttons) {
+			x += this.RenderField(this.Buttons[i], null, null, x, y)
+		}
+		for (i in List.Buttons) {
+			x += this.RenderField(List.Buttons[i], null, null, x, y)
+		}
+	}
+
+//---------------------------------------------------------------------------
+	this.RenderList = function (List, y) {
+		var Items = List.Items
+		for (var i = 0; i < Items.length; i++) {
+			this.RenderItem(Items[i], y, i)
+			y += this.ItemHeight
 		}
 	}
 
@@ -82,35 +129,33 @@ function AList() {
 	this.RenderBody = function() {
 		this.Clear()
 		this.TabControls.Items = []
-		var i, y = this.TopY
-		var List = this.Lists[this.ListIndex]
+		var y = this.TopY
 
 		if (this.Lists.length > 1) {
-			
-		}
-
-		if (this.Buttons.length || (List.Buttons && List.Buttons.length)) {
-			var x = (640 - this.ItemWidth) >> 1
-			for(i in this.Buttons) {
-				x += this.RenderField(this.Buttons[i], null, null, x, y)
-			}
-			for(i in List.Buttons) {
-				x += this.RenderField(List.Buttons[i], null, null, x, y)
-			}
+			this.RenderListSelector(y)
 			y += this.ItemHeight * 1.5
 		}
 
-		var Items = List.Items
-		for(i = 0; i < Items.length; i++) {
-			this.RenderItem(Items[i], y, i)
-			y += this.ItemHeight
+		var List = this.Lists[this.ListIndex]
+
+		if (this.Buttons.length || (List.Buttons && List.Buttons.length)) {
+			this.RenderListButtons(List, y)
+			y += this.ItemHeight * 1.5
 		}
+
+		this.RenderList(List, y)
 		this.RenderControls()
 	}
 
 //---------------------------------------------------------------------------
-	this.Serialize = function() {
-		return {Object: 'AList', Data: []}
+	this.SelectList = function (Index) {
+		this.ListIndex = Index
+		if (this.IsActive()) this.RenderBody()
+	}
+
+//---------------------------------------------------------------------------
+	this.TabInit = function () {
+		this.SelectList(0)
 	}
 
 //---------------------------------------------------------------------------
@@ -130,17 +175,6 @@ function ABotList() {
 		{Type: 'PropertyText', Width: 472, Property: 'SnakeName'},
 		{Type: 'TextButton', Width: 80, Label: 'Смотреть', BackColor: '#99ccff'},
 	]
-
-//---------------------------------------------------------------------------
-	this.TabInit = function() {
-		Game.OtherSnakes.TabId = this.TabId
-	}
-
-//---------------------------------------------------------------------------
-	this.OnClose = function() {
-		Game.OtherSnakes.TabId = null
-		return true
-	}
 
 //---------------------------------------------------------------------------
 	this.OnClick = function(x, y, Dataset) {
@@ -204,7 +238,7 @@ function ASnakeList() {
 		}
 
 		if (Dataset.id == 'import') {
-			Canvas.RenderInput('textarea', 'Импорт змеи', '', function(Dataset, Context) {
+			Canvas.RenderInput('textarea', 'Импорт змеи', '', function(Dataset) {
 				if (!Dataset.value) return
 
 				try {
