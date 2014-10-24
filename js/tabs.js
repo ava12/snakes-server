@@ -117,11 +117,11 @@ function AMainPageTab() {
 	this.TabStackIndex = 0
 	this.TabControls = {w: 200, h: 50, BackColor: '#99ccff', Items: {
 		Ratings: {x: 70, y: 127, Label: 'Рейтинги', id: 'Ratings', Tab: ARatingList},
-		Players: {x: 70, y: 227, Label: 'Игроки', id: 'Players', Tab: APlayerList},
-		Snakes: {x: 70, y: 327, Label: 'Змеи', id: 'Snakes', Tab: ASnakeList},
-		MySnakes: {x: 370, y: 127, Label: 'Мои змеи', id: 'MySnakes', Tab: AMySnakeList},
-		MyFights: {x: 370, y: 227, Label: 'Мои бои', id: 'MyFights', Tab: AMyFightList},
-		Help: {x: 370, y: 127, Label: 'Справка', id: 'Help'},
+		Players: {x: 70, y: 227, Label: 'Игроки', id: 'Players', Tab: 'APlayerList'},
+		Snakes: {x: 70, y: 327, Label: 'Змеи', id: 'Snakes', Tab: 'ASnakeList'},
+		MySnakes: {x: 370, y: 127, Label: 'Мои змеи', id: 'MySnakes', Tab: 'AMySnakeList'},
+		MyFights: {x: 370, y: 227, Label: 'Мои бои', id: 'MyFights', Tab: 'AMyFightList'},
+		Help: {x: 370, y: 327, Label: 'Справка', id: 'Help'},
 	}}
 
 //---------------------------------------------------------------------------
@@ -146,8 +146,9 @@ function AMainPageTab() {
 			case 'Ratings': case 'Players': case 'Snakes':
 			case 'MySnakes': case 'MyFights':
 				var Control = this.TabControls.Items[Dataset.id]
-				if (Control.List.TabId) TabSet.Select(Control.List.TabId)
-				else TabSet.Add(new Control.Tab())
+				//if (Control.List.TabId) TabSet.Select(Control.List.TabId)
+				//else
+				TabSet.Add(new Control.Tab())
 			break
 
 			case 'Help':

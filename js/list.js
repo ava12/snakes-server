@@ -1,15 +1,34 @@
 function AList() {
 	this.TabWidth = 24
 	this.Buttons = []
-	this.Fields = []
 	this.BackColor = ['#ddddff', '#ddffdd']
 	this.Lists = [
-		{ListButton: '', Request: {}, Columns: [], Fields: [], Buttons: [], Pages: 0, Page: 0, SortBy: [], Items: []}
+		{
+			ListButton: '',
+			Request: {},
+			Columns: [], // [{Label:, Width:, Name:?}+]
+			Fields: [],
+			Buttons: [],
+			Pages: 0,
+			Page: 0, // начиная с 1
+			SortName: '',
+			SortDesc: false,
+			ItemName: 'List',
+			Items: []
+		}
 	]
+	this.SortButtons = [
+		{x: 0, y: 0, w: 15, h: 15, Label: '\u25b2',
+			id: 0, Title: 'по возрастанию', Data: {cls: 'list-sort', name: ''}},
+		{x: 0, y: 15, w: 15, h: 15, Label: '\u25bc',
+			id: 1, Title: 'по убыванию', Data: {cls: 'list-sort', name: ''}}
+	]
+	this.RefreshButton = {Label: 'Обновить', Title: 'перезагрузить страницу', Data: {cls: 'list-refresh'}}
 	this.ListIndex = null
 	this.TabControls = {Items: []}
 	this.ItemHeight = 30
 	this.ItemWidth = 620
+	this.ItemX = 10
 	this.TopY = 40
 
 //---------------------------------------------------------------------------
@@ -20,8 +39,19 @@ function AList() {
 	}
 
 //---------------------------------------------------------------------------
-	this.AddControl = function(Control) {
+	this.AddControl = function (Control) {
 		this.TabControls.Items.push(Control)
+	}
+
+//---------------------------------------------------------------------------
+	this.RenderTextButtonBox = function (Label, Button, x, y, BackColor, Id) {
+		var Box = Clone(Button)
+		if (!Label) Label = Box.Label
+		Box.x += x
+		Box.y += y
+		Canvas.RenderTextBox(Label, Box, '#000000', BackColor, '#000000', 'center')
+		Box.id = (Id ? Id : Button.id)
+		this.AddControl(Box)
 	}
 
 //---------------------------------------------------------------------------
@@ -40,9 +70,10 @@ function AList() {
 	}
 
 //---------------------------------------------------------------------------
-	this.RenderText = function (Text, x, y, w) {
-		Canvas.RenderText(Text, ABox(x + 4, y + 1, Width, this.ItemHeight - 2))
-		return Width + 8
+	this.RenderText = function (Text, x, y, w, Align) {
+		if (!w) w = Canvas.GetTextMetrics(Text).w
+		Canvas.RenderText(Text, ABox(x + 4, y + 1, w, this.ItemHeight - 2), null, Align)
+		return w + 8
 	}
 
 //---------------------------------------------------------------------------
@@ -50,7 +81,7 @@ function AList() {
 		var Text = this.GetItemProperty(Item, Params.Property)
 		var Width = Params.Width
 		if (!Width) Width = Canvas.GetTextMetrics(Text).w
-		return this.RenderText(Text, x, y, Width)
+		return this.RenderText(Text, x, y, Width, Params.Align)
 	}
 
 //---------------------------------------------------------------------------
@@ -72,11 +103,10 @@ function AList() {
 	}
 
 //---------------------------------------------------------------------------
-	this.RenderItem = function(Item, y, Index) {
-		var x = (640 - this.ItemWidth) >> 1
+	this.RenderItem = function(Item, Fields, y, Index) {
+		var x = this.ItemX
 		var Color = this.BackColor[Index % this.BackColor.length]
 		Canvas.FillRect(ABox(x, y, this.ItemWidth, this.ItemHeight), Color)
-		var Fields = this.Fields
 		for (var i = 0; i < Fields.length; i++) {
 			x += this.RenderField(Fields[i], Item, Index, x, y)
 		}
@@ -84,7 +114,7 @@ function AList() {
 
 //---------------------------------------------------------------------------
 	this.RenderListSelector = function (y) {
-		var x = (640 - this.ItemWidth) >> 1
+		var x = this.ItemX
 		for (var i in this.Lists) {
 			List = this.Lists[i]
 			if (!List.ListButton) continue
@@ -107,7 +137,7 @@ function AList() {
 
 //---------------------------------------------------------------------------
 	this.RenderListButtons = function (List, y) {
-		var x = (640 - this.ItemWidth) >> 1
+		var x = this.ItemX
 		for (var i in this.Buttons) {
 			x += this.RenderField(this.Buttons[i], null, null, x, y)
 		}
@@ -117,11 +147,62 @@ function AList() {
 	}
 
 //---------------------------------------------------------------------------
+	this.RenderListPageButton = function (List, Page, x, y) {
+		if (Page == List.Page) {
+			return this.RenderText(Page, x, y)
+		} else {
+			return this.RenderTextButton(null, Page, x, y, {Data: {cls: 'list-page'}})
+		}
+	}
+
+//---------------------------------------------------------------------------
 	this.RenderList = function (List, y) {
+		if (!List.Page) this.RefreshList()
+
+		var x = this.ItemX
+
+		for (var i in List.Columns) {
+			var Column = List.Columns[i]
+			var Width = (Column.Name ? Column.Width - 15 : Column.Width)
+			x += this.RenderText(Column.Label, x, y, Width, 'center')
+
+			if (Column.Name) {
+				var Colors = ['#eeeeee', '#eeeeee']
+				if (List.SortName == Column.Name) {
+					Colors[List.SortDesc ? 1 : 0] = '#99eeff'
+				}
+				for (var j = 0; j < 2; j++) {
+					this.RenderTextButtonBox(null, this.SortButtons[j], x, y, Colors[j])
+				}
+				x += 15
+			}
+		}
+		y += this.ItemHeight
+
 		var Items = List.Items
-		for (var i = 0; i < Items.length; i++) {
-			this.RenderItem(Items[i], y, i)
-			y += this.ItemHeight
+		if (Items) {
+			for (i = 0; i < Items.length; i++) {
+				this.RenderItem(Items[i], List.Fields, y, i)
+				y += this.ItemHeight
+			}
+		}
+
+		x = this.ItemX
+		x += this.RenderTextButton(null, null, x, y, this.RefreshButton)
+
+		if (List.Pages > 1) {
+			x += 8
+			x += this.RenderListPageButton(List, 1, x, y)
+			var Page = List.Page
+			var GroupFirst = (Page >= 5 ? Page - 3 : 2)
+			var GroupLast = (Page <= (List.Pages - 4) ? Page + 3 : List.Pages - 1)
+
+			if (Page > 5) x += 8
+			for (i = GroupFirst; i <= GroupLast; i++) {
+				x += this.RenderListPageButton(List, i, x, y)
+			}
+			if (Page < (List.Pages - 4)) x += 8
+			this.RenderListPageButton(List, List.Pages, x, y)
 		}
 	}
 
@@ -148,6 +229,26 @@ function AList() {
 	}
 
 //---------------------------------------------------------------------------
+	this.RefreshList = function () {
+		var List = this.Lists[this.ListIndex]
+		if (!List.Page) List.Page = 1
+		var Request = Clone(List.Request)
+		Request.FirstIndex = (List.Page - 1) * 10
+		Request.Count = 10
+		if (List.SortName) {
+			Request.SortBy = [(List.SortDesc ? '>' : '<') + List.SortName]
+		}
+		PostRequest(null, Request, 20, function (Response) {
+			List.Items = Response[List.ItemName]
+			List.Page = Math.floor(Response.FirstIndex / 10) + 1
+			List.Pages = Math.floor((Response.TotalCount + 9) / 10)
+			List.SortDesc = (Response.SortBy[0].charAt(0) == '>')
+			List.SortName = Response.SortBy[0].substr(1)
+			if (this.IsActive()) this.RenderBody()
+		}, null, this)
+	}
+
+//---------------------------------------------------------------------------
 	this.SelectList = function (Index) {
 		this.ListIndex = Index
 		if (this.IsActive()) this.RenderBody()
@@ -161,6 +262,38 @@ function AList() {
 //---------------------------------------------------------------------------
 }
 Extend(AList, BPageTab)
+
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+function ARatingList() {
+	this.Lists = [{
+		Request: {Request: 'ratings'},
+		ItemName: 'Ratings',
+		SortBy: 'Rating',
+		SortDesc: true,
+
+		Columns: [
+			{Label: 'Игрок', Width: 230, Name: 'PlayerName'},
+			{Label: 'Рейтинг', Width: 100, Name: 'Rating'},
+			{Label: 'Змея', Width: 290}
+		],
+
+		Fields: [
+			{Type: 'PropertyText', Width: 230, Property: 'PlayerName'},
+			{Type: 'PropertyText', Width: 100, Property: 'Rating', Align: 'right'},
+			{Type: 'Gap'},
+			{Type: 'Skin'},
+			{Type: 'Gap'},
+			{Type: 'PropertyText', Width: 234, Property: 'SnakeName'}
+		],
+	}]
+
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+}
+Extend(ARatingList, new AList())
 
 
 //---------------------------------------------------------------------------

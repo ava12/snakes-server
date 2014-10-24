@@ -59,6 +59,7 @@ function Login() {
 
 //---------------------------------------------------------------------------
 function PostRequest(Url, Data, Timeout, SuccessHandler, ErrorHandler, Context, Dialog) {
+	if (Url == undefined) Url = BaseUrl + 'ajax'
 	if (Dialog == undefined) Dialog = 'json-wait'
 	if (Dialog) {
 		Show(Dialog)

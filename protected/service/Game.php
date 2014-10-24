@@ -157,7 +157,12 @@ class Game {
 		$count = (isset($request['Count']) ? $request['Count'] : 30);
 		$firstIndex = (isset($request['FirstIndex']) ? $request['FirstIndex'] : 0);
 
-		$sortBy = (isset($request['SortBy']) ? $request['SortBy'] : (array)$defaultSort);
+		if (isset($request['SortBy'])) {
+			$sortBy = $request['SortBy'];
+		} else {
+			$sortBy = (array)$defaultSort;
+			$this->request['SortBy'] = $sortBy;
+		}
 		$sort = array();
 
 		foreach($sortBy as $field) {

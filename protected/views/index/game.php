@@ -144,7 +144,7 @@ button, input[type=button] { cursor: pointer; }
 <script type="text/javascript" src="<?= BASE_URL ?>js/snakes.js"></script>
 <script type="text/javascript" src="<?= BASE_URL ?>js/editor.js-"></script>
 <script type="text/javascript" src="<?= BASE_URL ?>js/viewer.js-"></script>
-<script type="text/javascript" src="<?= BASE_URL ?>js/list.js-"></script>
+<script type="text/javascript" src="<?= BASE_URL ?>js/list.js"></script>
 <script type="text/javascript" src="<?= BASE_URL ?>js/fight-planner.js-"></script>
 <script type="text/javascript" src="<?= BASE_URL ?>js/processor.js-"></script>
 <script type="text/javascript" src="<?= BASE_URL ?>js/fight-viewer.js-"></script>

@@ -297,6 +297,8 @@ function ACanvas(Canvas, HtmlLayers) {
 		var Result = {w: 0, h: 0, Lines: []}
 		if (!Text) return Result
 
+		if (!w) w = 640
+		if (!h) h = 480
 		var dc = this.DrawContext
 		Text = Text.split('\n')
 		var LastY = this.LineHeight
@@ -311,6 +313,7 @@ function ACanvas(Canvas, HtmlLayers) {
 				var OutWidth = dc.measureText(Output).width
 				if (OutWidth <= w) {
 					LastWidth = OutWidth
+					if (OutWidth > Result.w) Result.w = OutWidth
 					continue
 				}
 
@@ -321,6 +324,7 @@ function ACanvas(Canvas, HtmlLayers) {
 					OutWidth = LastWidth
 					FirstIndex = j
 				}
+
 				LastWidth = 0
 				if (OutWidth > Result.w) Result.w = OutWidth
 				Result.Lines.push({w: OutWidth, Text: Output})

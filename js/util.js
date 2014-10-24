@@ -92,8 +92,12 @@ function Clone(Obj) {
 	} else {
 		//var c = Obj.constructor
 		var Result = {}
-		for(var i in Obj) Result[i] = Clone(Obj[i])
-		Result.prototype = Obj.prototype
+		Result.__proto__ = Obj.prototype
+		for(var i in Obj) {
+			if (Obj.hasOwnProperty(i) && i !== 'prototype') {
+				Result[i] = Clone(Obj[i])
+			}
+		}
 	}
 	return Result
 }
