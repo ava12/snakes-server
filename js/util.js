@@ -248,6 +248,7 @@ var Ajax = {
 		if (this.Timer) {
 			clearTimeout(this.Timer)
 			this.Timer = null
+			this.Pending = false
 		}
 	},
 
@@ -279,6 +280,8 @@ var Ajax = {
 			}, Timeout * 1000)
 		}
 
+		var Request = {Xhr: Xhr, Timer: Timer, Pending: true, Cancel: this._Cancel}
+
 		Xhr.onreadystatechange = function() {
 			if (this.readyState != 4) return
 
@@ -287,15 +290,19 @@ var Ajax = {
 				Timer = null
 			}
 
-			this.LastRequest = null
-
 			if (this.status == 200) {
 				if (SuccessHandler) {
 					SuccessHandler.call(Context, Xhr.responseText)
 				}
 			} else {
 				if (ErrorHandler) {
-					ErrorHandler.call(Context, Xhr.status, Xhr.statusText, Xhr.responseText)
+					var Status = Xhr.status
+					var StatusText = Xhr.statusText
+					if (!Status && Request.Pending) {
+						Status = -1
+						StatusText = 'сервер не отвечает'
+					}
+					ErrorHandler.call(Context, Status, StatusText, Xhr.responseText)
 				}
 			}
 		}
@@ -316,7 +323,7 @@ var Ajax = {
 			Xhr.send()
 		}
 
-		this.LastRequest = {Xhr: Xhr, Timer: Timer, Cancel: this._Cancel}
+		this.LastRequest = Request
 		return this.LastRequest
 	},
 

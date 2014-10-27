@@ -172,10 +172,29 @@ function AFight(Fields) {
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 var Game = {
+	Player: {
+		Id: null,
+		Name: null,
+		FightId: null
+	},
+
+	Tabs: {
+		// {id: TabId}
+		Players: {},
+		Snakes: {},
+		Fights: {}
+	},
 
 //---------------------------------------------------------------------------
 	Run: function() {
-		TabSet.Init()
+		PostRequest(null, {Request: 'whoami'}, 20, function (Data) {
+			this.Player = {
+				Id: Data.PlayerId,
+				Name: Data.PlayerName,
+				FightId: Data.FightId
+			}
+			TabSet.Init()
+		}, null, this, 'game-wait')
 	}
 
 //---------------------------------------------------------------------------

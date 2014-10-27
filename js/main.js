@@ -65,7 +65,7 @@ function PostRequest(Url, Data, Timeout, SuccessHandler, ErrorHandler, Context, 
 		Show(Dialog)
 	}
 
-	if (SessionId) {
+	if (window.SessionId) {
 		Data.Sid = SessionId
 	}
 

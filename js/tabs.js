@@ -116,12 +116,13 @@ function AMainPageTab() {
 	this.TabTitle = 'Главная'
 	this.TabStackIndex = 0
 	this.TabControls = {w: 200, h: 50, BackColor: '#99ccff', Items: {
-		Ratings: {x: 70, y: 127, Label: 'Рейтинги', id: 'Ratings', Tab: ARatingList},
-		Players: {x: 70, y: 227, Label: 'Игроки', id: 'Players', Tab: 'APlayerList'},
-		Snakes: {x: 70, y: 327, Label: 'Змеи', id: 'Snakes', Tab: 'ASnakeList'},
-		MySnakes: {x: 370, y: 127, Label: 'Мои змеи', id: 'MySnakes', Tab: 'AMySnakeList'},
-		MyFights: {x: 370, y: 227, Label: 'Мои бои', id: 'MyFights', Tab: 'AMyFightList'},
-		Help: {x: 370, y: 327, Label: 'Справка', id: 'Help'},
+		Site: {x: 70, y: 77, Label: 'Сайт', id: 'Site'},
+		Ratings: {x: 70, y: 177, Label: 'Рейтинги', id: 'Ratings', Tab: ARatingList},
+		Players: {x: 70, y: 277, Label: 'Игроки', id: 'Players', Tab: 'APlayerList'},
+		Snakes: {x: 70, y: 377, Label: 'Змеи', id: 'Snakes', Tab: 'ASnakeList'},
+		MySnakes: {x: 370, y: 77, Label: 'Мои змеи', id: 'MySnakes', Tab: 'AMySnakeList'},
+		MyFights: {x: 370, y: 177, Label: 'Мои бои', id: 'MyFights', Tab: 'AMyFightList'},
+		Help: {x: 370, y: 377, Label: 'Справка', id: 'Help'},
 	}}
 
 //---------------------------------------------------------------------------
@@ -130,7 +131,7 @@ function AMainPageTab() {
 		var Box = {w: this.TabControls.w, h: this.TabControls.h}
 		var BackColor = this.TabControls.BackColor
 
-		var Lists = ['Ratings', 'Players', 'Snakes', 'MySnakes', 'MyFights', 'Help']
+		var Lists = ['Site', 'Ratings', 'Players', 'Snakes', 'MySnakes', 'MyFights', 'Help']
 		for(var i in Lists) {
 			var Control = Controls[Lists[i]]
 			Box.x = Control.x
@@ -150,6 +151,10 @@ function AMainPageTab() {
 				//else
 				TabSet.Add(new Control.Tab())
 			break
+
+			case 'Site':
+				location.assign(BaseUrl)
+			break;
 
 			case 'Help':
 				var t = window.open(BaseUrl + 'help.html', 'SnakesHelp')
@@ -186,7 +191,7 @@ var TabSet = {
 	TabBox: {x: 0, y: 24, w: 640, h: 480},
 
 	Controls: {w: 16, h: 16, y: 4, Data: {cls: 'tabs'}, Items: [
-		{x: 2, y: 0, w: 24, h: 24, Title: 'Главная закладка'},
+		{x: 2, y: 0, w: 24, h: 24, Title: 'Главная вкладка'},
 		{x: 30, Data: {id: 'left'}, Title: 'прокрутить влево', Sprite: '16.Buttons.Left'},
 		{x: 602, Data: {id: 'right'}, Title: 'прокрутить вправо', Sprite: '16.Buttons.Right'},
 		{x: 622, Data: {id: 'close'}, Title: 'закрыть вкладку', Sprite: '16.Buttons.Del'},

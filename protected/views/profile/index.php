@@ -1,3 +1,4 @@
+<?php $this->pageTitle = 'профиль'; ?>
 <script type="text/javascript">
 
 function SetError(Name, Message) {

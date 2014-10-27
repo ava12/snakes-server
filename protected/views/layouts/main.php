@@ -4,7 +4,8 @@
 <meta charset="utf-8">
 <meta http-equiv="Cache-Control" content="no-cache">
 
-<title>Змеи</title>
+<title>Змеи<?= $this->PageTitle ? ' | ' . $this->pageTitle : '' ?></title>
+<link rel="icon" type="image/vnd.microsoft.icon" href="<?= BASE_URL ?>favicon.ico">
 
 <link rel="stylesheet" type="text/css" href="<?= BASE_URL ?>style.css">
 <script type="text/javascript">var BaseUrl = '<?= BASE_URL ?>';</script>

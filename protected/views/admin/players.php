@@ -3,6 +3,8 @@
 <tr><th>Ид<th>Логин<th>Имя<th>Рейтинг<th>Зарегистрирован<th>Группы</tr>
 <?php
 
+$this->pageTitle = 'администрирование: игроки';
+
 foreach ($provider->data as $player) {
 	$id = $player->id;
 	$login = htmlspecialchars($player->login);

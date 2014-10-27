@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 
-<title>Змеи</title>
+<title>Змеи | игра</title>
+<link rel="icon" type="image/vnd.microsoft.icon" href="<?= BASE_URL ?>favicon.ico">
 
 <style>
 * { margin: 0px; padding: 0px; }
@@ -76,14 +77,14 @@ button, input[type=button] { cursor: pointer; }
 }
 .debug-list .skin { cursor: pointer; margin: 0px; }
 
-#json-wait { display: none; position: absolute; left: 0px; top: 0px; right: 0px; bottom: 0px; }
-#json-wait-back { background-color: #000; opacity: 0.5; }
-#json-wait-dialog {
+.json-wait { display: none; position: absolute; left: 0px; top: 0px; right: 0px; bottom: 0px; }
+.json-wait-back { background-color: #000; opacity: 0.5; width: 100%; height: 100%; }
+.json-wait-dialog {
 	position: absolute; left: 160px; right: 160px; top: 180px; bottom: 180px;
 	text-align: center; border: 1px solid; background-color: #fff;
 }
-#json-wait-dialog div { padding: 1em; }
-#json-wait-dialog input { padding: 1ex; }
+.json-wait-dialog div { padding: 1em; }
+.json-wait-dialog input { padding: 1ex; }
 
 </style>
 <script type="text/javascript">
@@ -104,18 +105,30 @@ button, input[type=button] { cursor: pointer; }
 <canvas id="canvas" width="640" height="480"></canvas>
 
 <div id="control-frame">
+
 <div id="controls"></div>
 <div id="tab_controls"></div>
 <div id="tabs"></div>
-<div id="json-wait">
-<div id="json-wait-back"></div>
-<div id="json-wait-dialog">
+
+<div id="json-wait" class="json-wait">
+<div class="json-wait-back"></div>
+<div class="json-wait-dialog">
 <div>
 <img alt="" src="<?= BASE_URL ?>img/loading.gif"> Запрос к серверу.<br><br>
 <input type="button" value="Отмена" onclick="Ajax.Cancel()">
 </div>
 </div>
 </div>
+
+<div id="game-wait" class="json-wait">
+<div class="json-wait-back"></div>
+<div class="json-wait-dialog">
+<div>
+<br>Соединение с сервером... <img alt="" src="<?= BASE_URL ?>img/loading.gif">
+</div>
+</div>
+</div>
+
 </div>
 
 </div>
@@ -128,26 +141,22 @@ button, input[type=button] { cursor: pointer; }
 <img id="img-sprites" alt="" src="<?= BASE_URL ?>img/client/sprites.png">
 <img id="img-skins" alt="" src="<?= BASE_URL ?>img/16/skins.png">
 <img id="img-tile" alt="" src="<?= BASE_URL ?>img/client/tile.png">
-
-<img alt="" src="<?= BASE_URL ?>img/16/skin1.png">
-<img alt="" src="<?= BASE_URL ?>img/16/skin2.png">
-<img alt="" src="<?= BASE_URL ?>img/16/skin3.png">
-<img alt="" src="<?= BASE_URL ?>img/16/skin4.png">
-<img alt="" src="<?= BASE_URL ?>img/16/skin5.png">
-<img alt="" src="<?= BASE_URL ?>img/16/skin6.png">
+<?php
+	for ($i = 1; $i <= 6; $i++) {
+		echo '<img alt="" src="' . BASE_URL . "img/16/skin$i.png\">\r\n";
+	}
+?>
 </div>
 
-<script type="text/javascript" src="<?= BASE_URL ?>js/canvas.js"></script>
-<script type="text/javascript" src="<?= BASE_URL ?>js/sprites.js"></script>
-<script type="text/javascript" src="<?= BASE_URL ?>js/skins.js-"></script>
-<script type="text/javascript" src="<?= BASE_URL ?>js/tabs.js"></script>
-<script type="text/javascript" src="<?= BASE_URL ?>js/snakes.js"></script>
-<script type="text/javascript" src="<?= BASE_URL ?>js/editor.js-"></script>
-<script type="text/javascript" src="<?= BASE_URL ?>js/viewer.js-"></script>
-<script type="text/javascript" src="<?= BASE_URL ?>js/list.js"></script>
-<script type="text/javascript" src="<?= BASE_URL ?>js/fight-planner.js-"></script>
-<script type="text/javascript" src="<?= BASE_URL ?>js/processor.js-"></script>
-<script type="text/javascript" src="<?= BASE_URL ?>js/fight-viewer.js-"></script>
+<?php
+	foreach(array(
+		'canvas', 'sprites', 'tabs', 'snakes', 'skins',
+		'list',
+//		'editor', 'viewer', 'fight-planner', 'fight-viewer',
+	) as $name) {
+		echo '<script type="text/javascript" src="' . BASE_URL . "js/$name.js\"></script>\r\n";
+	}
+?>
 
 <script type="text/javascript">
 

@@ -28,7 +28,8 @@ var Sprites = {
 				_: [16, 16], Up: [400, 80], Down: [416, 80], Add: [432, 80],
 				Copy: [448, 80], Del: [464, 80], First: [352, 96], Last: [368, 96],
 				Back: [384, 96], Forth: [400, 96], Run: [416, 96],
-			},
+				Ratings: [176, 96], Players: [192, 96], Me: [208, 96], Player: [224, 96]
+			}
 		},
 
 		32: {
@@ -74,6 +75,7 @@ var Sprites = {
 
 		Fight: [128, 96, 48, 16],
 		Attack: [144, 96, 16, 16],
+		Sort: {_: [15, 15], Asc: [272, 64], Desc: [288, 64], IsAsc: [272, 80], IsDesc: [288, 80]}
 	},
 
 	Image: GetImage('img-sprites'),

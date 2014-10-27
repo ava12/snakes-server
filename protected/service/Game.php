@@ -198,7 +198,7 @@ class Game {
 	protected function requestRatings() {
 		$model = Player::model()->hasRating()->with('fighter');
 		$provider = $this->makeDataProvider($model, '>Rating',
-			array('Rating' => 'rating', 'PlayerName' => 'name'));
+			array('Rating' => 'rating', 'PlayerName' => 't.name'));
 		$data = $provider->getData();
 		$response = $this->makeListResponse('ratings', $provider);
 

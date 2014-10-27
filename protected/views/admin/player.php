@@ -1,4 +1,8 @@
-<?php if (!$player) throw new CHttpException(404); ?>
+<?php
+	if (!$player) throw new CHttpException(404);
+
+	$this->pageTitle = 'администрирование: игрок ' . $player->id;
+?>
 <a href="<?= BASE_URL ?>admin/player">Список</a><br><br>
 <script type="text/javascript">
 

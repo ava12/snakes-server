@@ -295,7 +295,9 @@ function ACanvas(Canvas, HtmlLayers) {
 //---------------------------------------------------------------------------
 	this.GetTextMetrics = function(Text, w, h) {
 		var Result = {w: 0, h: 0, Lines: []}
-		if (!Text) return Result
+		if (Text == undefined) return Result
+
+		Text = String(Text)
 
 		if (!w) w = 640
 		if (!h) h = 480
@@ -304,7 +306,7 @@ function ACanvas(Canvas, HtmlLayers) {
 		var LastY = this.LineHeight
 
 		for(var i = 0; i < Text.length; i++) {
-			var Line = Text[i].replace(/^\s+|\s+$/g, '').split(/\s+/)
+			var Line = Text[i].replace(/^\s+|\s+$/g, '').split(/[\0-\x20]+/g)
 			var FirstIndex = 0
 			var LastWidth = 0
 

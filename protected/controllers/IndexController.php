@@ -7,10 +7,10 @@ class IndexController extends Controller {
 
 //---------------------------------------------------------------------------
 	public function actionIndex() {
-		$model = Player::model()->hasRating();//->with('fighter');
+		$model = Player::model()->hasRating()->with('fighter');
 		$provider = new CActiveDataProvider($model, array(
 			'criteria' => array(
-				'order' => '`rating` DESC, `t`.`id` ASC',
+				'order' => '`rating` DESC, `t`.`id` DESC',
 			),
 			'pagination' => array(
 				'currentPage' => (isset($_GET['page']) ? $_GET['page'] - 1 : 0),

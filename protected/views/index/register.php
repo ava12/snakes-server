@@ -1,3 +1,4 @@
+<?php $this->pageTitle = 'регистрация'; ?>
 <script type="text/javascript">
 
 function RefreshCaptcha() {

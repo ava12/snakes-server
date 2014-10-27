@@ -1,4 +1,8 @@
-<?php if ($this->player and $this->player->isConfirmed()) { ?>
+<?php
+$this->pageTitle = '';
+
+if ($this->player and $this->player->isConfirmed()) {
+?>
 <a href="<?= BASE_URL ?>game" class="fl-right">Играть</a>
 <?php } ?>
 <h1>Рекорды</h1>
@@ -8,8 +12,9 @@
 foreach ($provider->data as $player) {
 	$name = htmlspecialchars($player->name);
 	$rating = $player->rating;
-	$skin = mt_rand(1, 6);
-	$fighter = 'боец ' . $name;
+	$snake = $player->fighter;
+	$skin = $snake->skin_id;
+	$fighter = htmlspecialchars($snake->name);
 	echo "<tr><td>$name<td class=\"ar\">$rating<td><span class=\"skin skin$skin\"></span>$fighter</tr>\r\n";
 }
 ?>
