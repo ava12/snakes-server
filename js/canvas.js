@@ -400,6 +400,7 @@ function ACanvas(Canvas, HtmlLayers) {
 	this.RenderTextBox = function(Text, Box, Color, BackColor, BorderColor, Align, VAlign) {
 		this.SaveState()
 		if (!BackColor) BackColor = '#ffffff'
+		if (!BorderColor) BorderColor = BackColor
 		this.Rect(Box, BackColor, BorderColor, 1)
 		this.Clip(ABox(Box.x + 2, Box.y + 2, Box.w - 4, Box.h - 4))
 		this.RenderText(Text, ABox(Box.x + 4, Box.y - 1, Box.w - 8, Box.h + 1), Color, Align, VAlign)

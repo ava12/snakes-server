@@ -118,8 +118,8 @@ function AMainPageTab() {
 	this.TabControls = {w: 200, h: 50, BackColor: '#99ccff', Items: {
 		Site: {x: 70, y: 77, Label: 'Сайт', id: 'Site'},
 		Ratings: {x: 70, y: 177, Label: 'Рейтинги', id: 'Ratings', Tab: ARatingList},
-		Players: {x: 70, y: 277, Label: 'Игроки', id: 'Players', Tab: 'APlayerList'},
-		Snakes: {x: 70, y: 377, Label: 'Змеи', id: 'Snakes', Tab: 'ASnakeList'},
+		Players: {x: 70, y: 277, Label: 'Игроки', id: 'Players', Tab: APlayerList},
+		Snakes: {x: 70, y: 377, Label: 'Змеи', id: 'Snakes', Tab: ASnakeList},
 		MySnakes: {x: 370, y: 77, Label: 'Мои змеи', id: 'MySnakes', Tab: 'AMySnakeList'},
 		MyFights: {x: 370, y: 177, Label: 'Мои бои', id: 'MyFights', Tab: 'AMyFightList'},
 		Help: {x: 370, y: 377, Label: 'Справка', id: 'Help'},
