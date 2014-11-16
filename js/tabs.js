@@ -77,8 +77,8 @@ var BPageTab = {
 	Show: function() {
 		this.OnShow()
 		Canvas.FillRect(TabSet.TabBox, '#ffffff')
-		this.RestoreControlHtml()
 		this.RenderBody()
+		this.RestoreControlHtml()
 	},
 
 //---------------------------------------------------------------------------

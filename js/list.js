@@ -1,7 +1,7 @@
 function AList() {
 	this.TabWidth = 24
 	this.Buttons = []
-	this.BackColor = ['#eeeeff', '#eeffee']
+	this.BackColor = CanvasColors.Items
 	this.LinkColor = '#3333ff'
 	this.LinkBackColor = '#ffffff'
 	this.List = {
@@ -57,7 +57,7 @@ function AList() {
 //---------------------------------------------------------------------------
 	this.RenderTextButton = function(Item, Index, x, y, Params) {
 		var BackColor = Params.BackColor
-		if (!BackColor) BackColor = '#eeeeee'
+		if (!BackColor) BackColor = CanvasColors.Button
 		var Width = Params.Width
 		if (!Width) Width = Canvas.GetTextMetrics(Params.Label).w + 8
 		var Box = {x: x + 4, y: y + 4, w: Width, h: this.ItemHeight - 8}
@@ -304,6 +304,12 @@ function AList() {
 				this.RefreshList()
 			break;
 
+			case 'player':
+				Id = this.List.Items[Id].PlayerId
+				if (Game.Tabs.Players[Id]) TabSet.Select(Game.Tabs.Players[Id])
+				else TabSet.Add(new APlayer(Id))
+			break;
+
 			default:
 				this.OnCustomClick(x, y, Dataset)
 		}
@@ -331,14 +337,14 @@ function ARatingList() {
 		ExtraSort: [['PlayerId', false]],
 
 		Columns: [
-			{Label: 'Игрок', Width: 230, Name: 'PlayerName'},
+			{Label: 'Игрок', Width: 200, Name: 'PlayerName'},
 			{Label: 'Рейтинг', Width: 100, Name: 'Rating'},
-			{Label: 'Боец', Width: 290}
+			{Label: 'Боец', Width: 240}
 		],
 
 		Fields: [
 			{Type: 'Gap'},
-			{Type: 'PropertyLink', Width: 228, Property: 'PlayerName', Data: {cls: 'player'}},
+			{Type: 'PropertyLink', Width: 198, Property: 'PlayerName', Data: {cls: 'player'}},
 			{Type: 'Separator'},
 			{Type: 'PropertyText', Width: 84, Property: 'Rating', Align: 'right'},
 			{Type: 'Gap', Width: 15},
@@ -346,8 +352,30 @@ function ARatingList() {
 			{Type: 'Gap'},
 			{Type: 'Skin'},
 			{Type: 'Gap'},
-			{Type: 'PropertyText', Width: 233, Property: 'SnakeName'}
+			{Type: 'PropertyText', Width: 160, Property: 'SnakeName'},
+			{Type: 'ChallengeButton', Width: 70, BackColor: CanvasColors.Create, Label: 'Вызвать'}
 		],
+	}
+
+//---------------------------------------------------------------------------
+	this.RenderChallengeButton = function (Item, Index, x, y, Params) {
+		if (Item.PlayerId == Game.Player.Id) return Params.Width
+
+		var Box = {x: x, y: y, Width: Params.Width, BackColor: Params.BackColor,
+			Label: Params.Label, Data: {cls: 'challenge'}, Title: 'вызвать игрока на бой'}
+		return this.RenderTextButton(Item, Index, x, y, Box)
+	}
+
+//---------------------------------------------------------------------------
+	this.OnCustomClick = function (x, y, Dataset) {
+		var Class = Dataset.cls
+		var Id = Dataset.id
+
+		switch (Class) {
+			case 'challenge':
+				alert('<не реализовано>')
+			break;
+		}
 	}
 
 //---------------------------------------------------------------------------

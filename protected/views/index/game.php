@@ -151,8 +151,8 @@ button, input[type=button] { cursor: pointer; }
 <?php
 	foreach(array(
 		'canvas', 'sprites', 'tabs', 'snakes', 'skins',
-		'list',
-//		'editor', 'viewer', 'fight-planner', 'fight-viewer',
+		'list', 'player', 'viewer',
+//		'editor', 'fight-planner', 'fight-viewer',
 	) as $name) {
 		echo '<script type="text/javascript" src="' . BASE_URL . "js/$name.js\"></script>\r\n";
 	}
@@ -166,11 +166,6 @@ var Canvas = new ACanvas('canvas', {
 
 Canvas.SetFont('verdana', 14, 18)
 window.onload = function() {
-/*	PostRequest(BaseUrl + 'ajax', {Request: 'whoami'}, 20, function (Data) {
-		var a = []
-		for (var Name in Data) a.push(Name + ': ' + Data[Name])
-		alert(a.join(', '))
-	})*/
 	Game.Run()
 }
 

@@ -83,6 +83,7 @@ function ASnakeMap(Fields) {
 function ASnake(Fields) {
 	this.SnakeId = false
 	this.PlayerId = false
+	this.PlayerName = false
 	this.SnakeName = ''
 	this.SnakeType =  'N'
 	this.SkinId = 1

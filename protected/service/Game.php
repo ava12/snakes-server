@@ -244,7 +244,7 @@ class Game {
 //---------------------------------------------------------------------------
 	protected function requestPlayerInfo() {
 		$playerId = $this->request['PlayerId'];
-		$player = Player::model()->with('snakes')->findByPk($playerId);
+		$player = Player::model()->findByPk($playerId);
 		if (!$player) {
 			throw new NackException(NackException::ERR_UNKNOWN_PLAYER, $playerId);
 		}
@@ -265,6 +265,7 @@ class Game {
 			'PlayerId' => $player->id,
 			'PlayerName' => $player->name,
 			'Rating' => (isset($rating) ? (int)$rating : NULL),
+			'FighterId' => (isset($rating) ? $player->fighter_id : NULL),
 			'PlayerSnakes' => $snakes,
 		);
 	}

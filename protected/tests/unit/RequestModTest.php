@@ -40,6 +40,7 @@ final class RequestModTest extends RequestTestBase {
 			'PlayerId' => '2',
 			'PlayerName' => 'ch2',
 			'Rating' => 20,
+			'FighterId' => '2',
 			'PlayerSnakes' => array(
 				array('SnakeId' => $snakeId, 'SnakeName' => '1питон', 'SnakeType' => 'B', 'SkinId' => 1),
 				array('SnakeId' => '2', 'SnakeName' => 'sn2', 'SnakeType' => 'N', 'SkinId' => 1),

@@ -119,7 +119,7 @@ class Snake extends ActiveRecord {
 //---------------------------------------------------------------------------
 	public function forPlayer($playerId) {
 		if (is_object($playerId)) $playerId = $playerId->id;
-		$this->getDbCriteria()->addColumnCondition('player_id', $playerId);
+		$this->getDbCriteria()->addColumnCondition(array('player_id' => $playerId));
 		return $this;
 	}
 

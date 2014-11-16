@@ -1,6 +1,11 @@
 function ASnakeViewer(Snake) {
-	if (typeof Snake != 'object') Snake = Game.OtherSnakes.List[Snake]
-	this.Snake = Snake
+	if (typeof Snake == 'object') {
+		this.Snake = Snake
+		this.SnakeId = Snake.SnakeId
+	} else {
+		this.Snake = null
+		this.SnakeId = Snake
+	}
 	this.TabTitle = (Snake.SnakeName ? Snake.SnakeName : '<без имени>')
 	this.TabSprite = SnakeSkins.Get(Snake.SkinId)
 	this.CurrentMap = 0
@@ -32,12 +37,12 @@ function ASnakeViewer(Snake) {
 			{x : 386, y: 358, id: '7', Title: 'карта № 8'},
 			{x : 507, y: 358, id: '8', Title: 'карта № 9'},
 		]},
-		FightButton: {x: 562, y: 27, w: 70, h: 22, Data: {cls: 'fight'},
-			Label: 'В бой!', BackColor: '#99ff99'},
+		RefreshButton: {x: 532, y: 27, w: 100, h: 22, Data: {cls: 'refresh'},
+			Label: 'Обновить', BackColor: CanvasColors.Button},
 	}}
 
 	this.SkinControl = {x: 8, y: 29, w: 48, h: 16}
-	this.NameControl = {x: 60, y: 27, w: 492, h: 22}
+	this.NameControl = {x: 60, y: 27, w: 462, h: 22}
 	this.MapControl = {x: 21, y: 109, w: 224, h: 224}
 
 	this.Templates = {
@@ -50,7 +55,7 @@ function ASnakeViewer(Snake) {
 
 //---------------------------------------------------------------------------
 	this.TabInit = function() {
-		this.Snake.TabId = this.TabId
+		Game.Tabs.Snakes[this.SnakeId] = this.TabId
 	}
 
 //---------------------------------------------------------------------------
@@ -125,6 +130,11 @@ function ASnakeViewer(Snake) {
 
 //---------------------------------------------------------------------------
 	this.RenderBody = function() {
+		if (!this.Snake) {
+			this.LoadSnake()
+			return
+		}
+
 		this.RenderMaps()
 		this.RenderTemplates()
 
@@ -133,7 +143,7 @@ function ASnakeViewer(Snake) {
 		Canvas.RenderSprite(this.TabSprite, this.SkinControl.x, this.SkinControl.y)
 		this.RenderTextBox(this.NameControl, this.TabTitle)
 		this.RenderTextBox(Controls.ProgramDescription, this.Snake.ProgramDescription)
-		var Button = Controls.FightButton
+		var Button = Controls.RefreshButton
 		Canvas.RenderTextBox(Button.Label, Button, '#000', Button.BackColor,
 			'#000', 'center', 'middle')
 	}
@@ -156,30 +166,44 @@ function ASnakeViewer(Snake) {
 		switch(Dataset.cls) {
 			case 'map': this.SelectMap(Id); break
 			case 'desc': this.RenderDescription(Id); break
-			case 'fight': TabSet.Add(new AFightPlanner(this.Snake)); break
+			case 'refresh': this.LoadSnake(); break
 		}
 	}
 
 //---------------------------------------------------------------------------
 	this.OnClose = function() {
-		this.Snake.TabId = null
+		delete Game.Tabs.Snakes[this.SnakeId]
 		return true
 	}
 
 //---------------------------------------------------------------------------
 	this.Serialize = function() {
-		var List = Game.OtherSnakes.List
-		for(var i in List) if (List[i] == this.Snake) break
-		return {Object: 'ASnakeViewer', Data: [i]}
+		return {Object: 'ASnakeViewer', Data: [this.SnakeId]}
 	}
 
 //---------------------------------------------------------------------------
-	;(function() {
-		var MapCnt = this.Snake.Maps.length
-		var Controls = this.TabControls.Items
-		Controls.Maps.Items = Controls.Maps.Items.slice(0, MapCnt)
-		Controls.MapButtons.Items = Controls.MapButtons.Items.slice(0, MapCnt)
-	}).apply(this)
+	this.LoadSnake = function () {
+		var Request = {Request: 'snake info', SnakeId: this.SnakeId}
+		PostRequest(null, Request, 20, function(Data) {
+			this.Snake = new ASnake(Data)
+			if (this.Snake.PlayerId != Game.Player.Id) {
+				this.Snake.SnakeName += ' (' + this.Snake.PlayerName + ')'
+			}
+			this.TabTitle = this.Snake.SnakeName
+
+			var MapCnt = this.Snake.Maps.length
+			var Controls = this.TabControls.Items
+			Controls.Maps.Items = Controls.Maps.Items.slice(0, MapCnt)
+			Controls.MapButtons.Items = Controls.MapButtons.Items.slice(0, MapCnt)
+
+			this.Clear()
+			TabSet.RenderTabs()
+			this.Show()
+		}, function (Status, Message, Data) {
+			alert('Ошибка: ' + (Date.Error ? Data.Error : (Status + ' ' + Message)))
+			if (!this.Snake) this.Close()
+		}, this)
+	}
 
 //---------------------------------------------------------------------------
 }

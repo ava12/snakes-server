@@ -120,7 +120,7 @@ final class RequestTest extends RequestTestBase {
 	}
 
 	public function testLogin() {
-		$salt = 'abcdefgh';
+		$salt = '0123abcd';
 		$hash = sha1(sha1('login:password') . $salt);
 		$player = new Player;
 		$errors = Util::saveModel($player, array(
@@ -221,6 +221,7 @@ final class RequestTest extends RequestTestBase {
 			'PlayerId' => '5',
 			'PlayerName' => 'p',
 			'Rating' => NULL,
+			'FighterId' => NULL,
 			'PlayerSnakes' => array(
 				array('SnakeId' => '5', 'SnakeName' => 'sn', 'SnakeType' => 'B', 'SkinId' => 1),
 			),

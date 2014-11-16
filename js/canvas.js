@@ -51,6 +51,9 @@ function ACanvas(Canvas, HtmlLayers) {
 		}
 		if (Context == undefined) Context = {}
 		else Context = Clone(Context)
+
+		if (Control.Skip) return ''
+
 		for(var i in Control) {
 			switch(i) {
 				case 'Items': case 'prototype':
@@ -410,7 +413,7 @@ function ACanvas(Canvas, HtmlLayers) {
 //---------------------------------------------------------------------------
 	this.RenderTextButton = function(Text, Box, BackColor, Color) {
 		if (!Color) Color = '#000'
-		if (!BackColor) BackColor = '#eef'
+		if (!BackColor) BackColor = CanvasColors.Button
 		return this.RenderTextBox(Text, Box, Color, BackColor, Color, 'center', 'middle')
 	}
 
@@ -461,3 +464,13 @@ function ACanvas(Canvas, HtmlLayers) {
 
 //---------------------------------------------------------------------------
 }
+
+var CanvasColors = {
+	Info: '#9cf',
+	Create: '#9f9',
+	Modify: '#ff6',
+	Delete: '#f99',
+	Button: '#eee',
+	Items: ['#eef', '#efe']
+}
+
