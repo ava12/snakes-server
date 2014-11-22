@@ -69,6 +69,7 @@ function PostRequest(Url, Data, Timeout, SuccessHandler, ErrorHandler, Context, 
 		Data.Sid = SessionId
 	}
 
+//	console.log('POST: ' + Data.Request)
 	return Ajax.Post(Url, Data, Timeout,
 		function (Text) {
 			if (Dialog) Show(Dialog, false)

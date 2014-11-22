@@ -149,11 +149,13 @@ class RequestValidator {
 
 //---------------------------------------------------------------------------
 	protected static function getDefaultValue($type) {
+		if (substr($type, 0, 1) == '_') return NULL;
+
 		$typeDef = (array)static::$fieldTypes[$type];
 		if(isset($typeDef[1])) {
 			$result = $typeDef[1];
 			if(in_array($type, static::$arrayFieldTypes) and !is_array($typeDef[1])) {
-				$value = static::GetDefaultValue($typeDef[0]);
+				$value = static::getDefaultValue($typeDef[0]);
 				if(!isset($typeDef[3]) or !$typeDef[3]) $result = array();
 				else $result = array_fill(0, $typeDef[3], $value);
 			}
@@ -258,7 +260,7 @@ class RequestValidator {
 						$value[$name] = static::validateField($value[$name], $typeDef, $name, $path);
 					}
 					else {
-						$v = GetDefaultValue($typeDef[0]);
+						$v = static::getDefaultValue($typeDef[0]);
 						if(isset($v)) $value[$name] = $v;
 						else {
 							$path[] = $name;
@@ -319,7 +321,7 @@ class RequestValidator {
 				}
 
 				else {
-					$value = static::GetDefaultValue($name);
+					$value = static::getDefaultValue($name);
 					if(isset($value)) $request[$name] = $value;
 				}
 			}

@@ -120,7 +120,7 @@ function AMainPageTab() {
 		Ratings: {x: 70, y: 177, Label: 'Рейтинги', id: 'Ratings', Tab: ARatingList},
 		Players: {x: 70, y: 277, Label: 'Игроки', id: 'Players', Tab: APlayerList},
 		Snakes: {x: 70, y: 377, Label: 'Змеи', id: 'Snakes', Tab: ASnakeList},
-		MySnakes: {x: 370, y: 77, Label: 'Мои змеи', id: 'MySnakes', Tab: 'AMySnakeList'},
+		MySnakes: {x: 370, y: 77, Label: 'Мои змеи', id: 'MySnakes'},
 		MyFights: {x: 370, y: 177, Label: 'Мои бои', id: 'MyFights', Tab: 'AMyFightList'},
 		Help: {x: 370, y: 377, Label: 'Справка', id: 'Help'},
 	}}
@@ -145,16 +145,20 @@ function AMainPageTab() {
 	this.OnClick = function(x, y, Dataset) {
 		switch(Dataset.id) {
 			case 'Ratings': case 'Players': case 'Snakes':
-			case 'MySnakes': case 'MyFights':
+			case 'MyFights':
 				var Control = this.TabControls.Items[Dataset.id]
 				//if (Control.List.TabId) TabSet.Select(Control.List.TabId)
 				//else
 				TabSet.Add(new Control.Tab())
 			break
 
+			case 'MySnakes':
+				TabSet.Add(new APlayer(Game.Player.Id))
+			break
+
 			case 'Site':
 				location.assign(BaseUrl)
-			break;
+			break
 
 			case 'Help':
 				var t = window.open(BaseUrl + 'help.html', 'SnakesHelp')

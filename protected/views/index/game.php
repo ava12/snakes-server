@@ -137,7 +137,7 @@ button, input[type=button] { cursor: pointer; }
 <!--[if lt ie 9]></div><![endif]-->
 
 <div style="display:none">
-<img alt="" src="img/empty.png">
+<img alt="" src="<?= BASE_URL ?>img/empty.png">
 <img id="img-sprites" alt="" src="<?= BASE_URL ?>img/client/sprites.png">
 <img id="img-skins" alt="" src="<?= BASE_URL ?>img/16/skins.png">
 <img id="img-tile" alt="" src="<?= BASE_URL ?>img/client/tile.png">
@@ -151,8 +151,8 @@ button, input[type=button] { cursor: pointer; }
 <?php
 	foreach(array(
 		'canvas', 'sprites', 'tabs', 'snakes', 'skins',
-		'list', 'player', 'viewer',
-//		'editor', 'fight-planner', 'fight-viewer',
+		'list', 'player', 'viewer', 'editor',
+//		'fight-planner', 'fight-viewer',
 	) as $name) {
 		echo '<script type="text/javascript" src="' . BASE_URL . "js/$name.js\"></script>\r\n";
 	}

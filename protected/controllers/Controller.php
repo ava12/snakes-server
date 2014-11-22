@@ -46,7 +46,7 @@ class Controller extends CController {
 //---------------------------------------------------------------------------
 	public function renderJson($data) {
 		header('Content-Type: text/json', true);
-		echo json_encode($data);
+		echo json_encode($data, defined('JSON_UNESCAPED_UNICODE') ? JSON_UNESCAPED_UNICODE : 0);
 	}
 
 //---------------------------------------------------------------------------

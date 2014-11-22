@@ -1,13 +1,7 @@
-function ASnakeViewer(Snake) {
-	if (typeof Snake == 'object') {
-		this.Snake = Snake
-		this.SnakeId = Snake.SnakeId
-	} else {
-		this.Snake = null
-		this.SnakeId = Snake
-	}
-	this.TabTitle = (Snake.SnakeName ? Snake.SnakeName : '<без имени>')
-	this.TabSprite = SnakeSkins.Get(Snake.SkinId)
+function ASnakeViewer(SnakeId) {
+	this.Snake = null
+	this.SnakeId = SnakeId
+
 	this.CurrentMap = 0
 
 	this.TabControls = {Items: {
@@ -186,10 +180,8 @@ function ASnakeViewer(Snake) {
 		var Request = {Request: 'snake info', SnakeId: this.SnakeId}
 		PostRequest(null, Request, 20, function(Data) {
 			this.Snake = new ASnake(Data)
-			if (this.Snake.PlayerId != Game.Player.Id) {
-				this.Snake.SnakeName += ' (' + this.Snake.PlayerName + ')'
-			}
-			this.TabTitle = this.Snake.SnakeName
+			this.TabTitle = this.Snake.SnakeName + ' (' + this.Snake.PlayerName + ')'
+			this.TabSprite = SnakeSkins.Get(this.Snake.SkinId)
 
 			var MapCnt = this.Snake.Maps.length
 			var Controls = this.TabControls.Items

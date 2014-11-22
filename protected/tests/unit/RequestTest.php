@@ -91,6 +91,23 @@ final class RequestTest extends RequestTestBase {
 		self::checkInvalidRequest($request, NackException::ERR_UNKNOWN_SLOT, 1);
 	}
 
+	public function testDuplicateSnakeName() {
+		$request = array(
+			'Request' => 'snake new',
+			'SnakeName' => 'sn',
+			'SnakeType' => 'N',
+			'SkinId' => 1,
+			'ProgramDescription' => '',
+			'Templates' => array('S', 'S', 'S', 'S'),
+			'Maps' => array(array(
+				'HeadX' => 0, 'HeadY' => 0, 'Description' => '', 'Lines' => array(
+					array('X' => 0, 'Y' => 0, 'Line' => '--')
+				)
+			)),
+		);
+		self::checkInvalidRequest($request, NackException::ERR_WRONG_VALUE, 1);
+	}
+
 
 //- корректные, не изменяющие состояние -------------------------------------
 

@@ -283,6 +283,7 @@ var Ajax = {
 		var Request = {Xhr: Xhr, Timer: Timer, Pending: true, Cancel: this._Cancel}
 
 		Xhr.onreadystatechange = function() {
+//			console.log(this.readyState)
 			if (this.readyState != 4) return
 
 			if (Timer) {

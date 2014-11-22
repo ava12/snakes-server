@@ -1,22 +1,38 @@
-function ASnakeEditor(Snake) {
-	if (!Snake) Snake = new ASnake()
-	else if (typeof Snake != 'object') Snake = Game.MySnakes.Get(Snake)
+function ASnakeEditor(SnakeId) {
+	this.SnakeId = SnakeId
 
-	this.Snake = Snake
-	this.TabTitle = (Snake.SnakeName ? Snake.SnakeName : '<без имени>')
-	this.TabSprite = SnakeSkins.Get(Snake.SkinId)
+	this.Dirty = {
+		Dirty: false,
+		Name: false,
+		Type: false,
+		Skin: false,
+		Templates: false,
+		Description: false,
+		Maps: false
+	}
+
+	if (SnakeId) this.Snake = null
+	else {
+		this.Snake = new ASnake()
+		this.TabSprite = SnakeSkins.Get(this.Snake.SkinId)
+		this.TabTitle = '<без имени>'
+		for (var n in this.Dirty) this.Dirty[n] = true
+	}
+
 	this.BaseControlHtml = ''
 
 	this.Controls = {Items: {
 		Map: {x: 208, y: 150, w: 224, h: 224, Data: {cls: 'map', id: 'map'}},
-		SkinId: {x: 8, y: 45, w: 48, h: 16, Data: {cls: 'desc', id: 'skin'},
+		SnakeType: {x: 22, y: 42, w: 50, h: 22,
+			Labels: {B: 'бот', N: 'змея'}, Data: {cls: 'type'}},
+		SkinId: {x: 76, y: 45, w: 48, h: 16, Data: {cls: 'desc', id: 'skin'},
 			Back: false, Sprite: this.TabSprite},
-		SnakeName: {x: 60, y: 42, w: 412, h: 22, Data: {cls: 'desc', id: 'name'},
+		SnakeName: {x: 128, y: 42, w: 336, h: 22, Data: {cls: 'desc', id: 'name'},
 			Back: false},
-		FightButton: {x: 562, y: 42, w: 70, h: 22, Data: {cls: 'fight'},
-			Label: 'В бой!', BackColor: '#99ff99'},
-		ExportButton: {x: 482, y: 42, w: 70, h: 22, Data: {cls: 'export'},
-			Label: 'Экспорт', Title: 'экспортировать в виде текста', BackColor: '#9cf'},
+		FightButton: {x: 468, y: 42, w: 70, h: 22, Data: {cls: 'fight'},
+			Label: 'В бой!', BackColor: CanvasColors.Create},
+		SaveButton: {x: 542, y: 42, w: 90, h: 22, Label: 'Сохранить', Data: {cls: 'save'},
+			BackColor: (this.SnakeId ? CanvasColors.Update : CanvasColors.Create)},
 		ProgramDescription: {x: 8, y: 79, w: 624, h: 58,
 			Data: {cls: 'desc', id: 'program'}, Back: false, Title: 'описание программы'},
 		Description: {x: 8, y: 268, w: 192, h: 108, Data: {cls: 'desc', id: 'map'},
@@ -121,6 +137,8 @@ function ASnakeEditor(Snake) {
 		{x : 554, y: 302, id: '8', Title: 'карта № 9', Sprite: '16.Digits.9'},
 	]}
 
+	this.DirtyLabel = {x: 8, y: 42, w: 10, h: 22, Label: '*'}
+
 	this.MapIndex = 0
 	this.Cells = null
 	this.Group = null
@@ -131,30 +149,14 @@ function ASnakeEditor(Snake) {
 	this.Templates = {}
 
 //---------------------------------------------------------------------------
-	;(function() {
-		if (!window.JSON) delete this.Controls.ExportButton
-
-		var SetNames = ['A', 'B', 'C', 'D']
-		for(var i in SetNames) {
-			var Set = {Count: 0,
-				s: false, t: false, v: false, w: false, x: false, y: false, z: false}
-			var Tpl = Snake.Templates[i].chunk()
-			for(var j in Tpl) {
-				var t = Tpl[j].toLowerCase()
-				Set[t] = true
-				Set.Count++
-			}
-			this.Templates[SetNames[i]] = Set
-		}
-	}).apply(this)
-
-//---------------------------------------------------------------------------
 	this.TabInit = function() {
-		this.Snake.TabId = this.TabId
+		Game.Tabs.Snakes[this.SnakeId] = this.TabId
 	}
 
 //---------------------------------------------------------------------------
 	this.RenderControls = function() {
+		if (!this.Snake) return
+
 		var MapCnt = this.Snake.Maps.length
 		var Mbc = this.MapButtonControls
 		var MapButtons = {w: Mbc.w, h: Mbc.h, Data: Mbc.Data,
@@ -222,7 +224,30 @@ function ASnakeEditor(Snake) {
 	}
 
 //---------------------------------------------------------------------------
+	this.RenderDirtyMark = function () {
+		if (this.Dirty.Dirty) Canvas.RenderText(this.DirtyLabel.Label, this.DirtyLabel)
+		else Canvas.FillRect(this.DirtyLabel, '#fff')
+	}
+
+//---------------------------------------------------------------------------
+	this.RenderSnakeType = function () {
+		var Box = this.Controls.Items.SnakeType
+		Canvas.RenderTextBox(Box.Labels[this.Snake.SnakeType], Box)
+	}
+
+//---------------------------------------------------------------------------
+	this.RenderSnakeSkin = function () {
+		var Box = this.Controls.Items.SkinId
+		Canvas.RenderSprite(SnakeSkins.Get(this.Snake.SkinId), Box.x, Box.y)
+	}
+
+//---------------------------------------------------------------------------
 	this.RenderBody = function() {
+		if (!this.Snake) {
+			this.LoadSnake()
+			return
+		}
+
 		var Controls = this.Controls.Items
 		for (var i in Controls) {
 			var Control = Controls[i]
@@ -242,10 +267,13 @@ function ASnakeEditor(Snake) {
 		this.RenderProgramDescription()
 		this.RenderSnakeName()
 		this.RenderDescription()
+		this.RenderDirtyMark()
+		this.RenderSnakeType()
+		this.RenderSnakeSkin()
 
 		var Button = Controls.FightButton
 		Canvas.RenderTextButton(Button.Label, Button, Button.BackColor)
-		Button = Controls.ExportButton
+		Button = Controls.SaveButton
 		Canvas.RenderTextButton(Button.Label, Button, Button.BackColor)
 
 		for(i in this.Templates) {
@@ -378,7 +406,7 @@ function ASnakeEditor(Snake) {
 
 //---------------------------------------------------------------------------
 	this.PutCell = function(x, y) {
-		if (x == this.HeadX && y == this.HeadY) return
+		if (x == this.HeadX && y == this.HeadY) return false
 
 		if (this.Element == '*') {
 			var hx = this.HeadX
@@ -387,18 +415,18 @@ function ASnakeEditor(Snake) {
 			this.HeadY = y
 			this.DrawCell(hx, hy, '--')
 			this.DrawCell(this.HeadX, this.HeadY, '--')
-			return
+			return true
 		}
 
 		if (this.Element == '-') {
 			this.DrawCell(x, y, '--')
-			return
+			return true
 		}
 
 		var Cell = this.Cells[y][x].chunk()
 		if (this.Element) Cell[0] = this.Element
 		else {
-			if (Cell[0] == '-') return
+			if (Cell[0] == '-') return false
 		}
 
 		if (this.Group) Cell[1] = this.Group
@@ -407,6 +435,21 @@ function ASnakeEditor(Snake) {
 		}
 		Cell[0] = (this.Not ? Cell[0].toLowerCase() : Cell[0].toUpperCase())
 		this.DrawCell(x, y, Cell.join(''))
+		return true
+	}
+
+//---------------------------------------------------------------------------
+	this.MarkDirty = function (Name) {
+		this.Dirty[Name] = true
+		if (!this.Dirty.Dirty) {
+			this.Dirty.Dirty = true
+			this.RenderDirtyMark()
+		}
+	}
+
+//---------------------------------------------------------------------------
+	this.MarkDirtyMaps = function () {
+		this.MarkDirty('Maps')
 	}
 
 //---------------------------------------------------------------------------
@@ -415,10 +458,12 @@ function ASnakeEditor(Snake) {
 		switch(Id) {
 			case 'upper':
 				this.MoveMap(-1)
+				this.MarkDirtyMaps()
 			break
 
 			case 'lower':
 				this.MoveMap(1)
+				this.MarkDirtyMaps()
 			break
 
 			case 'add': case 'copy':
@@ -427,6 +472,7 @@ function ASnakeEditor(Snake) {
 				this.SaveMap()
 				Maps.push((Id == 'add' ? new ASnakeMap() : Clone(Maps[this.MapIndex])))
 				this.SelectMap(Maps.length - 1)
+				this.MarkDirtyMaps()
 			break
 
 			case 'del':
@@ -439,7 +485,8 @@ function ASnakeEditor(Snake) {
 					this.SelectMap(this.MapIndex)
 				}
 				var t = this.MapButtonControls.Items[Maps.length]
-				Canvas.FillRect(ABox(t.x, t.y, 32, 32), '#ffffff')
+				Canvas.FillRect(ABox(t.x, t.y, 32, 32), '#fff')
+				this.MarkDirtyMaps()
 			break
 		}
 	}
@@ -454,7 +501,7 @@ function ASnakeEditor(Snake) {
 
 		switch(Id) {
 			case 'map':
-				this.PutCell(x >> 5, y >> 5)
+				if (this.PutCell(x >> 5, y >> 5)) this.MarkDirtyMaps()
 			break
 
 			case 'prev':
@@ -559,6 +606,7 @@ function ASnakeEditor(Snake) {
 		}
 		this.Snake.Templates[{A: 0, B: 1, C: 2, D: 3}[Template]] = t.join('')
 		this.RenderButton(this.Controls.Items.UserSetButtons.Items[Template], Id, Set[Id])
+		this.MarkDirty('Templates')
 	}
 
 //---------------------------------------------------------------------------
@@ -574,6 +622,7 @@ function ASnakeEditor(Snake) {
 		}
 		Html = Html.join(' ')
 		Canvas.RenderInputHtml(Html, 'Шкура для змеи', this.HandleInput, 'skin')
+		this.MarkDirty('Skin')
 	}
 
 //---------------------------------------------------------------------------
@@ -601,23 +650,11 @@ function ASnakeEditor(Snake) {
 
 		switch(Id) {
 			case 'name': {
-				if (Text == Snake.SnakeName || Game.MySnakes.Exists(Text)) {
-					alert('Змея с таким именем уже есть')
-					return
-				}
+				if (Text == Snake.SnakeName) return
 
-				if (!Text && Snake.SnakeName) {
-					Game.MySnakes.Remove(Snake.SnakeName)
-				} else {
-					if (!Snake.SnakeName) {
-						Snake.SnakeName = Text
-						Game.MySnakes.Add(Snake)
-					} else {
-						if (!Game.MySnakes.Rename(Snake, Text)) return
-					}
-				}
-
+				Snake.SnakeName = Text
 				Editor.TabTitle = (Text ? Text : '<без имени>')
+				Editor.MarkDirty('Name')
 				Editor.RenderSnakeName()
 				TabSet.RenderTabs()
 			break }
@@ -656,13 +693,15 @@ function ASnakeEditor(Snake) {
 	}
 
 //---------------------------------------------------------------------------
-	this.HandleExportClick = function() {
-		this.SaveMap()
-		var w = window.open()
-		w.document.open('text/plain')
-		w.document.writeln(window.JSON.stringify(this.Snake.Serialize()))
-		w.document.close()
-		w.focus()
+	this.HandleTypeClick = function () {
+		if (this.Snake.SnakeType == 'N' && Game.Player.FighterId == this.SnakeId) {
+			alert('Нельзя сменить тип бойца.')
+			return
+		}
+
+		this.Snake.SnakeType = (this.Snake.SnakeType == 'B' ? 'N' : 'B')
+		this.MarkDirty('Type')
+		this.RenderSnakeType()
 	}
 
 //---------------------------------------------------------------------------
@@ -676,7 +715,8 @@ function ASnakeEditor(Snake) {
 			case 'set': this.HandleSetClick(Dataset.usr, Id); break
 			case 'tpl': this.HandleTemplateClick(Id); break
 			case 'fight': this.HandleFightClick(); break
-			case 'export': this.HandleExportClick(); break
+			case 'save': this.SaveSnake(); break
+			case 'type': this.HandleTypeClick(); break
 		}
 	}
 
@@ -687,8 +727,9 @@ function ASnakeEditor(Snake) {
 
 //---------------------------------------------------------------------------
 	this.OnClose = function() {
-		this.SaveMap()
-		this.Snake.TabId = null
+		if (this.Dirty.Dirty && !confirm('При закрытии вкладки все несохраненные изменения будут потеряны. Закрыть вкладку?')) return false
+
+		delete Game.Tabs.Snakes[this.SnakeId]
 		return true
 	}
 
@@ -699,6 +740,76 @@ function ASnakeEditor(Snake) {
 			Object: 'ASnakeEditor',
 			Data: [this.Snake.SnakeName ? this.Snake.SnakeName : this.Snake.Serialize()]
 		}
+	}
+
+//---------------------------------------------------------------------------
+	this.LoadSnake = function () {
+		var Request = {Request: 'snake info', SnakeId: this.SnakeId}
+		PostRequest(null, Request, 20, function (Data) {
+			this.Snake = new ASnake(Data)
+			this.TabTitle = this.Snake.SnakeName
+			this.TabSprite = SnakeSkins.Get(this.Snake.SkinId)
+
+			var SetNames = ['A', 'B', 'C', 'D']
+			for(var i in SetNames) {
+				var Set = {Count: 0,
+					s: false, t: false, v: false, w: false, x: false, y: false, z: false}
+				var Tpl = this.Snake.Templates[i].chunk()
+				for(var j in Tpl) {
+					var t = Tpl[j].toLowerCase()
+					Set[t] = true
+					Set.Count++
+				}
+				this.Templates[SetNames[i]] = Set
+			}
+
+			this.Clear()
+			TabSet.RenderTabs()
+			this.Show()
+		}, null, this)
+	}
+
+//---------------------------------------------------------------------------
+	this.SaveSnake = function () {
+		if (!this.Dirty.Dirty) return
+
+		this.SaveMap()
+		var Request = (this.SnakeId ?
+			{Request: 'snake edit', SnakeId: this.SnakeId} :
+			{Request: 'snake new'})
+
+		if (!this.SnakeId && !this.Snake.SnakeName) {
+			alert('Необходимо задать имя змеи')
+			return
+		}
+
+		for (var Name in this.Dirty) {
+			if (!this.Dirty[Name]) continue
+
+			var Snake = this.Snake
+			var Names = {Name: 'SnakeName', Type: 'SnakeType', Skin: 'SkinId',
+				Templates: 'Templates', Description: 'ProgramDescription'}
+			switch (Name) {
+				case 'Dirty': break
+				case 'Maps':
+					Request.Maps = []
+					for (var i in Snake.Maps) Request.Maps.push(Snake.Maps[i].Serialize())
+				break
+
+				default:
+					Request[Names[Name]] = Snake[Names[Name]]
+			}
+		}
+
+		PostRequest(null, Request, 20, function (Data) {
+			for (var Name in this.Dirty) this.Dirty[Name] = false
+			this.RenderDirtyMark()
+			if (!this.SnakeId) {
+				this.SnakeId = Data.SnakeId
+				this.Snake.SnakeId = Data.SnakeId
+				this.Controls.Items.SaveButton.BackColor = CanvasColors.Update
+			}
+		}, null, this)
 	}
 
 //---------------------------------------------------------------------------
