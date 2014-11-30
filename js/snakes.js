@@ -66,7 +66,7 @@ function ASnakeMap(Fields) {
 			Description: this.Description, HeadX: this.HeadX, HeadY: this.HeadY,
 		}
 		var Match = /^(-*)(.*?)-*$/.exec(this.Lines)
-		if (!Match || !Match[2]) Result.Lines = []
+		if (!Match || !Match[2]) Result.Lines = [{X: 0, Y: 0, Line: '--'}]
 		else {
 			var Len = Match[1].length >> 1
 			Result.Lines = [{X: Len % 7, Y: Math.floor(Len / 7), Line: Match[2]}]
@@ -136,6 +136,7 @@ function AFight(Fields) {
 	this.Turns = []
 	this.Snakes = [null, null, null, null]
 	this.SnakeStats = [null, null, null, null]
+	this.OtherPlayerIds = [null, null, null]
 
 	this.SlotIndex = null
 
@@ -150,6 +151,22 @@ function AFight(Fields) {
 				/*else*/ this.Snakes[i] = new ASnake(this.Snakes[i])
 			}
 		}
+	}
+
+//---------------------------------------------------------------------------
+	this.MakeChallenge = function (OtherPlayerId) {
+		this.FightType = 'challenge'
+		if (OtherPlayerId) {
+			this.OtherPlayerIds[0] = OtherPlayerId
+		}
+	}
+
+//---------------------------------------------------------------------------
+	this.SetSnake = function (Snake, Index) {
+		if (!Snake.Serialize) {
+			Snake = new ASnake(Snake)
+		}
+		this.Snakes[Index] = Snake
 	}
 
 //---------------------------------------------------------------------------

@@ -55,10 +55,12 @@ class Snake extends ActiveRecord {
 			array('player_id', 'exists', 'className' => 'Player', 'attributeName' => 'id'),
 			array('skin_id', 'exists', 'className' => 'SnakeSkin', 'attributeName' => 'id'),
 			array('name', 'length', 'min' => 1, 'max' => 40),
-			array('name', 'unique', 'criteria' => array(
-				'condition' => 'player_id = :pid AND current AND base_id <> :baseId',
-				'params' => array(':pid' => $this->player_id, ':baseId' => (int)$this->base_id)
-			)),
+			array('name', 'unique', 'message' => 'змея с таким именем уже есть',
+				'criteria' => array(
+					'condition' => 'player_id = :pid AND current AND base_id <> :baseId',
+					'params' => array(':pid' => $this->player_id, ':baseId' => (int)$this->base_id),
+				)
+			),
 			array('type', 'in', 'range' => array(self::TYPE_BOT, self::TYPE_NORMAL)),
 			array('description', 'length', 'min' => 0, 'max' => 1024),
 		);

@@ -41,8 +41,6 @@ final class RequestValidatorTest extends CTestCase {
 	}
 
 	/**
-	 * @expectedException NackException
-	 * @expectedExceptionCode NackException::ERR_UNKNOWN_FIELD
 	 */
 	public function testUnknownField() {
 		RequestValidator::validate(array('Request' => 'ping', 'Sid' => '1', 'PlayerId' => 1));

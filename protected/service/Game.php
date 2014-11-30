@@ -472,7 +472,7 @@ class Game {
 		$this->editSnake($snake, $this->request);
 
 		if (!$snake->save()) {
-			throw new RuntimeException('не могу создать змею');
+			throw Util::makeValidationException($snake, 'не могу создать змею');
 		}
 
 		return array(

@@ -149,7 +149,7 @@ class RequestValidator {
 
 //---------------------------------------------------------------------------
 	protected static function getDefaultValue($type) {
-		if (substr($type, 0, 1) == '_') return NULL;
+		if (!isset(static::$fieldTypes[$type])) return NULL;
 
 		$typeDef = (array)static::$fieldTypes[$type];
 		if(isset($typeDef[1])) {
@@ -305,11 +305,13 @@ class RequestValidator {
 		}
 		$requestFields += static::$defaultFields;
 
+/*
 		foreach(array_keys($request) as $name) {
 			if(!isset($requestFields[$name])) {
 				throw new NackException(NackException::ERR_UNKNOWN_FIELD, $name);
 			}
 		}
+*/
 
 		$fieldTypes = static::$fieldTypes;
 		foreach($requestFields as $name => $isRequired) {
