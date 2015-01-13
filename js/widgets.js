@@ -369,7 +369,7 @@ function ARatingListWidget (Fields) {
 			{Type: 'Gap'},
 			{Type: 'PropertyText', Width: 160, Property: 'SnakeName'},
 			{Type: 'ChallengeButton', Width: 70, BackColor: CanvasColors.Create, Label: 'Вызвать'}
-		],
+		]
 	}
 
 //---------------------------------------------------------------------------
@@ -389,7 +389,7 @@ function ARatingListWidget (Fields) {
 		switch (Class) {
 			case 'challenge':
 				alert('<не реализовано>')
-			break;
+			break
 
 			default:
 				this.Parent.OnClick.call(this, x, y, Dataset)
@@ -399,3 +399,114 @@ function ARatingListWidget (Fields) {
 //---------------------------------------------------------------------------
 }
 Extend(ARatingListWidget, new AListWidget())
+
+
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+function APlayerListWidget (Fields) {
+	this.SetFields(Fields)
+	this.List = {
+		Request: {Request: 'player list'},
+		ItemName: 'PlayerList',
+		SortName: 'PlayerName',
+		SortDesc: false,
+
+		Columns: [
+			{Label: 'Игрок', Width: 520, Name: 'PlayerName'},
+			{Label: 'Рейтинг', Width: 100},
+		],
+
+		Fields: [
+			{Type: 'Gap'},
+			{Type: 'PropertyLink', Width: 515, Property: 'PlayerName', Data: {cls: 'player'}},
+			{Type: 'Separator'},
+			{Type: 'PropertyText', Width: 84, Property: 'Rating', Align: 'right'},
+		]
+	}
+
+//---------------------------------------------------------------------------
+}
+Extend(APlayerListWidget, new AListWidget())
+
+
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+function ASnakeListWidget (Fields) {
+	this.SetFields(Fields)
+	this.List = {
+		Request: {Request: 'snake list', SnakeTypes: 'BN'},
+		ItemName: 'SnakeList',
+		SortName: 'SnakeName',
+		SortDesc: false,
+		ExtraSort: [['SnakeId', false]],
+
+		Buttons: [
+			{Type: 'TextLabel', Label: 'все', id: 'BN', Data: {cls: 'snake-types'}},
+			{Type: 'Gap'},
+			{Type: 'TextButton', Label: 'змеи', id: 'N', Data: {cls: 'snake-types'}},
+			{Type: 'Gap'},
+			{Type: 'TextButton', Label: 'боты', id: 'B', Data: {cls: 'snake-types'}}
+		],
+
+		Columns: [
+			{Label: 'Змея', Width: 290, Name: 'SnakeName'},
+			{Label: 'Тип', Width: 40},
+			{Label: 'Владелец', Width: 265, Name: 'PlayerName'}
+		],
+
+		Fields: [
+			{Type: 'Gap'},
+			{Type: 'Skin'},
+			{Type: 'Gap'},
+			{Type: 'PropertyLink', Width: 234, Property: 'SnakeName', Data: {cls: 'snake'}},
+			{Type: 'Separator'},
+			{Type: 'SnakeType', Width: 40},
+			{Type: 'Separator'},
+			{Type: 'Gap'},
+			{Type: 'PropertyLink', Width: 260, Property: 'PlayerName', Data: {cls: 'player'}}
+		]
+	}
+
+//---------------------------------------------------------------------------
+	this.RenderSnakeType = function (Item, Index, x, y, Params) {
+		var Text = (Item.SnakeType == 'B' ? 'бот' : 'змея')
+		return this.RenderText(Text, x, y, Params.Width, 'center')
+	}
+
+//---------------------------------------------------------------------------
+	this.RenderButtons = function (y) {
+		this.RenderItem(null, this.List.Buttons, y, 0)
+	}
+
+//---------------------------------------------------------------------------
+	this.RenderBody = function () {
+		this.WidgetControls.Items = []
+		this.RenderButtons(this.TopY)
+		this.RenderList(this.TopY + 30)
+	}
+
+//---------------------------------------------------------------------------
+	this.OnClick = function (x, y, Dataset) {
+		var Class = Dataset.cls
+		var Id = Dataset.id
+
+		switch (Class) {
+			case 'snake-types':
+				this.List.Request.SnakeTypes = Id
+				var Buttons = this.List.Buttons
+				for (var i in Buttons) {
+					if (Buttons[i].id) {
+						Buttons[i].Type = (Buttons[i].id == Id ? 'TextLabel' : 'TextButton')
+					}
+				}
+				this.RefreshList()
+			break
+
+			default:
+				this.Parent.OnClick.call(this, x, y, Dataset)
+		}
+	}
+
+//---------------------------------------------------------------------------
+}
+Extend(ASnakeListWidget, new AListWidget())

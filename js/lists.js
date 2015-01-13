@@ -40,3 +40,37 @@ function ARatingListTab() {
 //---------------------------------------------------------------------------
 }
 Extend(ARatingListTab, new AListTab())
+
+
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+function APlayerListTab() {
+	this.TabTitle = 'Игроки'
+	this.TabSprite = Sprites.Get('16.Labels.Players')
+	this.List = new APlayerListWidget(this.ListFields)
+
+	this.OnClick = function (x, y, Dataset) {
+		this.List.OnClick(x, y, Dataset)
+	}
+	this.RenderBody = this.RenderList
+
+//---------------------------------------------------------------------------
+}
+Extend(APlayerListTab, new AListTab())
+
+
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+function ASnakeListTab() {
+	this.TabTitle = 'Змеи'
+	this.TabSprite = Sprites.Get('16.X')
+	this.List = new ASnakeListWidget(this.ListFields)
+
+	this.OnClick = function (x, y, Dataset) {
+		this.List.OnClick(x, y, Dataset)
+	}
+	this.RenderBody = this.RenderList
+
+//---------------------------------------------------------------------------
+}
+Extend(ASnakeListTab, new AListTab())
