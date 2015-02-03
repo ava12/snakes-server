@@ -182,7 +182,7 @@ class RequestValidator {
 		}
 
 		if(is_array($value) <> in_array($type, static::$arrayFieldTypes)) {
-			$params = array($path, (string)$value, gettype($value));
+			$params = array($path, (is_array($value) ? implode(',', $value) : (string)$value), gettype($value));
 			throw new NackException(NackException::ERR_WRONG_FORMAT, $params);
 		}
 
@@ -272,7 +272,7 @@ class RequestValidator {
 			break; }
 		}
 
-		$params = array($path, (string)$value, gettype($value));
+		$params = array($path, (is_array($value) ? 'array' : (string)$value), gettype($value));
 		throw new NackException(NackException::ERR_WRONG_FORMAT, $params);
 	}
 

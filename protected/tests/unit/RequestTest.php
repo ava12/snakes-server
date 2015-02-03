@@ -105,7 +105,7 @@ final class RequestTest extends RequestTestBase {
 				)
 			)),
 		);
-		self::checkInvalidRequest($request, NackException::ERR_WRONG_VALUE, 1);
+		self::checkInvalidRequest($request, NackException::ERR_INVALID_INPUT, 1);
 	}
 
 

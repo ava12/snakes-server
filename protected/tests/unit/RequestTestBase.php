@@ -6,6 +6,7 @@ class RequestTestBase extends CTestCase {
 
 //---------------------------------------------------------------------------
 	protected static function clearDb() {
+		/** @var CDbConnection $db */
 		$db = Yii::app()->db;
 		$prefix = $db->tablePrefix;
 
@@ -23,8 +24,8 @@ class RequestTestBase extends CTestCase {
 
 //---------------------------------------------------------------------------
 	protected static function setupDb($dbData) {
+		/** @var CDbConnection $db */
 		$db = Yii::app()->db;
-		$prefix = $db->tablePrefix;
 
 		$db->createCommand('SET FOREIGN_KEY_CHECKS = 0')->execute();
 
