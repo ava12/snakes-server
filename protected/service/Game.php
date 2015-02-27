@@ -6,6 +6,7 @@ class Game {
 	const COMPATIBLE = 1;
 
 	protected $request;
+	/** @var Player $player */
 	protected $player;
 	protected $ack = array('Response' => 'ack');
 
@@ -27,7 +28,7 @@ class Game {
 
 //---------------------------------------------------------------------------
 	public function setPlayer($player) {
-		if (!$player) return;
+		if (!$player) return NULL;
 
 		if (is_scalar($player)) {
 			$playerId = $player;
@@ -91,6 +92,7 @@ class Game {
 
 //---------------------------------------------------------------------------
 	protected function requestInfo() {
+		/** @var User $user */
 		$user = Yii::app()->user;
 		return array(
 			'Response' => 'info',
@@ -150,6 +152,12 @@ class Game {
 	}
 
 //---------------------------------------------------------------------------
+	/**
+	 * @param CActiveRecord $model
+	 * @param string $defaultSort
+	 * @param array $sortedNames
+	 * @return CActiveDataProvider
+	 */
 	protected function makeDataProvider(
 		$model, $defaultSort = '<id', $sortedNames = array('id' => 'id')
 	) {
@@ -210,7 +218,7 @@ class Game {
 				'PlayerId' => $player->id,
 				'PlayerName' => $player->name,
 				'Rating' => (isset($rating) ? (int)$rating : NULL),
-				'SnakeId' => $fighter->base_id,
+				'SnakeId' => $fighter->id,
 				'SnakeName' => $fighter->name,
 				'SkinId' => (int)$fighter->skin_id,
 			);
@@ -252,7 +260,7 @@ class Game {
 		$snakes = array();
 		foreach($player->snakes as $snake) {
 			$snakes[] = array(
-				'SnakeId' => $snake->base_id,
+				'SnakeId' => $snake->id,
 				'SnakeName' => $snake->name,
 				'SnakeType' => $snake->type,
 				'SkinId' => (int)$snake->skin_id,
@@ -288,7 +296,7 @@ class Game {
 //---------------------------------------------------------------------------
 	protected function requestSnakeList() {
 		$types = array_unique(str_split($this->request['SnakeTypes']));
-		$model = Snake::model()->current()->types($types)->with('player');
+		$model = Snake::model()->types($types)->with('player');
 
 		$provider = $this->makeDataProvider($model, array('<SnakeName', '<PlayerName'),
 			array('SnakeName' => 't.name', 'PlayerName' => 'player.name'));
@@ -299,7 +307,7 @@ class Game {
 
 		foreach($data as $snake) {
 			$list[] = array(
-				'SnakeId' => $snake->base_id,
+				'SnakeId' => $snake->id,
 				'SnakeName' => $snake->name,
 				'SnakeType' => $snake->type,
 				'SkinId' => (int)$snake->skin_id,
@@ -338,14 +346,14 @@ class Game {
 //---------------------------------------------------------------------------
 	protected function requestSnakeInfo() {
 		$snakeId = $this->request['SnakeId'];
-		$snake = Snake::model()->current()->byBaseId($snakeId)->with('player')->find();
+		$snake = Snake::model()->with('player')->findByPk($snakeId);
 		if (!$snake) {
 			throw new NackException(NackException::ERR_UNKNOWN_SNAKE);
 		}
 
 		$response = array(
 			'Response' => 'snake info',
-			'SnakeId' => $snake->base_id,
+			'SnakeId' => $snake->id,
 			'SnakeName' => $snake->name,
 			'SnakeType' => $snake->type,
 			'SkinId' => (int)$snake->skin_id,
@@ -367,7 +375,7 @@ class Game {
 
 		$response += array(
 			'ProgramDescription' => $snake->description,
-			'Templates' => $snake->getTemplates(),
+			'Templates' => $snake->templates,
 			'Maps' => $maps,
 		);
 
@@ -377,10 +385,11 @@ class Game {
 //---------------------------------------------------------------------------
 	protected function requestSnakeAssign() {
 		$snakeId = $this->request['SnakeId'];
+		/** @var CDbTransaction $transaction */
 		$transaction = Yii::app()->db->beginTransaction();
 
 		try {
-			$snake = Snake::model()->current()->byBaseId($snakeId)->find();
+			$snake = Snake::model()->findByPk($snakeId);
 			if (!$snake) {
 				throw new NackException(NackException::ERR_UNKNOWN_SNAKE, $snakeId);
 			}
@@ -409,10 +418,11 @@ class Game {
 //---------------------------------------------------------------------------
 	protected function requestSnakeDelete() {
 		$snakeId = $this->request['SnakeId'];
+		/** @var CDbTransaction $transaction */
 		$transaction = Yii::app()->db->beginTransaction();
 
 		try {
-			$snake = Snake::model()->current()->byBaseId($snakeId)->find();
+			$snake = Snake::model()->findByPk($snakeId);
 			if (!$snake) {
 				throw new NackException(NackException::ERR_UNKNOWN_SNAKE, $snakeId);
 			}
@@ -438,6 +448,10 @@ class Game {
 	}
 
 //---------------------------------------------------------------------------
+	/**
+	 * @param Snake $snake
+	 * @param array $request
+	 */
 	protected function editSnake($snake, $request) {
 		foreach ($this->snakeFields as $requestName => $dbName) {
 			if (array_key_exists($requestName, $request)) {
@@ -477,7 +491,7 @@ class Game {
 
 		return array(
 			'Response' => 'snake new',
-			'SnakeId' => $snake->base_id,
+			'SnakeId' => $snake->id,
 		);
 	}
 
@@ -485,7 +499,7 @@ class Game {
 	protected function requestSnakeEdit() {
 		$request = $this->request;
 		$snakeId = $request['SnakeId'];
-		$snake = Snake::model()->current()->byBaseId($snakeId)->find();
+		$snake = Snake::model()->findByPk($snakeId);
 		if (!$snake) {
 			throw new NackException(NackException::ERR_UNKNOWN_SNAKE, $snakeId);
 		}
@@ -495,10 +509,6 @@ class Game {
 		}
 
 		$this->editSnake($snake, $request);
-
-		if ($snake->needsRespawn) {
-			$snake = $snake->respawn();
-		}
 
 		if (!$snake->save()) {
 			throw Util::makeValidationException($snake, 'не могу отредактировать змею');
@@ -512,8 +522,7 @@ class Game {
 		$listType = $this->request['FightListType'];
 
 		$fightList = FightEntry::model()->forPlayer($this->player->id)->byType($listType)
-			->with('fight', 'fight.player', 'fight.stats', 'fight.stats.snake', 'fight.stats.snake.player')
-			->findAll();
+			->with('fight', 'fight.player')->findAll();
 
 		$list = array();
 		foreach ($fightList as $item) {
@@ -521,9 +530,9 @@ class Game {
 
 			$snakes = array(NULL, NULL, NULL, NULL);
 			foreach ($item->fight->stats as $index => $stat) {
-				$snake = $stat->snake;
+				$snake = $fight->snakes[$index];
 				$snakes[$index] = array(
-					'SnakeId' => $snake->base_id,
+					'SnakeId' => $snake->id,
 					'SnakeName' => $snake->name,
 					'SnakeType' => $snake->type,
 					'SkinId' => (int)$snake->skin_id,
@@ -551,18 +560,23 @@ class Game {
 
 //---------------------------------------------------------------------------
 	protected function updateRatings($fight) {
-		foreach ($fight->stats as $stat) {
-			$rating = (int)$stat->snake->player->rating;
+		foreach ($fight->stats as $index => $stat) {
+			$rating = (int)$fight->snakes[$index]->player->rating;
 			$stat->pre_rating = $rating;
 			$stat->post_rating = $rating;
-			$stat->snake->player->rating = $rating;
+			$fight->snakes[$index]->player->rating = $rating;
 		}
 	}
 
 //---------------------------------------------------------------------------
+	/**
+	 * @param Fight $fight
+	 * @param DelayedFight $delayed
+	 * @throws Exception
+	 */
 	protected function updateFight($fight, $delayed) {
 		$fight->result = $delayed->result;
-		$fight->setTurns($delayed->turns);
+		$fight->turns = $delayed->turns;
 		$snakes = $delayed->snakes;
 
 		$stats = $fight->stats;
@@ -582,6 +596,7 @@ class Game {
 
 		$player = $this->player;
 
+		/** @var CDbTransaction $transaction */
 		$transaction = Yii::app()->db->beginTransaction();
 
 		try {
@@ -602,21 +617,19 @@ class Game {
 			}
 
 			$player->delayed_id = NULL;
-			$player->save();
 
-			DelayedFight::model()->deleteByPk($fight->id);
-
-			foreach ($fight->stats as $index => $stat) {
-				if (!$stat->save()) {
-					throw new RuntimeException('не могу сохранить статистику для змеи ' . $index);
-				}
-
-				if ($isChallenge) {
-					if (!$stat->snake->player->save()) {
+			if ($isChallenge) {
+				foreach ($fight->snakes as $index => $snake) {
+					if (!$snake->player->save()) {
 						throw new RuntimeException('не могу сохранить рейтинг для змеи ' . $index);
 					}
 				}
+			} else {
+				$player->save();
 			}
+
+			DelayedFight::model()->deleteByPk($fight->id);
+
 
 		} catch (Exception $e) {
 			$transaction->rollback();
@@ -642,10 +655,10 @@ class Game {
 				);
 			}
 
-			$fight = Fight::model()->forPlayer($playerId)->full()->findByPk($fightId);
+			$fight = Fight::model()->forPlayer($playerId)->findByPk($fightId);
 			$this->updateFight($fight, $delayed);
 		} else {
-			$fight = Fight::model()->live()->full()->findByPk($fightId);
+			$fight = Fight::model()->live()->findByPk($fightId);
 			if (!$fight or !$fight->isListed($playerId)) {
 				throw new NackException(NackException::ERR_UNKNOWN_FIGHT, $fightId);
 			}
@@ -666,10 +679,10 @@ class Game {
 		$snakes = $stats;
 
 		foreach ($fight->stats as $index => $stat) {
-			$snake = $stat->snake;
+			$snake = $fight->snakes[$index];
 
 			$snakes[$index] = array(
-				'SnakeId' => $snake->base_id,
+				'SnakeId' => $snake->id,
 				'SnakeName' => $snake->name,
 				'SnakeType' => $snake->type,
 				'SkinId' => (int)$snake->skin_id,
@@ -689,13 +702,13 @@ class Game {
 
 			if ($snake->player_id == $playerId or $snake->type == Snake::TYPE_BOT) {
 				$maps = array();
-				foreach($stat->snake->maps as $map) {
+				foreach($snake->maps as $map) {
 					$maps[] = $this->makeResponseMap($map);
 				}
 
 				$entry += array(
 					'ProgramDescription' => $snake->description,
-					'Templates' => $snake->getTemplates(),
+					'Templates' => $snake->templates,
 					'Maps' => $maps,
 					'DebugData' => $stat->debug,
 				);
@@ -712,7 +725,7 @@ class Game {
 			'FightTime' => (int)$fight->time,
 			'FightResult' => $fight->result,
 			'TurnLimit' => (int)$fight->turn_limit,
-			'Turns' => $fight->getTurns(),
+			'Turns' => $fight->turns,
 			'Snakes' => $snakes,
 			'SnakeStats' => $stats,
 		);
@@ -724,6 +737,7 @@ class Game {
 		$fight = new Fight;
 		$delayed = new DelayedFight;
 
+		/** @var CDbTransaction $transaction */
 		$transaction = Yii::app()->db->beginTransaction();
 
 		try {
@@ -734,7 +748,7 @@ class Game {
 
 			$fight->player_id = $this->player->id;
 			$fight->type = $type;
-			$fight->setStats($snakes);
+			$fight->setSnakes($snakes);
 			if ($turnLimit) $fight->turn_limit = $turnLimit;
 			if (!$fight->save()) {
 				throw new RuntimeException('не могу создать бой');
@@ -762,11 +776,12 @@ class Game {
 //---------------------------------------------------------------------------
 	protected function requestFightTest() {
 		$request = $this->request;
-		$request['SnakeType'] = Snake::TYPE_BOT;
-		$tempSnake = $this->createSnake($request);
-		$tempSnake->isTemp = true;
-		if (!$tempSnake->save()) {
-			throw new RuntimeException('не могу создать временную змею');
+		$tempSnake = new Snake;
+		$tempSnake->player_id = $this->player->id;
+		$tempSnake->type = Snake::TYPE_BOT;
+		$this->editSnake($tempSnake, $request);
+		if (!$tempSnake->validate()) {
+			throw Util::makeValidationException($tempSnake, 'некорректное описание временной змеи');
 		}
 
 		$stats = $request['OtherSnakeIds'];
@@ -774,7 +789,6 @@ class Game {
 
 		$delayedFight = $this->createFight($stats, Fight::TYPE_TRAIN, $request['TurnLimit']);
 
-		$tempSnake->release();
 		return array(
 			'Response' => 'fight delayed',
 			'FightId' => $delayedFight->fight_id,
@@ -787,7 +801,7 @@ class Game {
 		$snakeIds = $request['SnakeIds'];
 		$turnLimit = $request['TurnLimit'];
 
-		$delayedFight = $this->createFight($snakeIds, Fight::TYPE_TRAIN, @$request['TurnLimit']);
+		$delayedFight = $this->createFight($snakeIds, Fight::TYPE_TRAIN, $turnLimit);
 
 		return array(
 			'Response' => 'fight delayed',
@@ -827,11 +841,12 @@ class Game {
 
 //---------------------------------------------------------------------------
 	protected function requestFightCancel() {
-		$fightId = $this->player->fight_id;
+		$fightId = $this->player->delayed_id;
 		if (!$fightId) return $this->ack;
 
-		$this->player->fight_id = NULL;
+		$this->player->delayed_id = NULL;
 
+		/** @var CDbTransaction $transaction */
 		$transaction = Yii::app()->db->beginTransaction();
 		try {
 			DelayedFight::model()->deleteByPk($fightId);
@@ -842,7 +857,7 @@ class Game {
 		}
 		$transaction->commit();
 
-		return $this->ack();
+		return $this->ack;
 	}
 
 //---------------------------------------------------------------------------
@@ -850,7 +865,7 @@ class Game {
 		$slots = FightSlot::model()->forPlayer($this->player->id)->with('fight')->findAll();
 		$list = array_fill(0, 10, NULL);
 		foreach ($slots as $index => $slot) {
-			$fight = $slot->fight();
+			$fight = $slot->fight;
 			$list[$index] = array(
 				'SlotName' => $slot->name,
 				'FightId' => $slot->fight_id,
@@ -898,6 +913,7 @@ class Game {
 
 //---------------------------------------------------------------------------
 	protected function requestSlotDelete() {
+		$slotIndex = (int)$this->request['SlotIndex'];
 		FightSlot::model()->forPlayer($this->player->id)->byIndex($slotIndex)->deleteAll();
 		return $this->ack;
 	}
@@ -910,6 +926,7 @@ class Game {
 		$fightId = $request['FightId'];
 		$playerId = $this->player->id;
 
+		/** @var CDbTransaction $transaction */
 		$transaction = Yii::app()->db->beginTransaction();
 
 		try {
@@ -917,7 +934,7 @@ class Game {
 				throw new NackException(NackException::ERR_UNKNOWN_FIGHT, $fightId);
 			}
 
-			FightSlot::model()->forPlayer($playerId)->byIndex($index)->dleteAll();
+			FightSlot::model()->forPlayer($playerId)->byIndex($index)->deleteAll();
 
 			$slot = new FightSlot;
 			$slot->player_id = $playerId;

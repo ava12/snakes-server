@@ -5,7 +5,7 @@
  * @property int $delay_till
  * @property string $state
  */
-class DelayedFight extends CActiveRecord {
+class DelayedFight extends ActiveRecord {
 	const BATCH_CNT = 50;
 	const DEFAULT_TIMEOUT = 30;
 
@@ -29,16 +29,23 @@ class DelayedFight extends CActiveRecord {
 	protected $startX = array(12, 9, 12, 15);
 	protected $startY = array(15, 12, 9, 12);
 
+	protected $names = array('isSolitaire', 'field', 'result', 'turns', 'snakes' => array('Snake'), 'stats' => array('SnakeStat'));
+
 	protected $isSolitaire = NULL;
 	protected $field;
 
 	public $result;
 	public $turns;
 	public $snakes = array(NULL, NULL, NULL, NULL);
+	public $stats = array();
 
 	protected $isLocked = false;
 
 //---------------------------------------------------------------------------
+	/**
+	 * @param string $className
+	 * @return DelayedFight
+	 */
 	public static function model($className = __CLASS__) {
 		return parent::model($className);
 	}
@@ -52,8 +59,6 @@ class DelayedFight extends CActiveRecord {
 	public function relations() {
 		return array(
 			'fight' => array(self::BELONGS_TO, 'Fight', 'fight_id'),
-			'stats' => array(self::HAS_MANY, 'SnakeStat', 'fight_id',
-				'order' => 'stats.index', 'index' => 'index'),
 		);
 	}
 
@@ -69,18 +74,12 @@ class DelayedFight extends CActiveRecord {
 	protected function beforeSave() {
 		if (!$this->field) $this->prepare();
 		$this->delay_till = 0;
-		$this->fold();
-		return true;
+		return parent::beforeSave();
 	}
 
 //---------------------------------------------------------------------------
 	protected function afterSave() {
 		$this->unlock();
-	}
-
-//---------------------------------------------------------------------------
-	protected function afterFind() {
-		$this->unfold();
 	}
 
 //---------------------------------------------------------------------------
@@ -120,23 +119,6 @@ class DelayedFight extends CActiveRecord {
 
 		$this->isLocked = false;
 		return $result;
-	}
-
-//---------------------------------------------------------------------------
-	protected function unfold() {
-		foreach (unserialize($this->state) as $name => $value) {
-			$this->$name = $value;
-		}
-	}
-
-//---------------------------------------------------------------------------
-	protected function fold() {
-		if (!$this->field) $this->prepare();
-		$state = array_flip(array('result', 'field', 'snakes', 'turns', 'isSolitaire'));
-		foreach ($state as $name => &$p) {
-			$p = $this->$name;
-		}
-		$this->state = serialize($state);
 	}
 
 //---------------------------------------------------------------------------
@@ -225,7 +207,6 @@ class DelayedFight extends CActiveRecord {
 //---------------------------------------------------------------------------
 	protected function makeTemplateMasks($templates, $index) {
 		$singleRate = 6 << self::RATE_SHIFT;
-		$multiRate = 1 << self::RATE_SHIFT;
 		$result = array(
 			'S' => $singleRate | (self::BODY_CELL << $index),
 			'T' => $singleRate | (self::TAIL_CELL << $index),
@@ -432,7 +413,6 @@ class DelayedFight extends CActiveRecord {
 		$startX = $headX - $variant[0];
 		$startY = $headY - $variant[1];
 		$masks = $variant[2];
-		$my = $startY - 1;
 
 		for ($y = 0, $my = $startY; $y < 7; $y++, $my++) {
 			for ($x = 0, $mx = $startX; $x < 7; $x++, $mx++) {

@@ -9,12 +9,14 @@
  * @property int $time
  * @property int $player_id
  * @property int $turn_limit
- * @property int $turn_count
- * @property string $turns
  * @property string $result
+ * @property array $turns
+ * @property Snake[] $snakes
+ * @property SnakeStat[] $stats
+ *
+ * @method Fight live()
  */
-class Fight extends CActiveRecord {
-
+class Fight extends ActiveRecord {
 	const TYPE_TRAIN = 'train';
 	const TYPE_CHALLENGE = 'challenge';
 
@@ -26,10 +28,18 @@ class Fight extends CActiveRecord {
 	const DEFAULT_TURN_LIMIT = 1000;
 	const MAX_TURN_LIMIT = 1000;
 
-	protected $newStats = array();
+	protected $names = array('snakes' => array('Snake'), 'stats' => array('SnakeStat'), 'turns');
+
+	public $snakes = array();
+	public $stats = array();
+	public $turns = array();
 
 
 //---------------------------------------------------------------------------
+	/**
+	 * @param string $className
+	 * @return Fight
+	 */
 	public static function model($className = __CLASS__) {
 		return parent::model($className);
 	}
@@ -43,8 +53,6 @@ class Fight extends CActiveRecord {
 	public function relations() {
 		return array(
 			'player' => array(self::BELONGS_TO, 'Player', 'player_id'),
-			'stats' => array(self::HAS_MANY, 'SnakeStat', 'fight_id',
-				'order' => 'stats.index', 'index' => 'index'),
 		);
 	}
 
@@ -52,7 +60,6 @@ class Fight extends CActiveRecord {
 	public function scopes() {
 		return array(
 			'live' => array('condition' => 't.refs > 0'),
-			'full' => array('with' => array('stats', 'stats.snake', 'stats.snake.maps', 'stats.snake.player')),
 		);
 	}
 
@@ -73,6 +80,7 @@ class Fight extends CActiveRecord {
 
 			array('type', 'in', 'range' => array(self::TYPE_TRAIN, self::TYPE_CHALLENGE)),
 			array('turn_limit', 'default', 'value' => self::DEFAULT_TURN_LIMIT),
+			array('refs', 'default', 'value' => 1),
 		);
 	}
 
@@ -86,49 +94,16 @@ class Fight extends CActiveRecord {
 	}
 
 //---------------------------------------------------------------------------
-	public function getTurns() {
-		$turns = str_split($this->getAttribute('turns'), 2);
-		foreach ($turns as &$p) {
-			$p = (ord(substr($p, 0, 1)) << 8) | ord(substr($p, 1, 1));
-		}
-		return $turns;
-	}
-
-//---------------------------------------------------------------------------
-	public function setTurns($turns) {
-		foreach ($turns as &$p) {
-			$p = pack('n', $p);
-		}
-		$this->setAttribute('turn_count', count($turns));
-		$this->setAttribute('turns', implode('', $turns));
-	}
-
-//---------------------------------------------------------------------------
-	public function setStats($snakes) {
-		$this->newStats = array();
-		foreach ((array)$snakes as $index => $snake) {
-			if (!$snake) continue;
-
-			$stat = new SnakeStat();
-			$stat->setFightSnake($this, $snake, $index);
-			$this->newStats[] = $stat;
+	public function setSnakes($snakes) {
+		foreach ($snakes as $index => $snake) {
+			if (!is_object($snake)) {
+				$snake = Snake::model()->findByPk($snake);
+			}
+			if ($snake) {
+				$this->snakes[$index] = $snake;
+				$this->stats[$index] = new SnakeStat;
+			}
 		}
 	}
-
-//---------------------------------------------------------------------------
-	protected function afterSave() {
-		if (!$this->getIsNewRecord()) return;
-
-		if (!$this->newStats) {
-			throw new RuntimeException('требуется хотя бы одна змея');
-		}
-
-		$collection = new ActiveRecordCollection($this->newStats);
-		$collection->setDefaults(array('fight_id' => $this->id));
-		if (!$collection->save()) {
-			throw new RuntimeException('не могу сохранить змей');
-		}
-	}
-
 //---------------------------------------------------------------------------
 }

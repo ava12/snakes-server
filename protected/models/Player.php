@@ -16,6 +16,9 @@
  * @property int|NULL $delayed_id ид текущего рассчитываемого боя
  * @property int|NULL $viewed_id ид последнего просмотренного боя
  * @property int $registered timestamp времени регистрации
+ *
+ * @property Snake $fighter
+ * @method Player hasRating()
  */
 class Player extends CActiveRecord {
 	const SALT_LENGTH = 8;

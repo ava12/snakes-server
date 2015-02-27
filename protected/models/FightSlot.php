@@ -7,6 +7,9 @@
  * @property int $index
  * @property int $fight_id
  * @property string $name
+ *
+ * @property Fight $fight
+ * @property Player $player
  */
 class FightSlot extends CActiveRecord {
 
