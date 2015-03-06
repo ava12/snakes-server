@@ -28,7 +28,7 @@ class Fight extends ActiveRecord {
 	const DEFAULT_TURN_LIMIT = 1000;
 	const MAX_TURN_LIMIT = 1000;
 
-	protected $names = array('snakes' => array('Snake'), 'stats' => array('SnakeStat'), 'turns');
+	protected $blobNames = array('snakes' => array('Snake'), 'stats' => array('SnakeStat'), 'turns');
 
 	public $snakes = array();
 	public $stats = array();

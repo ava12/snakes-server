@@ -119,7 +119,6 @@ CREATE TABLE IF NOT EXISTS `fight` (
   `time` int(11) DEFAULT NULL,
   `player_id` int(11) NOT NULL,
   `turn_limit` smallint(6) NOT NULL,
-  `turn_count` smallint(6) NOT NULL,
   `result` enum('','limit','eaten','blocked') NOT NULL,
   `data` blob
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -135,8 +134,7 @@ CREATE TABLE IF NOT EXISTS `fightlist` (
   `type` enum('ordered','challenged') NOT NULL,
   `player_id` int(11) NOT NULL,
   `time` int(11) NOT NULL,
-  `fight_id` int(11) NOT NULL,
-  `data` blob
+  `fight_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -370,7 +368,8 @@ MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 -- AUTO_INCREMENT для таблицы `snake`
 --
 ALTER TABLE `snake`
-MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;SET FOREIGN_KEY_CHECKS=1;
+MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+SET FOREIGN_KEY_CHECKS=1;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;

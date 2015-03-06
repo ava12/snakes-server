@@ -4,6 +4,8 @@
  * @property int $fight_id
  * @property int $delay_till
  * @property string $state
+ *
+ * @property Fight $fight;
  */
 class DelayedFight extends ActiveRecord {
 	const BATCH_CNT = 50;
@@ -29,15 +31,14 @@ class DelayedFight extends ActiveRecord {
 	protected $startX = array(12, 9, 12, 15);
 	protected $startY = array(15, 12, 9, 12);
 
-	protected $names = array('isSolitaire', 'field', 'result', 'turns', 'snakes' => array('Snake'), 'stats' => array('SnakeStat'));
+	protected $names = array('isSolitaire', 'field', 'result', 'turns', 'snakes');
 
 	protected $isSolitaire = NULL;
 	protected $field;
 
 	public $result;
-	public $turns;
+	public $turns = array();
 	public $snakes = array(NULL, NULL, NULL, NULL);
-	public $stats = array();
 
 	protected $isLocked = false;
 
@@ -155,7 +156,9 @@ class DelayedFight extends ActiveRecord {
 		$this->fight_id = $this->fight->id;
 
 		$snakes = array(NULL, NULL, NULL, NULL);
-		foreach ($this->fight->stats as $index => $stat) {
+		foreach ($this->fight->snakes as $index => $snake) {
+			if (!$snake) continue;
+
 			$this->isSolitaire = !isset($this->isSolitaire);
 			$coords = $this->prepareCoords($index);
 
@@ -166,9 +169,9 @@ class DelayedFight extends ActiveRecord {
 			$this->field[$coords[9][1]][$coords[9][0]] = self::TAIL_CELL << $index;
 
 			$snakes[$index] = array(
-				'SnakeId' => $stat->snake->base_id, 'PlayerId' => $stat->snake->player_id,
+				'SnakeId' => $snake->id, 'PlayerId' => $snake->player_id,
 				'Dir' => $index, 'Coords' => $coords, 'Result' => '', 'Debug' => array(),
-				'Maps' => $this->prepareMapVariants($stat->snake, $index),
+				'Maps' => $this->prepareMapVariants($snake, $index),
 			);
 		}
 

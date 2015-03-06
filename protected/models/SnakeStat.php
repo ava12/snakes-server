@@ -9,7 +9,7 @@ class SnakeStat extends Model {
 	const RESULT_EATEN = 'eaten';
 	const RESULT_BLOCKED = 'blocked';
 
-	protected $names = array('fight_id', 'result', 'length', 'pre_rating', 'post_rating', 'debug');
+	protected $names = array('fight_id' => false, 'result' => false, 'length' => false, 'pre_rating' => false, 'post_rating' => false, 'debug' => false);
 
 	public $fight_id;
 	public $result = self::RESULT_NONE;

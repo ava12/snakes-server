@@ -26,7 +26,6 @@ final class RequestModTest extends RequestTestBase {
 		$game = new Game($request, true);
 		$response = $game->setPlayer(2)->run();
 		$this->assertEquals('snake new', $response['Response']);
-		$snake = Snake::model()->byBaseId($response['SnakeId'])->find();
 		return $response['SnakeId'];
 	}
 
@@ -48,8 +47,8 @@ final class RequestModTest extends RequestTestBase {
 		);
 		self::checkValidRequest($request, $response, 2);
 
-		$snake = Snake::model()->byBaseId($snakeId)->find();
-		$this->assertEquals($snakeId, $snake->base_id);
+		$snake = Snake::model()->findByPk($snakeId);
+		$this->assertEquals($snakeId, $snake->id);
 		return $snakeId;
 	}
 
@@ -65,9 +64,6 @@ final class RequestModTest extends RequestTestBase {
 		);
 
 		self::checkValidRequest($request, NULL, 2);
-		$snake = Snake::model()->byBaseId($snakeId)->find();
-		$this->assertEquals($snakeId, $snake->base_id);
-		$this->assertNotEquals($snakeId, $snake->id);
 		return $snakeId;
 	}
 

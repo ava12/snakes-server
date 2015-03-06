@@ -437,7 +437,7 @@ class Game {
 				}
 			}
 
-			$snake->update(array('current' => 0, 'refs' => new CDbExpression('refs - 1')));
+			$snake->delete();
 		} catch (Exception $e) {
 			$transaction->rollback();
 			throw $e;

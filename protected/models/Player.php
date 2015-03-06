@@ -48,10 +48,9 @@ class Player extends CActiveRecord {
 //---------------------------------------------------------------------------
 	public function relations() {
 		return array(
-			'fighter' => array(self::BELONGS_TO, 'Snake', array('fighter_id' => 'base_id'),
-				'condition' => 'fighter.current'),
+			'fighter' => array(self::BELONGS_TO, 'Snake', array('fighter_id' => 'id')),
 			'snakes' => array(self::HAS_MANY, 'Snake', 'player_id',
-				'order' => 'snakes.name ASC', 'condition' => 'snakes.current'),
+				'order' => 'snakes.name ASC'),
 		);
 	}
 

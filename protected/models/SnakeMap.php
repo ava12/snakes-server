@@ -8,11 +8,12 @@
  * @property string $lines
  */
 class SnakeMap extends Model {
-	protected $names = array('description' => false, 'head_x' => false, 'head_y' => false, 'lines' => false);
+	protected $names = array('description' => false, 'head_x' => false, 'head_y' => false, 'lines' => true);
+	protected $writableNames = array('description' => false, 'head_x' => false, 'head_y' => false, 'lines' => false);
 
-	public $description;
-	protected $head_x;
-	protected $head_y;
+	public $description = '';
+	protected $head_x = 0;
+	protected $head_y = 0;
 	protected $lines;
 
 //---------------------------------------------------------------------------
@@ -44,6 +45,7 @@ class SnakeMap extends Model {
 		if ($offset + strlen($line) > 98) return false;
 
 		$lines = $this->lines;
+		if (!$lines) $lines = str_repeat('--', 49);
 		$len = strlen($line);
 		if (substr($lines, $offset, $len) <> str_repeat('-', $len)) return false;
 
@@ -63,6 +65,11 @@ class SnakeMap extends Model {
 //---------------------------------------------------------------------------
 	public function copy() {
 		return new SnakeMap($this->asArray());
+	}
+
+//---------------------------------------------------------------------------
+	public function getLines() {
+		return ($this->lines ? $this->lines : str_repeat('--', 49));
 	}
 
 //---------------------------------------------------------------------------

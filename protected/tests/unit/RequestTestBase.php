@@ -12,8 +12,8 @@ class RequestTestBase extends CTestCase {
 
 		$request = "SET FOREIGN_KEY_CHECKS = 0;\r\n";
 		$tables = array(
-			'player', 'snake', 'map', 'fight', 'snakestat', 'delayedfight',
-			'fightlist', 'fightslot', 'session',
+			'player', 'snake', 'fight', 'delayedfight', 'fightlist',
+			'fightslot', 'session',
 		);
 		foreach($tables as $name) {
 			$request .= "TRUNCATE TABLE `$prefix$name`;\r\n";
@@ -30,7 +30,22 @@ class RequestTestBase extends CTestCase {
 		$db->createCommand('SET FOREIGN_KEY_CHECKS = 0')->execute();
 
 		foreach($dbData as $table => $def) {
-			$db->createCommand(Util::makeMultiInsert($db, $table, $def[0], $def[1]))->execute();
+			$columns = $def[0];
+			$rows = $def[1];
+			foreach ($columns as $index => $name) {
+				if (is_string($name)) continue;
+
+				foreach ($rows as &$row) {
+					$data = array();
+					foreach ($name as $i => $k) {
+						$data[$k] = $row[$index][$i];
+					}
+					$row[$index] = json_encode($data, JSON_UNESCAPED_UNICODE);
+				}
+
+				$columns[$index] = 'data';
+			}
+			$db->createCommand(Util::makeMultiInsert($db, $table, $columns, $rows))->execute();
 		}
 
 		$db->createCommand('SET FOREIGN_KEY_CHECKS = 1')->execute();

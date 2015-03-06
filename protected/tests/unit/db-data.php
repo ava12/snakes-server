@@ -15,55 +15,53 @@ return array(
 	),
 
 	'snake' => array(
+		array('id', 'player_id', 'name', 'type', 'skin_id', array('templates', 'maps')),
 		array(
-			'id', 'base_id', 'refs', 'current', 'player_id',
-			'name', 'type', 'skin_id', 'templates'
-		),
-		array(
-			array(1, 1, 2, 1, 1, 'sn', 'N', 1, 'S,S,S,S'),
-			array(2, 2, 2, 1, 2, 'sn2', 'N', 1, 'S,S,S,S'),
-			array(3, 3, 2, 1, 3, 'sn3', 'N', 1, 'S,S,S,S'),
-			array(4, 4, 2, 1, 4, 'sn4', 'N', 1, 'S,S,S,S'),
-			array(5, 5, 2, 1, 5, 'sn', 'B', 1, 'S,S,S,S'),
-		)
-	),
-
-	'map' => array(
-		array('snake_id', 'index', 'head_x', 'head_y', 'lines'),
-		array(
-			array(1, 0, 3, 3, $mapLine),
-			array(2, 0, 3, 3, $mapLine),
-			array(3, 0, 3, 3, $mapLine),
-			array(4, 0, 3, 3, $mapLine),
-			array(5, 0, 3, 3, $mapLine),
+			array(1, 1, 'sn', 'N', 1, array(
+				array('S', 'S', 'S', 'S'),
+				array(array('head_x' => 3, 'head_y' => 3, 'lines' => $mapLine))
+			)),
+			array(2, 2, 'sn2', 'N', 1, array(
+				array('S', 'S', 'S', 'S'),
+				array(array('head_x' => 3, 'head_y' => 3, 'lines' => $mapLine))
+			)),
+			array(3, 3, 'sn3', 'N', 1, array(
+				array('S', 'S', 'S', 'S'),
+				array(array('head_x' => 3, 'head_y' => 3, 'lines' => $mapLine))
+			)),
+			array(4, 4, 'sn4', 'N', 1, array(
+				array('S', 'S', 'S', 'S'),
+				array(array('head_x' => 3, 'head_y' => 3, 'lines' => $mapLine))
+			)),
+			array(5, 5, 'sn', 'B', 1, array(
+				array('S', 'S', 'S', 'S'),
+				array(array('head_x' => 3, 'head_y' => 3, 'lines' => $mapLine))
+			)),
 		)
 	),
 
 	'fight' => array(
 		array(
-			'id', 'refs', 'type', 'time', 'player_id', 'turn_limit', 'turn_count', 'turns', 'result'
+			'id', 'refs', 'type', 'time', 'player_id',
+			'turn_limit', 'result', array('turns', 'snakes', 'stats'),
 		),
 		array(
-			array(1, 5, 'challenge', 1000000000, 1, 1, 1, chr(0x2a).chr(0xa4), 'limit'),
-			array(2, 1, 'train', NULL, 2, 2, 0, NULL, NULL),
-		)
-	),
-
-	'snakestat' => array(
-		array(
-			'fight_id', 'index', 'snake_id', 'result', 'length',
-			'pre_rating', 'post_rating', 'debug'
-		),
-		array(
-			array(1, 0, 1, 'free', 10, 0, 0, chr(40)),
-			array(1, 1, 2, 'free', 10, 0, 0, chr(42)),
-			array(1, 2, 3, 'free', 10, 0, 0, chr(44)),
-			array(1, 3, 4, 'free', 10, 0, 0, chr(46)),
-
-			array(2, 0, 1, NULL, NULL, NULL, NULL, NULL),
-			array(2, 1, 3, NULL, NULL, NULL, NULL, NULL),
-			array(2, 2, 4, NULL, NULL, NULL, NULL, NULL),
-			array(2, 3, 5, NULL, NULL, NULL, NULL, NULL),
+			array(1, 5, 'challenge', 1000000000, 1, 1, 'limit', array(
+				array(0xA42A),
+				array(
+					array('id' => 1, 'player_id' => 1, 'maps' => array(array())),
+					array('id' => 2, 'player_id' => 2, 'maps' => array(array())),
+					array('id' => 3, 'player_id' => 3, 'maps' => array(array())),
+					array('id' => 4, 'player_id' => 4, 'maps' => array(array())),
+				),
+				array(
+					array('result' => 'free', 'length' => 10, 'debug' => chr(40)),
+					array('result' => 'free', 'length' => 10, 'debug' => chr(42)),
+					array('result' => 'free', 'length' => 10, 'debug' => chr(44)),
+					array('result' => 'free', 'length' => 10, 'debug' => chr(46)),
+				),
+			)),
+			array(2, 1, 'train', NULL, 2, 2, NULL, array(NULL, array(), array())),
 		)
 	),
 

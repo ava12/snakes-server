@@ -14,7 +14,10 @@ abstract class ActiveRecord extends CActiveRecord {
 	}
 
 	public function __set($name, $value) {
-		if (!isset($this->magicSetters[$name])) parent::__set($name, $value);
+		if (!isset($this->magicSetters[$name])) {
+			parent::__set($name, $value);
+			return;
+		}
 
 		$method = $this->magicSetters[$name];
 		if (!$method) $method = 'set' . ucfirst($name);
@@ -22,50 +25,60 @@ abstract class ActiveRecord extends CActiveRecord {
 	}
 
 	protected function afterFind() {
-		if ($this->hasAttribute('data')) {
-			$data = json_decode($this->getAttribute('data'), true);
-			foreach ($this->blobNames as $name => $class) {
-				if (is_numeric($name)) {
-					$name = $class;
-					$class = false;
-				}
-				if (isset($data[$name])) {
-					if ($class) {
-						if (is_array($class)) {
-							$class = $class[0];
-							$list = array();
-							foreach ((array)$data[$name] as $index => $value) {
+		if (!$this->hasAttribute('data')) return;
+
+		$data = json_decode($this->getAttribute('data'), true);
+		foreach ($this->blobNames as $name => $class) {
+			if (is_numeric($name)) {
+				$name = $class;
+				$class = false;
+			}
+			if (isset($data[$name])) {
+				if ($class) {
+					if (is_array($class)) {
+						$class = $class[0];
+						$list = array();
+						$isAR = is_subclass_of($class, 'CActiveRecord');
+						foreach ((array)$data[$name] as $index => $value) {
+							if ($isAR) {
+								$list[$index] = call_user_func(array($class, 'model'))->populateRecord($value);
+							} else {
 								$list[$index] = new $class($value);
 							}
-							$this->$name = $list;
+						}
+						$this->$name = $list;
+					} else {
+						$isAR = is_subclass_of($class, 'CActiveRecord');
+						if ($isAR) {
+							$this->$name = call_user_func(array($class, 'model'))->populateRecord($data[$name]);
 						} else {
 							$this->$name = new $class($data[$name]);
 						}
 					}
-					else $this->$name = $data[$name];
 				}
+				else $this->$name = $data[$name];
 			}
 		}
 	}
 
 	protected function beforeSave() {
-		if ($this->hasAttribute('data')) {
-			$data = array();
-			foreach ($this->blobNames as $name => $class) {
-				if (is_numeric($name)) $name = $class;
-				$value = $this->$name;
-				if (is_object($value)) {
-					$value = $value->asArray();
-				} elseif (is_array($value)) {
-					/** @var Model $p */
-					foreach ($value as &$p) {
-						if (is_object($p)) $p = $p->asArray();
-					}
+		if (!$this->hasAttribute('data')) return true;
+
+		$data = array();
+		foreach ($this->blobNames as $name => $class) {
+			if (is_numeric($name)) $name = $class;
+			$value = $this->$name;
+			if (is_object($value)) {
+				$value = $value->asArray();
+			} elseif (is_array($value)) {
+				/** @var Model $p */
+				foreach ($value as &$p) {
+					if (is_object($p)) $p = $p->asArray();
 				}
-				$data[$name] = $value;
 			}
-			$this->setAttribute('data', json_encode($data, JSON_UNESCAPED_UNICODE));
+			$data[$name] = $value;
 		}
+		$this->setAttribute('data', json_encode($data, JSON_UNESCAPED_UNICODE));
 		return true;
 	}
 
@@ -83,7 +96,7 @@ abstract class ActiveRecord extends CActiveRecord {
 		}
 	}
 
-	protected function validateComponent($attribute, $params) {
+	public function validateComponent($attribute, $params) {
 		$value = $this->$attribute;
 		if (is_object($value)) {
 			if ($value->hasErrors()) {
