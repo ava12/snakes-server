@@ -10,6 +10,13 @@ final class Util {
 	}
 
 //---------------------------------------------------------------------------
+	/**
+	 * @param CDbConnection $db
+	 * @param string $table
+	 * @param array $columns
+	 * @param array $values
+	 * @return string
+	 */
 	public static function makeMultiInsert($db, $table, $columns, $values) {
 		$table = $db->quoteTableName($db->tablePrefix . $table);
 
@@ -64,6 +71,11 @@ final class Util {
 	}
 
 //---------------------------------------------------------------------------
+	/**
+	 * @param CActiveRecord $model
+	 * @param array $attr
+	 * @return array|null
+	 */
 	public static function saveModel($model, $attr) {
 		$model->setAttributes($attr);
 		if ($model->save()) return NULL;
@@ -77,6 +89,11 @@ final class Util {
 	}
 
 //---------------------------------------------------------------------------
+	/**
+	 * @param CActiveRecord $model
+	 * @param string $message
+	 * @return NackException|RuntimeException
+	 */
 	public static function makeValidationException($model, $message) {
 		$errors = $model->getErrors();
 		if (!$errors) return new RuntimeException($message);

@@ -644,7 +644,9 @@ class Game {
 		$fightId = $this->request['FightId'];
 		$playerId = $this->player->id;
 
+		/** @var Fight $fight */
 		if ($this->player->delayed_id == $fightId) {
+			/** @var DelayedFight $delayed */
 			$delayed = DelayedFight::model()->findByPk($fightId);
 			if (!$delayed->process()) {
 				$delayed->save();
@@ -822,8 +824,11 @@ class Game {
 
 		foreach ($players as $player) {
 			$playerId = $player->id;
-			$fighters[$playerIds[$playerId] + 1] = $player->fighter;
-			unset($playerIds[$playerId]);
+			$fighter = $player->fighter;
+			if ($fighter) {
+				$fighters[$playerIds[$playerId] + 1] = $player->fighter;
+				unset($playerIds[$playerId]);
+			}
 		}
 
 		if ($playerIds) {

@@ -78,7 +78,8 @@ abstract class ActiveRecord extends CActiveRecord {
 			}
 			$data[$name] = $value;
 		}
-		$this->setAttribute('data', json_encode($data, JSON_UNESCAPED_UNICODE));
+		$flags = (defined('JSON_UNESCAPED_UNICODE') ? JSON_UNESCAPED_UNICODE : 0);
+		$this->setAttribute('data', json_encode($data, $flags));
 		return true;
 	}
 
@@ -96,16 +97,19 @@ abstract class ActiveRecord extends CActiveRecord {
 		}
 	}
 
-	public function validateComponent($attribute, $params) {
+	public function validateComponent($attribute) {
 		$value = $this->$attribute;
 		if (is_object($value)) {
 			if ($value->hasErrors()) {
 				$this->addComponentErrors($value, $attribute);
-			} elseif (is_array($value)) {
-				/** @var CModel|array $v */
-				foreach ($value as $name => $v) {
-					if (is_object($v) and $v->hasErrors()) {
-						$this->addComponentErrors($value, $attribute . '.' . $name);
+			}
+		} elseif (is_array($value)) {
+			/** @var CModel|array $v */
+			foreach ($value as $name => $v) {
+				if (is_object($v)) {
+					$v->validate();
+					if ($v->hasErrors()) {
+						$this->addComponentErrors($v, $attribute . '.' . $name);
 					}
 				}
 			}

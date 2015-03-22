@@ -48,7 +48,7 @@ function ASnakeEditor(SnakeId) {
 			{x: 486, id: 'lower', Back: '32.Buttons.Back', Sprite:'16.Labels.Down', Title: 'ниже'},
 			{x: 520, id: 'add', Back: '32.Buttons.Add', Sprite: '16.Labels.Add', Title: 'новая карта'},
 			{x: 554, id: 'copy', Back: '32.Buttons.Add', Sprite: '16.Labels.Copy', Title: 'копия карты'},
-			{x: 588, id: 'del', Back: '32.Buttons.Del', Sprite: '16.Labels.Del', Title: 'удалить карту'},
+			{x: 588, id: 'del', Back: '32.Buttons.Del', Sprite: '16.Labels.Del', Title: 'удалить карту'}
 		]},
 		TemplateButtons: {y: 389, w: 32, h: 32, Data: {cls: 'tpl'},
 			Title: 'пользовательский набор', Items: {
@@ -62,7 +62,7 @@ function ASnakeEditor(SnakeId) {
 				A: {x: 381, y: 389, id: 'A', Sprite: '32.A'},
 				B: {x: 381, y: 429, id: 'B', Sprite: '32.B'},
 				C: {x: 510, y: 389, id: 'C', Sprite: '32.C'},
-				D: {x: 510, y: 429, id: 'D', Sprite: '32.D'},
+				D: {x: 510, y: 429, id: 'D', Sprite: '32.D'}
 			}
 		},
 		GroupButtons: {y: 429, w: 32, h: 32, Data: {cls: 'grp'}, Items: [
@@ -73,7 +73,7 @@ function ASnakeEditor(SnakeId) {
 			{x: 226, id: '4', Title: 'ИЛИ-группа 1', Sprite: '20.Group.4'},
 			{x: 260, id: '5', Title: 'ИЛИ-группа 2', Sprite: '20.Group.5'},
 			{x: 294, id: '6', Title: 'ИЛИ-группа 3', Sprite: '20.Group.6'},
-			{x: 328, id: '7', Title: 'ИЛИ-группа 4', Sprite: '20.Group.7'},
+			{x: 328, id: '7', Title: 'ИЛИ-группа 4', Sprite: '20.Group.7'}
 		]},
 		UserSetButtons: {w: 16, h: 16, Data: {cls: 'set'}, Items: {
 			A: {Items: {
@@ -83,7 +83,7 @@ function ASnakeEditor(SnakeId) {
 				w: {x: 471, y: 389, Data: {id: 'w', usr: 'A'}, Title: 'граница поля', Sprite: '16.W'},
 				x: {x: 417, y: 407, Data: {id: 'x', usr: 'A'}, Title: 'голова противника', Sprite: '16.X'},
 				y: {x: 435, y: 407, Data: {id: 'y', usr: 'A'}, Title: 'тело противника', Sprite: '16.Y'},
-				z: {x: 453, y: 407, Data: {id: 'z', usr: 'A'}, Title: 'хвост противника', Sprite: '16.Z'},
+				z: {x: 453, y: 407, Data: {id: 'z', usr: 'A'}, Title: 'хвост противника', Sprite: '16.Z'}
 			}},
 			B: {Items: {
 				v: {x: 417, y: 429, Data: {id: 'v', usr: 'B'}, Title: 'пустая клетка', Sprite: '16.V'},
@@ -92,7 +92,7 @@ function ASnakeEditor(SnakeId) {
 				w: {x: 471, y: 429, Data: {id: 'w', usr: 'B'}, Title: 'граница поля', Sprite: '16.W'},
 				x: {x: 417, y: 447, Data: {id: 'x', usr: 'B'}, Title: 'голова противника', Sprite: '16.X'},
 				y: {x: 435, y: 447, Data: {id: 'y', usr: 'B'}, Title: 'тело противника', Sprite: '16.Y'},
-				z: {x: 453, y: 447, Data: {id: 'z', usr: 'B'}, Title: 'хвост противника', Sprite: '16.Z'},
+				z: {x: 453, y: 447, Data: {id: 'z', usr: 'B'}, Title: 'хвост противника', Sprite: '16.Z'}
 			}},
 			C: {Items: {
 				v: {x: 546, y: 389, Data: {id: 'v', usr: 'C'}, Title: 'пустая клетка', Sprite: '16.V'},
@@ -101,7 +101,7 @@ function ASnakeEditor(SnakeId) {
 				w: {x: 600, y: 389, Data: {id: 'w', usr: 'C'}, Title: 'граница поля', Sprite: '16.W'},
 				x: {x: 546, y: 407, Data: {id: 'x', usr: 'C'}, Title: 'голова противника', Sprite: '16.X'},
 				y: {x: 564, y: 407, Data: {id: 'y', usr: 'C'}, Title: 'тело противника', Sprite: '16.Y'},
-				z: {x: 582, y: 407, Data: {id: 'z', usr: 'C'}, Title: 'хвост противника', Sprite: '16.Z'},
+				z: {x: 582, y: 407, Data: {id: 'z', usr: 'C'}, Title: 'хвост противника', Sprite: '16.Z'}
 			}},
 			D: {Items: {
 				v: {x: 546, y: 429, Data: {id: 'v', usr: 'D'}, Title: 'пустая клетка', Sprite: '16.V'},
@@ -110,9 +110,9 @@ function ASnakeEditor(SnakeId) {
 				w: {x: 600, y: 429, Data: {id: 'w', usr: 'D'}, Title: 'граница поля', Sprite: '16.W'},
 				x: {x: 546, y: 447, Data: {id: 'x', usr: 'D'}, Title: 'голова противника', Sprite: '16.X'},
 				y: {x: 564, y: 447, Data: {id: 'y', usr: 'D'}, Title: 'тело противника', Sprite: '16.Y'},
-				z: {x: 582, y: 447, Data: {id: 'z', usr: 'D'}, Title: 'хвост противника', Sprite: '16.Z'},
-			}},
-		}},
+				z: {x: 582, y: 447, Data: {id: 'z', usr: 'D'}, Title: 'хвост противника', Sprite: '16.Z'}
+			}}
+		}}
 	}}
 
 	this.PrevMapControl = {
@@ -134,7 +134,7 @@ function ASnakeEditor(SnakeId) {
 		{x : 452, y: 302, id: '5', Title: 'карта № 6', Sprite: '16.Digits.6'},
 		{x : 486, y: 302, id: '6', Title: 'карта № 7', Sprite: '16.Digits.7'},
 		{x : 520, y: 302, id: '7', Title: 'карта № 8', Sprite: '16.Digits.8'},
-		{x : 554, y: 302, id: '8', Title: 'карта № 9', Sprite: '16.Digits.9'},
+		{x : 554, y: 302, id: '8', Title: 'карта № 9', Sprite: '16.Digits.9'}
 	]}
 
 	this.DirtyLabel = {x: 8, y: 42, w: 10, h: 22, Label: '*'}
@@ -177,7 +177,7 @@ function ASnakeEditor(SnakeId) {
 //---------------------------------------------------------------------------
 	this.RenderButton = function(ButtonSet, ItemIndex, Pressed) {
 		if (ItemIndex == undefined) var Button = ButtonSet
-		else var Button = ButtonSet.Items[ItemIndex]
+		else Button = ButtonSet.Items[ItemIndex]
 		if (!Button.Sprite) return
 
 		var Sprite = Button.Sprite
@@ -232,7 +232,7 @@ function ASnakeEditor(SnakeId) {
 //---------------------------------------------------------------------------
 	this.RenderSnakeType = function () {
 		var Box = this.Controls.Items.SnakeType
-		Canvas.RenderTextBox(Box.Labels[this.Snake.SnakeType], Box)
+		Canvas.RenderTextBox(Box.Labels[this.Snake.SnakeType], Box, null, '#fff')
 	}
 
 //---------------------------------------------------------------------------
@@ -538,7 +538,6 @@ function ASnakeEditor(SnakeId) {
 //---------------------------------------------------------------------------
 	this.HandleTemplateClick = function(Id) {
 		var Controls = this.Controls.Items
-		var Index = null
 		var Element = this.Element
 		if (Element != undefined) {
 			switch(Element) {
@@ -632,7 +631,7 @@ function ASnakeEditor(SnakeId) {
 		var Params = {
 			name: ['Имя змеи', 'text', this.Snake.SnakeName],
 			program: ['Описание программы', 'textarea', this.Snake.ProgramDescription],
-			map: ['Описание карты', 'textarea', this.Snake.Maps[this.MapIndex].Description],
+			map: ['Описание карты', 'textarea', this.Snake.Maps[this.MapIndex].Description]
 		}
 		Canvas.RenderInput(
 			Params[Id][1], Params[Id][0], Params[Id][2], this.HandleInput, Id, true
@@ -694,7 +693,7 @@ function ASnakeEditor(SnakeId) {
 
 //---------------------------------------------------------------------------
 	this.HandleTypeClick = function () {
-		if (this.Snake.SnakeType == 'N' && Game.Player.FighterId == this.SnakeId) {
+		if (this.Snake.SnakeType == 'N' && this.SnakeId && Game.Player.FighterId == this.SnakeId) {
 			alert('Нельзя сменить тип бойца.')
 			return
 		}

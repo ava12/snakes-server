@@ -89,7 +89,7 @@ DROP TABLE IF EXISTS `delayedfight`;
 CREATE TABLE IF NOT EXISTS `delayedfight` (
   `fight_id` int(11) NOT NULL,
   `delay_till` int(11) NOT NULL,
-  `data` blob
+  `data` text
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -120,7 +120,7 @@ CREATE TABLE IF NOT EXISTS `fight` (
   `player_id` int(11) NOT NULL,
   `turn_limit` smallint(6) NOT NULL,
   `result` enum('','limit','eaten','blocked') NOT NULL,
-  `data` blob
+  `data` text
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
@@ -295,7 +295,7 @@ CREATE TABLE IF NOT EXISTS `snake` (
   `type` char(1) NOT NULL,
   `skin_id` int(11) NOT NULL,
   `description` varchar(1024) NOT NULL,
-  `data` blob
+  `data` text
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --

@@ -21,6 +21,10 @@ class FightEntry extends CActiveRecord {
 	);
 
 //---------------------------------------------------------------------------
+	/**
+	 * @param string $className
+	 * @return FightEntry
+	 */
 	public static function model($className = __CLASS__) {
 		return parent::model($className);
 	}

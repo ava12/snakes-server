@@ -91,7 +91,7 @@ class RequestTestBase extends CTestCase {
 		$game->setPlayer($playerId);
 
 		try {
-			$game->run();
+			$response = $game->run();
 		} catch (NackException $e) {
 			if ($code <> $e->getCode()) {
 				$msg = 'NackException: код ошибки ' . $e->getCode() . ' не совпадает с ожидаемым ' . $code;
@@ -99,7 +99,12 @@ class RequestTestBase extends CTestCase {
 				echo $msg, PHP_EOL;
 				throw $e;
 			}
+			return;
 		}
+
+		var_dump($response);
+		throw new RuntimeException('вместо NackException с кодом ' . $code . ' получен ответ "' .
+			$response['Response'] . '"');
 	}
 
 //---------------------------------------------------------------------------

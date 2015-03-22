@@ -19,6 +19,7 @@ class SnakeMap extends Model {
 //---------------------------------------------------------------------------
 	public function rules() {
 		return array(
+			array('head_x, head_y, description', 'safe'),
 			array('description', 'length', 'max' => 1024),
 			array('head_x, head_y', 'numerical', 'integerOnly' => true, 'min' => 0, 'max' => 6),
 			array('lines', 'validateLines'),
@@ -28,9 +29,8 @@ class SnakeMap extends Model {
 //---------------------------------------------------------------------------
 	public function validateLines($attribute) {
 		$value = $this->$attribute;
-		if (
-			!preg_match('/^(?:--|[A-DSTV-Z][0-7]){49}$/i', $value) or
-			substr($value, $this->head_y * 7 + $this->head_x, 2) <> '--'
+		if (!preg_match('/^(?:--|[A-DSTV-Z][0-7]){49}$/i', $value)
+			or substr($value, ($this->head_y * 7 + $this->head_x) << 1, 2) <> '--'
 		) {
 			$this->addError($attribute, 'некорректное описание карты');
 			return false;
