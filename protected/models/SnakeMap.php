@@ -29,6 +29,8 @@ class SnakeMap extends Model {
 //---------------------------------------------------------------------------
 	public function validateLines($attribute) {
 		$value = $this->$attribute;
+		if (!strlen($value)) return NULL;
+
 		if (!preg_match('/^(?:--|[A-DSTV-Z][0-7]){49}$/i', $value)
 			or substr($value, ($this->head_y * 7 + $this->head_x) << 1, 2) <> '--'
 		) {

@@ -47,12 +47,16 @@ return array(
 		),
 		array(
 			array(1, 5, 'challenge', 1000000000, 1, 1, 'limit', array(
-				array(0xA42A),
+				array(0x2aa4),
 				array(
-					array('id' => 1, 'player_id' => 1, 'maps' => array(array())),
-					array('id' => 2, 'player_id' => 2, 'maps' => array(array())),
-					array('id' => 3, 'player_id' => 3, 'maps' => array(array())),
-					array('id' => 4, 'player_id' => 4, 'maps' => array(array())),
+					array('id' => '1', 'name' => 'sn',  'type' => 'N', 'skin_id' => 1, 'player_id' => '1',
+						'maps' => array(), 'description' => ''),
+					array('id' => '2', 'name' => 'sn2', 'type' => 'N', 'skin_id' => 1, 'player_id' => '2',
+						'maps' => array(), 'description' => ''),
+					array('id' => '3', 'name' => 'sn3', 'type' => 'N', 'skin_id' => 1, 'player_id' => '3',
+						'maps' => array(), 'description' => ''),
+					array('id' => '4', 'name' => 'sn4', 'type' => 'N', 'skin_id' => 1, 'player_id' => '4',
+						'maps' => array(), 'description' => ''),
 				),
 				array(
 					array('result' => 'free', 'length' => 10, 'debug' => chr(40)),

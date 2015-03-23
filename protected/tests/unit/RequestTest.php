@@ -126,6 +126,7 @@ final class RequestTest extends RequestTestBase {
 
 	public function testWhoamiRequest() {
 		$request = array('Request' => 'whoami');
+		/** @var Player $player */
 		$player = Player::model()->findByPk(5);
 		$response = array(
 			'Response' => 'whoami',
@@ -387,9 +388,7 @@ final class RequestTest extends RequestTestBase {
 				array('Status' => 'free', 'FinalLength' => 10, 'InitialRating' => 0,
 					'FinalRating' => 0, 'ProgramDescription' => '',
 					'Templates' => array('S', 'S', 'S', 'S'),
-					'Maps' => array(array('Description' => '', 'HeadX' => 3, 'HeadY' => 3, 'Lines' => array(
-						array('X' => 3, 'Y' => 4, 'Line' => 'S0'),
-					))), 'DebugData' => chr(40)),
+					'Maps' => array(), 'DebugData' => chr(40)),
 				array('Status' => 'free', 'FinalLength' => 10, 'InitialRating' => 0, 'FinalRating' => 0),
 				array('Status' => 'free', 'FinalLength' => 10, 'InitialRating' => 0, 'FinalRating' => 0),
 				array('Status' => 'free', 'FinalLength' => 10, 'InitialRating' => 0, 'FinalRating' => 0),
@@ -435,9 +434,7 @@ final class RequestTest extends RequestTestBase {
 				array('Status' => 'free', 'FinalLength' => 10, 'InitialRating' => 0,
 					'FinalRating' => 0, 'ProgramDescription' => '',
 					'Templates' => array('S', 'S', 'S', 'S'),
-					'Maps' => array(array('Description' => '', 'HeadX' => 3, 'HeadY' => 3, 'Lines' => array(
-						array('X' => 3, 'Y' => 4, 'Line' => 'S0'),
-					))), 'DebugData' => chr(40)),
+					'Maps' => array(), 'DebugData' => chr(40)),
 				array('Status' => 'free', 'FinalLength' => 10, 'InitialRating' => 0, 'FinalRating' => 0),
 				array('Status' => 'free', 'FinalLength' => 10, 'InitialRating' => 0, 'FinalRating' => 0),
 				array('Status' => 'free', 'FinalLength' => 10, 'InitialRating' => 0, 'FinalRating' => 0),
