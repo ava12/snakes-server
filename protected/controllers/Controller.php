@@ -40,7 +40,15 @@ class Controller extends CController {
 			throw new CHttpException('403');
 		}
 
+		$sweepRatio = Yii::app()->params['SweepRatio'];
+		if ($sweepRatio > 0 and mt_rand(1, $sweepRatio) == 1) $this->sweep();
+
 		return true;
+	}
+
+//---------------------------------------------------------------------------
+	protected function sweep() {
+		Yii::app()->db->createCommand('CALL delete_zero_refs')->exec();
 	}
 
 //---------------------------------------------------------------------------

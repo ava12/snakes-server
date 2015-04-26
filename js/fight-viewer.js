@@ -2,10 +2,10 @@ function AFightViewer(Fight) {
 	this.TabTitle = 'бой'
 	this.TabSprite = Sprites.Get('Fight')
 	if (Fight instanceof AFight) {
-		if (Fight.FightTime) this.Fight = Fight
+		if (Fight.FightId) this.Fight = Fight
 		else return new AFightPlanner(Fight)
 	} else {
-		if (typeof Fight == 'number') this.Fight = Game.Fights.List[Fight]
+		if (typeof Fight == 'number') this.Fight = new AFight({FightId: Fight})
 		else return new AFightPlanner()
 	}
 
@@ -49,8 +49,8 @@ function AFightViewer(Fight) {
 		]},
 		SaveButton: {x: 428, y: 370, w: 100, h: 24, Data: {cls: 'save'},
 			Labels: ['Сохранить', 'Удалить'], BackColors: ['#9f9', '#f99']},
-		ExportButton: {x: 538, y: 370, w: 90, h: 24, Data: {cls: 'export'},
-			Label: 'Экспорт', Title: 'экспортировать в виде текста', BackColor: '#9cf'},
+		RefreshButton: {x: 538, y: 370, w: 90, h: 24, Data: {cls: 'refresh'},
+			Label: 'Обновить', Title: 'перезагрузить бой с сервера', BackColor: '#9cf'},
 	}}
 
 	this.ReasonSprites = ['Debug.NoDebug', 'Debug.NoMove', 'Debug.SingleMove', 'Debug.NoMap']
@@ -277,7 +277,7 @@ function AFightViewer(Fight) {
 
 //---------------------------------------------------------------------------
 	this.RenderStepInfo = function() {
-		Canvas.RenderTextBox(this.Step + 1, this.Items.MapStepText)
+		Canvas.RenderTextBox(this.Step + 1, this.Items.MapStepText, '#000', '#fff')
 	}
 
 //---------------------------------------------------------------------------
@@ -289,8 +289,8 @@ function AFightViewer(Fight) {
 		if (!Force) return
 
 		Canvas.RenderSprite(Sprites.Get('Debug.NoDebug'), Box.x, Box.y)
-		Canvas.RenderTextBox('', this.Items.MapIndexText)
-		Canvas.RenderTextBox('', this.Items.MapReasonText)
+		Canvas.RenderTextBox('', this.Items.MapIndexText, '#000', '#fff')
+		Canvas.RenderTextBox('', this.Items.MapReasonText, '#000', '#fff')
 		return
 	}
 
@@ -304,8 +304,8 @@ function AFightViewer(Fight) {
 		Index = ''
 		Reason = this.ReasonTexts[RotRef]
 	}
-	Canvas.RenderTextBox(Index, this.Items.MapIndexText)
-	Canvas.RenderTextBox(Reason, this.Items.MapReasonText)
+	Canvas.RenderTextBox(Index, this.Items.MapIndexText, '#000', '#fff')
+	Canvas.RenderTextBox(Reason, this.Items.MapReasonText, '#000', '#fff')
 }
 
 //---------------------------------------------------------------------------
@@ -585,14 +585,12 @@ function AFightViewer(Fight) {
 	}
 
 //---------------------------------------------------------------------------
-	;(function() {
+	this.Prepare = function () {
 		var Buttons = this.TabControls.Items.SnakeButtons.Items
 		for(var i = 0; i < 4; i++) {
 			if (!this.Fight.Snakes[i]) delete Buttons[i]
 			else Buttons[i].Title = this.Fight.Snakes[i].SnakeName
 		}
-
-		if (!window.JSON) delete this.TabControls.Items.ExportButton
 
 		var StartX = [12, 9, 12, 15], StartY = [15, 12, 9, 12]
 		var DeltaX = [0, -1, 0, 1], DeltaY = [1, 0, -1, 0]
@@ -616,6 +614,30 @@ function AFightViewer(Fight) {
 		this.TurnField = Clone(this.Field)
 		this.KeyFrames[0] = Clone(this.Field)
 		this.ExtractTurnInfo()
+	}
+
+//---------------------------------------------------------------------------
+	this.ProcessResponse = function(Response) {
+		if (Response.Response == 'fight info') {
+			this.Fight = new AFight(Response)
+			this.Prepare()
+			this.Show()
+			return
+		}
+
+		var Request = {Request: 'fight info', FightId: this.Fight.FightId}
+		PostRequest(null, Request, 10, this.ProcessResponse, null, this)
+	}
+
+//---------------------------------------------------------------------------
+	;(function() {
+		if (this.Fight.FightTime) {
+			this.Prepare()
+			return
+		}
+
+		var Request = {Request: 'fight info', FightId: this.Fight.FightId}
+		PostRequest(null, Request, 10, this.ProcessResponse, null, this)
 	}).call(this)
 
 //---------------------------------------------------------------------------

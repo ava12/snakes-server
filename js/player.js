@@ -1,4 +1,5 @@
 function APlayer(Id) {
+	this.TabList = 'Players'
 	this.Player = {
 		Id: Id,
 		Name: null,
@@ -58,12 +59,12 @@ function APlayer(Id) {
 
 //---------------------------------------------------------------------------
 	this.TabInit = function () {
-		Game.Tabs.Players[this.Player.Id] = this.TabId
+		this.RegisterTab(this.Player.Id)
 	}
 
 //---------------------------------------------------------------------------
 	this.OnClose = function () {
-		delete Game.Tabs.Players[this.Player.Id]
+		this.UnregisterTab()
 		return true
 	}
 
@@ -104,17 +105,17 @@ function APlayer(Id) {
 			for (var i = 0; i < Snakes.length; i++) {
 				Item = Snakes[i]
 
-				SnakeControls.push(this.MakeControl(IC.Fight, 0, y, {id: Item.SnakeId}))
+				SnakeControls.push(this.MakeControl(IC.Fight, 0, y, {id: i}))
 
 				if (this.IsMe || Item.SnakeType == 'B') {
 					SnakeControls.push(this.MakeControl(IC.Link, 0, y, {
-						id: Item.SnakeId, Title: Item.SnakeName
+						id: i, Title: Item.SnakeName
 					}))
 				}
 
 				if (this.IsMe && Item.SnakeId != FighterId) {
-					SnakeControls.push(this.MakeControl(IC.Assign, 0, y, {id: Item.SnakeId}))
-					SnakeControls.push(this.MakeControl(IC.Delete, 0, y, {id: Item.SnakeId}))
+					SnakeControls.push(this.MakeControl(IC.Assign, 0, y, {id: i}))
+					SnakeControls.push(this.MakeControl(IC.Delete, 0, y, {id: i}))
 				}
 
 				y += this.SnakeItemHeight
@@ -187,6 +188,7 @@ function APlayer(Id) {
 	this.OnClick = function (x, y, Dataset) {
 		var Class = Dataset.cls
 		var Id = Dataset.id
+		var Tab, SnakeId
 
 		switch (Class) {
 			case 'refresh':
@@ -195,8 +197,8 @@ function APlayer(Id) {
 
 			case 'snake-view':
 			case 'snake-edit':
-				if (Game.Tabs.Snakes[Id]) TabSet.Select(Game.Tabs.Snakes[Id])
-				else TabSet.Add(Class == 'snake-view' ? new ASnakeViewer(Id) : new ASnakeEditor(Id))
+				SnakeId = this.Player.Snakes[Id].SnakeId
+				Game.AddTab(Class == 'snake-view' ? new ASnakeViewer(SnakeId) : new ASnakeEditor(SnakeId))
 			break
 
 			case 'snake':
@@ -207,6 +209,19 @@ function APlayer(Id) {
 				}
 			break
 
+			case 'snake-fight':
+				Tab = Game.FindTab('Unique', 'Fight')
+				if (Tab) {
+					Tab.AddSnake(new ASnake(this.Player.Snakes[Id]))
+					TabSet.Select(Tab)
+				} else {
+					TabSet.Add(new AFightPlanner(new ASnake(this.Player.Snakes[Id])))
+				}
+			break
+
+			default:
+				alert('не реализовано')
+			break
 		}
 	}
 

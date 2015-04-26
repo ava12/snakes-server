@@ -1,13 +1,21 @@
 function AFightPlanner(Fight) {
 	this.TabTitle = 'бой'
 	this.TabSprite = Sprites.Get('Fight')
+	this.TabList = 'Unique'
+	this.TabKey = 'Fight'
+
 	if (Fight instanceof AFight) {
-		if (!Fight.FightTime) this.Fight = Fight
-		else return new AFightViewer(Fight)
+		if (Fight.FightTime) return new AFightViewer(Fight)
+
+		this.Fight = Fight
 	} else {
 		this.Fight = new AFight()
 		if (Fight instanceof ASnake) this.Fight.Snakes[0] = Fight
 	}
+
+	this.ShowWidget = false
+	this.Widget = new ASnakeListWidget({y: 30, IsPopup: true})
+	this.SnakeIndex = 0
 
 	this.MaxTurnLimit = 1000
 
@@ -48,10 +56,12 @@ function AFightPlanner(Fight) {
 //---------------------------------------------------------------------------
 	this.TabInit = function() {
 		this.Fight.TabId = this.TabId
+		this.RegisterTab()
 	}
 
 //---------------------------------------------------------------------------
 	this.OnClose = function() {
+		this.UnregisterTab()
 		this.Fight.TabId = null
 		return true
 	}
@@ -117,44 +127,22 @@ function AFightPlanner(Fight) {
 		Button = this.TabControls.Items.RunButton
 		Canvas.RenderTextBox(Button.Label, Button, '#000000', '#99ff99',
 			'#000000', 'center', 'middle')
+
+		if (this.ShowWidget) this.Widget.Render()
 	}
 
 //---------------------------------------------------------------------------
 	this.ShowSnakeList = function(Index) {
-		var Lists = [
-			[Game.OtherSnakes.List, 'Боты', 'b'],
-			[Game.MySnakes.List, 'Змеи', 'n'],
-		]
-		var Html = ''
-		for(var i in Lists) {
-			var List = Lists[i]
-			Html += '<div class="snake-list-frame"><h3>' + List[1] + '</h3>\r\n<ul class="snake-list">\r\n'
-			var Class = List[2]
-			List = List[0]
-			for(var j in List) {
-				var Snake = List[j]
-				var Name = Snake.SnakeName.encode()
-				Html += '<li data-cls="' + Class + '" data-id="' + j +
-					'" title="' + Name +
-					'" onclick="Canvas.Input(this)">' +
-					'<span class="skin skin' + Snake.SkinId +'"></span>' +
-					Name + '</li>\r\n'
-			}
-			Html += '</ul></div>\r\n'
-		}
-
-		Canvas.RenderInputHtml(Html, '', function(Dataset, Tab) {
-			Tab.Fight.Snakes[Index] =
-				(Dataset.cls == 'b' ? Game.OtherSnakes : Game.MySnakes).
-				List[Dataset.id]
-			Tab.RenderBody()
-		}, this, false)
+		this.SnakeIndex = Index
+		this.ShowWidget = true
+		this.Show()
 	}
 
 //---------------------------------------------------------------------------
 	this.RunFight = function() {
+		var Snakes = this.Fight.Snakes
 		var HasSnakes = false
-		for(var i in this.Fight.Snakes) {
+		for(var i in Snakes) {
 			if (this.Fight.Snakes[i]) {
 				HasSnakes = true
 				break
@@ -165,17 +153,25 @@ function AFightPlanner(Fight) {
 			return
 		}
 
-		var Processor = new AFightProcessor(this.Fight)
-		var Html = '<div class="fight-run">Расчет боя: ' +
-			'<span id="fight-turn">0</span>/' + this.Fight.TurnLimit + '</div>'
-		Canvas.RenderHtml('controls', Html)
-		var CounterDom = document.getElementById('fight-turn')
-		Processor.TurnAlert = function(Turn) {
-			CounterDom.innerHTML = Turn
+		var Request = {}
+		if (Snakes[0] && !Snakes[0].SnakeId) {
+			Request.Request = 'fight test'
+			var Snake = Snakes[0].Serialize()
+			for (var Name in Snake) Request[Name] = Snake[Name]
+			Snakes = Snakes.slice(1)
+			Request.OtherSnakeIds = []
+			for (i in Snakes) Request.OtherSnakeIds.push(Snakes[i] ? Snakes[i].SnakeId : null)
+		} else {
+			Request.Request = 'fight train'
+			Request.SnakeIds = []
+			for (i in Snakes) Request.SnakeIds.push(Snakes[i] ? Snakes[i].SnakeId : null)
 		}
-		var Fight = new AFight(Processor.Process())
-		Fight.Turns.push(0)
-		TabSet.Replace(this.TabId, new AFightViewer(Fight))
+		Request.TurnLimit = this.Fight.TurnLimit
+
+		PostRequest(null, Request, 10, function (Response) {
+			this.UnregisterTab()
+			TabSet.Replace(this, new AFightViewer(new AFight(Response)))
+		}, null, this)
 	}
 
 //---------------------------------------------------------------------------
@@ -214,14 +210,59 @@ function AFightPlanner(Fight) {
 			case 'run':
 				this.RunFight()
 			break
+
+			case 'list-cancel':
+				this.ShowWidget = false
+				this.Show()
+			break
+
+			case 'snake':
+				this.Fight.Snakes[this.SnakeIndex] = this.Widget.List.Items[Id]
+				this.ShowWidget = false
+				this.Show()
+			break
+
+			default:
+				if (this.ShowWidget) this.Widget.OnClick(x, y, Dataset)
+				else alert('не реализовано')
+			break
 		}
+	}
+
+//---------------------------------------------------------------------------
+	this.RenderControls = function () {
+		Canvas.RenderHtml('controls', Canvas.MakeControlHtml(this.ShowWidget ? this.Widget.WidgetControls : this.TabControls))
+	}
+
+//---------------------------------------------------------------------------
+	this.AddSnake = function (Snake) {
+		for (var i = 0; i < 4; i++) {
+			if (!this.Fight.Snakes[i]) break
+		}
+
+		if (Snake.SnakeName) {
+			this.Fight.Snakes[i] = Snake
+			this.Show()
+		} else Snake.Refresh(function () {
+			this.Fight.Snakes[i] = Snake
+			this.Show()
+		}, null, this)
 	}
 
 //---------------------------------------------------------------------------
 	;(function() {
 		var FirstSnake = this.Fight.Snakes[0]
-		if (FirstSnake && !FirstSnake.SnakeName) {
-			delete this.TabControls.Items.SnakeButtons.Items[0]
+		if (FirstSnake) {
+			if (!FirstSnake.SnakeId) {
+				delete this.TabControls.Items.SnakeButtons.Items[0]
+			} else if (!FirstSnake.SnakeName) {
+				FirstSnake.Refresh(function () {
+					this.Show()
+				}, function () {
+					this.Fight.Snakes[0] = null
+					this.Show()
+				}, this)
+			}
 		}
 	}).call(this)
 

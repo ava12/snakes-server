@@ -189,6 +189,8 @@ final class RequestModTest extends RequestTestBase {
 				'FightTime' => 0,
 				'PlayerId' => '4',
 				'PlayerName' => 'ch4',
+				'TurnLimit' => 1,
+				'TurnCount' => 1,
 				'Snakes' => array(
 					NULL,
 					array('SnakeId' => '3', 'SnakeName' => 'sn3', 'SnakeType' => 'N',

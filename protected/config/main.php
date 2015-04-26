@@ -1,4 +1,5 @@
 <?php
+if (!defined('JSON_UNESCAPED_UNICODE')) define('JSON_UNESCAPED_UNICODE', 0);
 
 if (!defined('APP_PATH')) {
 	define('APP_PATH', realpath(__DIR__ . '/..'));
@@ -47,5 +48,6 @@ return array(
 	'defaultController' => 'index',
 	'params' => array(
 		'MaxTimestampDiff' => 3 * 60,
+		'SweepRatio' => 100, // p = 1/x
 	),
 );

@@ -1,4 +1,5 @@
 function ASnakeViewer(SnakeId) {
+	this.TabList = 'Snakes'
 	this.Snake = null
 	this.SnakeId = SnakeId
 
@@ -49,7 +50,7 @@ function ASnakeViewer(SnakeId) {
 
 //---------------------------------------------------------------------------
 	this.TabInit = function() {
-		Game.Tabs.Snakes[this.SnakeId] = this.TabId
+		this.RegisterTab(this.SnakeId)
 	}
 
 //---------------------------------------------------------------------------
@@ -166,7 +167,7 @@ function ASnakeViewer(SnakeId) {
 
 //---------------------------------------------------------------------------
 	this.OnClose = function() {
-		delete Game.Tabs.Snakes[this.SnakeId]
+		this.UnregisterTab()
 		return true
 	}
 

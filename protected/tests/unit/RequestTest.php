@@ -126,15 +126,29 @@ final class RequestTest extends RequestTestBase {
 
 	public function testWhoamiRequest() {
 		$request = array('Request' => 'whoami');
+
 		/** @var Player $player */
 		$player = Player::model()->findByPk(5);
 		$response = array(
 			'Response' => 'whoami',
 			'PlayerId' => '5',
 			'PlayerName' => $player->name,
-			'FightId' => '0',
+			'FightId' => NULL,
 		);
 		self::checkValidRequest($request, $response, 5);
+
+		$player = Player::model()->findByPk(2);
+		$response = array(
+			'Response' => 'whoami',
+			'PlayerId' => '2',
+			'PlayerName' => $player->name,
+			'FightId' => '2',
+			'Rating' => 20,
+			'SnakeId' => '2',
+			'SnakeName' => 'sn2',
+			'SkinId' => 1,
+		);
+		self::checkValidRequest($request, $response, 2);
 	}
 
 	public function testLogin() {
@@ -349,6 +363,8 @@ final class RequestTest extends RequestTestBase {
 				'FightTime' => 1000000000,
 				'PlayerId' => '1',
 				'PlayerName' => 'ch1',
+				'TurnLimit' => 1,
+				'TurnCount' => 1,
 				'Snakes' => array(
 					array('SnakeId' => '1', 'SnakeName' => 'sn', 'SnakeType' => 'N',
 						'SkinId' => 1, 'PlayerId' => '1', 'PlayerName' => 'ch1'),

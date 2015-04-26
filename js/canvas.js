@@ -278,6 +278,8 @@ function ACanvas(Canvas, HtmlLayers) {
 
 //---------------------------------------------------------------------------
 	this.OnClick = function(e) {
+		if (e.target.hasChildNodes()) return false;
+
 		var x = (e.offsetX == undefined ? e.layerX : e.offsetX)
 		var y = (e.offsetY == undefined ? e.layerY : e.offsetY)
 		this.ClickHandler(x, y, GetDataset(e.target))
@@ -463,13 +465,3 @@ function ACanvas(Canvas, HtmlLayers) {
 
 //---------------------------------------------------------------------------
 }
-
-var CanvasColors = {
-	Info: '#9cf',
-	Create: '#9f9',
-	Modify: '#ff6',
-	Delete: '#f99',
-	Button: '#eee',
-	Items: ['#eef', '#efe']
-}
-

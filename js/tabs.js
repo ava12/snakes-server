@@ -14,12 +14,28 @@ var BPageTab = {
 	TabControls: {},
 	TabTitle: false,
 	TabStackIndex: 0,
+	TabList: null,
+	TabKey: null,
 
 //---------------------------------------------------------------------------
-	TabInit: function() {},
+	TabInit: function () {},
 
 //---------------------------------------------------------------------------
-	RenderBody: function() {},
+	RegisterTab: function (TabKey) {
+		if (TabKey) this.TabKey = TabKey
+		Game.RegisterTab(this.TabList, this.TabKey, this)
+	},
+
+//---------------------------------------------------------------------------
+	UnregisterTab: function () {
+		if (this.TabKey) {
+			Game.UnregisterTab(this.TabList, this.TabKey)
+			this.TabKey = null
+		}
+	},
+
+//---------------------------------------------------------------------------
+	RenderBody: function () {},
 
 //---------------------------------------------------------------------------
 	RenderControls: function() {
@@ -121,7 +137,7 @@ function AMainPageTab() {
 		Players: {x: 70, y: 277, Label: 'Игроки', id: 'Players', Tab: APlayerListTab},
 		Snakes: {x: 70, y: 377, Label: 'Змеи', id: 'Snakes', Tab: ASnakeListTab},
 		MySnakes: {x: 370, y: 77, Label: 'Мои змеи', id: 'MySnakes'},
-		MyFights: {x: 370, y: 177, Label: 'Мои бои', id: 'MyFights', Tab: 'AMyFightList'},
+		MyFights: {x: 370, y: 177, Label: 'Мои бои', id: 'MyFights'},
 		Help: {x: 370, y: 377, Label: 'Справка', id: 'Help'}
 	}}
 
@@ -145,15 +161,16 @@ function AMainPageTab() {
 	this.OnClick = function(x, y, Dataset) {
 		switch(Dataset.id) {
 			case 'Ratings': case 'Players': case 'Snakes':
-			case 'MyFights':
 				var Control = this.TabControls.Items[Dataset.id]
-				//if (Control.List.TabId) TabSet.Select(Control.List.TabId)
-				//else
 				TabSet.Add(new Control.Tab())
 			break
 
+			case 'MyFights':
+				Game.AddTab(new AFightListTab())
+			break
+
 			case 'MySnakes':
-				TabSet.Add(new APlayer(Game.Player.Id))
+				Game.AddTab(new APlayer(Game.Player.Id))
 			break
 
 			case 'Site':
@@ -257,7 +274,10 @@ var TabSet = {
 	Select: function(Id) {
 		this.Hide(this.CurrentTab)
 
-		if (Id) this.CurrentTab = this.Tabs[this.TabIndex[Id]]
+		if (Id) {
+			if (Id.TabId) Id = Id.TabId
+			this.CurrentTab = this.Tabs[this.TabIndex[Id]]
+		}
 		else this.CurrentTab = this.MainTab
 		if (this.CurrentTab) {
 			this.Show(this.CurrentTab)

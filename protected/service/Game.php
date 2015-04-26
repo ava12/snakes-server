@@ -105,12 +105,21 @@ class Game {
 //---------------------------------------------------------------------------
 	protected function requestWhoami() {
 		$player = $this->player;
-		return array(
+		$fighter = $player->fighter;
+
+		$result = array(
 			'Response' => 'whoami',
 			'PlayerId' => $player->id,
 			'PlayerName' => $player->name,
-			'FightId' => $player->delayed_id,
+			'FightId' => ($player->delayed_id ? $player->delayed_id : null),
 		);
+		if ($fighter) $result += array(
+			'Rating' => (int)$player->rating,
+			'SnakeId' => $fighter->id,
+			'SnakeName' => $fighter->name,
+			'SkinId' => (int)$fighter->skin_id,
+		);
+		return $result;
 	}
 
 //---------------------------------------------------------------------------
@@ -547,6 +556,8 @@ class Game {
 				'FightTime' => (int)$fight->time,
 				'PlayerId' => $fight->player_id,
 				'PlayerName' => $fight->player->name,
+				'TurnLimit' => (int)$fight->turn_limit,
+				'TurnCount' => count($fight->turns),
 				'Snakes' => $snakes,
 			);
 		}
@@ -648,6 +659,10 @@ class Game {
 		if ($this->player->delayed_id == $fightId) {
 			/** @var DelayedFight $delayed */
 			$delayed = DelayedFight::model()->findByPk($fightId);
+			if (!$delayed) {
+				throw new NackException(NackException::ERR_UNKNOWN_FIGHT, $fightId);
+			}
+
 			if (!$delayed->process()) {
 				$delayed->save();
 

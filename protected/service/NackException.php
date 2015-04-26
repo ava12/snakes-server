@@ -21,10 +21,9 @@ class NackException extends RuntimeException {
 	const ERR_UNKNOWN_SLOT = 15;
 	const ERR_NOT_MY_SNAKE = 16;
 	const ERR_HAS_DELAYED = 17;
-	const ERR_NO_FOES = 18;
+	const ERR_TOO_MANY_SNAKES = 18;
 	const ERR_INVALID_INPUT = 19;
 	const ERR_INVALID_MAP_LINE = 20;
-	const ERR_TOO_MANY_SNAKES = 21;
 
 
 	protected static $messages = array(
@@ -50,12 +49,9 @@ class NackException extends RuntimeException {
 
 		'змея "%s" принадлежит другому игроку',
 		'имеется незавершенный бой: "%s"',
-		'в бою должны участвовать не менее двух змей',
+		'у вас уже максимальное количество змей (%d)',
 		'некорректные данные: %s',
 		'некорректная линия %2$d (%3$s) для карты %1$d',
-
-		'у вас уже максимальное количество змей (%d)',
-
 	);
 
 

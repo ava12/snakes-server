@@ -96,13 +96,13 @@ CREATE TABLE IF NOT EXISTS `delayedfight` (
 -- Триггеры `delayedfight`
 --
 DROP TRIGGER IF EXISTS `delayedfight_before_delete_t`;
-DELIMITER //
+DELIMITER $$
 CREATE TRIGGER `delayedfight_before_delete_t` BEFORE DELETE ON `delayedfight`
  FOR EACH ROW BEGIN
  update `fight` set `refs` = `refs` - 1
  where `id` = old.`fight_id`;
 END
-//
+$$
 DELIMITER ;
 
 -- --------------------------------------------------------
@@ -113,7 +113,7 @@ DELIMITER ;
 
 DROP TABLE IF EXISTS `fight`;
 CREATE TABLE IF NOT EXISTS `fight` (
-`id` int(11) NOT NULL,
+  `id` int(11) NOT NULL,
   `refs` int(11) NOT NULL DEFAULT '1',
   `type` enum('train','challenge') NOT NULL,
   `time` int(11) DEFAULT NULL,
@@ -141,22 +141,22 @@ CREATE TABLE IF NOT EXISTS `fightlist` (
 -- Триггеры `fightlist`
 --
 DROP TRIGGER IF EXISTS `fightlist_after_insert_t`;
-DELIMITER //
+DELIMITER $$
 CREATE TRIGGER `fightlist_after_insert_t` AFTER INSERT ON `fightlist`
  FOR EACH ROW BEGIN
  update `fight` set `refs` = `refs` + 1
  where `id` = new.`fight_id`;
 END
-//
+$$
 DELIMITER ;
 DROP TRIGGER IF EXISTS `fightlist_before_delete_t`;
-DELIMITER //
+DELIMITER $$
 CREATE TRIGGER `fightlist_before_delete_t` BEFORE DELETE ON `fightlist`
  FOR EACH ROW BEGIN
  update `fight` set `refs` = `refs` - 1
  where `id` = old.`fight_id`;
 END
-//
+$$
 DELIMITER ;
 
 -- --------------------------------------------------------
@@ -177,16 +177,16 @@ CREATE TABLE IF NOT EXISTS `fightslot` (
 -- Триггеры `fightslot`
 --
 DROP TRIGGER IF EXISTS `fightslot_after_insert_t`;
-DELIMITER //
+DELIMITER $$
 CREATE TRIGGER `fightslot_after_insert_t` AFTER INSERT ON `fightslot`
  FOR EACH ROW BEGIN
  update `fight` set `refs` = `refs` + 1
  where `id` = new.`fight_id`;
 END
-//
+$$
 DELIMITER ;
 DROP TRIGGER IF EXISTS `fightslot_after_update_t`;
-DELIMITER //
+DELIMITER $$
 CREATE TRIGGER `fightslot_after_update_t` AFTER UPDATE ON `fightslot`
  FOR EACH ROW BEGIN
  CASE WHEN new.`fight_id` <> old.`fight_id` THEN
@@ -195,16 +195,16 @@ CREATE TRIGGER `fightslot_after_update_t` AFTER UPDATE ON `fightslot`
  ELSE BEGIN END;
  END CASE;
 END
-//
+$$
 DELIMITER ;
 DROP TRIGGER IF EXISTS `fightslot_before_delete_t`;
-DELIMITER //
+DELIMITER $$
 CREATE TRIGGER `fightslot_before_delete_t` BEFORE DELETE ON `fightslot`
  FOR EACH ROW BEGIN
  update `fight` set `refs` = `refs` - 1
  where `id` = old.`fight_id`;
 END
-//
+$$
 DELIMITER ;
 
 -- --------------------------------------------------------
@@ -234,7 +234,7 @@ CREATE TABLE IF NOT EXISTS `player` (
 -- Триггеры `player`
 --
 DROP TRIGGER IF EXISTS `player_after_update_t`;
-DELIMITER //
+DELIMITER $$
 CREATE TRIGGER `player_after_update_t` AFTER UPDATE ON `player`
  FOR EACH ROW BEGIN
  CASE WHEN new.`viewed_id` <> old.`viewed_id` THEN
@@ -243,7 +243,7 @@ CREATE TRIGGER `player_after_update_t` AFTER UPDATE ON `player`
  ELSE BEGIN END;
  END CASE;
 END
-//
+$$
 DELIMITER ;
 
 -- --------------------------------------------------------

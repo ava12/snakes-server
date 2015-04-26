@@ -91,6 +91,7 @@ function ASnake(Fields) {
 	this.Templates = ['S', 'S', 'S', 'S']
 
 	if(Fields) {
+		if (!(Fields instanceof Object)) Fields = {SnakeId: Fields}
 		for(var i in Fields) {
 			if (this[i] != undefined) this[i] = Fields[i]
 		}
@@ -103,12 +104,15 @@ function ASnake(Fields) {
 	}
 
 //---------------------------------------------------------------------------
-	this.SetName = function(Name) {
-		if (Game.MySnakes.Get(Name) == this) return false
-
-		Game.MySnakes.Remove(this.Name)
-		this.Name = Name
-		Game.MySnakes.Add(this)
+	this.Refresh = function (Handler, ErrorHandler, Context) {
+		PostRequest(null, {Request: 'snake info', SnakeId: this.SnakeId}, 10, function (Fields) {
+			for(var i in Fields) {
+				if (this[i] != undefined) this[i] = Fields[i]
+			}
+			if (Handler) Handler.call(Context)
+		}, function (Status, Message, Text) {
+			if (ErrorHandler) Handler.call(Context, Status, Message, Text)
+		}, this)
 	}
 
 //---------------------------------------------------------------------------
@@ -197,6 +201,7 @@ var Game = {
 	},
 
 	Tabs: {
+		Unique: {}, // {key: TabId}
 		// {id: TabId}
 		Players: {},
 		Snakes: {},
@@ -204,16 +209,64 @@ var Game = {
 	},
 
 //---------------------------------------------------------------------------
-	Run: function() {
+	Run: function () {
 		PostRequest(null, {Request: 'whoami'}, 20, function (Data) {
 			this.Player = {
 				Id: Data.PlayerId,
 				Name: Data.PlayerName,
-				FightId: Data.FightId
+				FightId: Data.FightId,
+				Rating: Data.Rating
+			}
+			if (Data.SnakeId) this.Player.Fighter = {
+				SnakeId: Data.SnakeId,
+				SnakeName: Data.SnakeName,
+				SkinId: Data.SkinId
 			}
 			TabSet.Init()
+			if (this.Player.FightId) {
+				TabSet.Add(new AFightViewer(new AFight({FightId: this.Player.FightId})))
+			}
 		}, null, this, 'game-wait')
+	},
+
+//---------------------------------------------------------------------------
+	RegisterTab: function (List, Key, Tab) {
+		this.Tabs[List][Key] = Tab
+	},
+
+//---------------------------------------------------------------------------
+	UnregisterTab: function (List, Key) {
+		delete this.Tabs[List][Key]
+	},
+
+//---------------------------------------------------------------------------
+	FindTab: function (List, Key) {
+		return this.Tabs[List][Key]
+	},
+
+//---------------------------------------------------------------------------
+	AddTab: function (Tab) {
+		if (Tab.TabList && Tab.TabKey) {
+			var RegisteredTab = this.Tabs[Tab.TabList][Tab.TabKey]
+			if (RegisteredTab) {
+				TabSet.Select(RegisteredTab)
+				return RegisteredTab
+			}
+		}
+
+		TabSet.Add(Tab)
+		return Tab
 	}
 
 //---------------------------------------------------------------------------
+}
+
+
+var CanvasColors = {
+	Info: '#9cf',
+	Create: '#9f9',
+	Modify: '#ff6',
+	Delete: '#f99',
+	Button: '#eee',
+	Items: ['#eef', '#efe']
 }

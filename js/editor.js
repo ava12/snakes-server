@@ -1,4 +1,5 @@
 function ASnakeEditor(SnakeId) {
+	this.TabList = 'Snakes'
 	this.SnakeId = SnakeId
 
 	this.Dirty = {
@@ -150,7 +151,7 @@ function ASnakeEditor(SnakeId) {
 
 //---------------------------------------------------------------------------
 	this.TabInit = function() {
-		Game.Tabs.Snakes[this.SnakeId] = this.TabId
+		this.RegisterTab(this.SnakeId)
 	}
 
 //---------------------------------------------------------------------------
@@ -807,6 +808,7 @@ function ASnakeEditor(SnakeId) {
 				this.SnakeId = Data.SnakeId
 				this.Snake.SnakeId = Data.SnakeId
 				this.Controls.Items.SaveButton.BackColor = CanvasColors.Update
+				this.RegisterTab(this.SnakeId)
 			}
 		}, null, this)
 	}
