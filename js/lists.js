@@ -111,16 +111,35 @@ function AFightListTab() {
 	}}
 
 //---------------------------------------------------------------------------
-	this.RenderBody = function() {
+	this.RenderBody = function () {
 		for (var Name in this.TabControls.Items) {
 			var Control = this.TabControls.Items[Name]
 			if (Name == this.ListType) {
-				Canvas.RenderTextBox(Control.Label, Control, '#000', '#fff')
+				Canvas.RenderTextBox(Control.Label, Control, '#000', '#fff', null, 'center')
 			} else {
 				Canvas.RenderTextButton(Control.Label, Control, '#ddf')
 			}
 		}
 		this.RenderList()
+	}
+
+//---------------------------------------------------------------------------
+	this.OnClick = function (x, y, Dataset) {
+		var Id = Dataset.id
+		switch (Dataset.cls) {
+			case 'fight':
+				Game.AddTab(new AFightViewer(Number(Id)))
+			break
+
+			case 'list':
+				this.ListType = Id
+				this.List = this.Lists[this.ListType]
+				this.Show()
+			break
+
+			default:
+				this.List.OnClick(x, y, Dataset)
+		}
 	}
 
 //---------------------------------------------------------------------------

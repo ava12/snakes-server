@@ -8,7 +8,7 @@ function ASnakeMap(Fields) {
 
 	if (Fields) {
 		for(var i in Fields) {
-			if (this[i] != undefined) this[i] = Fields[i]
+			if (i in this) this[i] = Fields[i]
 		}
 	}
 
@@ -81,9 +81,9 @@ function ASnakeMap(Fields) {
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 function ASnake(Fields) {
-	this.SnakeId = false
-	this.PlayerId = false
-	this.PlayerName = false
+	this.SnakeId = null
+	this.PlayerId = null
+	this.PlayerName = null
 	this.SnakeName = ''
 	this.SnakeType =  'N'
 	this.SkinId = 1
@@ -93,7 +93,7 @@ function ASnake(Fields) {
 	if(Fields) {
 		if (!(Fields instanceof Object)) Fields = {SnakeId: Fields}
 		for(var i in Fields) {
-			if (this[i] != undefined) this[i] = Fields[i]
+			if (i in this) this[i] = Fields[i]
 		}
 	}
 
@@ -132,10 +132,12 @@ function ASnake(Fields) {
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 function AFight(Fields) {
-	this.FightId = false
+	this.FightId = null
+	this.SlotIndex = null
+	this.SlotName = null
 	this.FightType = 'train'
-	this.FightTime = false
-	this.FightResult = false
+	this.FightTime = null
+	this.FightResult = null
 	this.TurnLimit = 1000
 	this.Turns = []
 	this.Snakes = [null, null, null, null]
@@ -146,13 +148,16 @@ function AFight(Fields) {
 
 	if(Fields) {
 		for(var i in Fields) {
-			if (this[i] != undefined || i == 'SlotIndex') this[i] = Clone(Fields[i])
+			if (i in this) this[i] = Clone(Fields[i])
 		}
 
 		for(i in this.Snakes) {
 			if (this.Snakes[i]) {
-				if (!this.Snakes[i].Serialize) //this.Snakes[i] = Clone(this.Snakes[i])
-				/*else*/ this.Snakes[i] = new ASnake(this.Snakes[i])
+				if (!this.Snakes[i].Serialize) {
+					var Fields = this.Snakes[i]
+					for (var j in this.SnakeStats[i]) Fields[j] = this.SnakeStats[i][j]
+					this.Snakes[i] = new ASnake(Fields)
+				}
 			}
 		}
 	}

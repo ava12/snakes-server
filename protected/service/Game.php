@@ -588,6 +588,7 @@ class Game {
 	protected function updateFight($fight, $delayed) {
 		$fight->result = $delayed->result;
 		$fight->turns = $delayed->turns;
+		$fight->time = time();
 		$snakes = $delayed->snakes;
 
 		$stats = $fight->stats;

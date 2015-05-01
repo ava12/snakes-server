@@ -208,6 +208,8 @@ function AListWidget(Fields) {
 			var Color = this.ItemBackColor[Index % this.ItemBackColor.length]
 			Canvas.FillRect(ABox(x, y, this.ItemWidth, this.ItemHeight), Color)
 		}
+		if (!Item) return
+
 		for (var i = 0; i < Fields.length; i++) {
 			x += this.RenderField(Fields[i], Item, Index, x, y)
 		}
@@ -558,7 +560,7 @@ function AFightListWidget() {
 //---------------------------------------------------------------------------
 	this.RenderFightType = function (Item, Index, x, y, Params) {
 		var Types = {train: 'бой', challenge: 'вызов'}
-		return this.RenderText(Types[Item.FightType], x, y, Params.Width)
+		return this.RenderText(Types[Item.FightType], x, y, Params.Width, 'center')
 	}
 
 //---------------------------------------------------------------------------
@@ -574,23 +576,23 @@ function AOrderedFightsWidget(Fields) {
 		ItemName: 'FightList',
 
 		Columns: [
-			{Label: 'Время', Width: 200},
-			{Label: 'Тип', Width: 70},
-			{Label: 'Тип', Width: 70},
-			{Label: 'Лимит', Width: 70},
-			{Label: 'Ходов', Width: 70},
-			{Label: 'Змеи', Width: 220}
+			{Label: 'Время', Width: 120},
+			{Label: 'Тип', Width: 50},
+			{Label: 'Лимит', Width: 50},
+			{Label: 'Ходов', Width: 50},
+			{Label: 'Змеи', Width: 350}
 		],
 
 		Fields: [
-			{Type: 'FightTime', IdProperty: 'FightId', Width: 200},
-			{Type: 'FightType', Width: 70},
-			{Type: 'PropertyText', Property: 'TurnLimit', Align: 'right'},
-			{Type: 'PropertyText', Property: 'TurnCount', Align: 'right'},
-			{Type: 'FightSnake', Index: 0, Width: 55},
-			{Type: 'FightSnake', Index: 1, Width: 55},
-			{Type: 'FightSnake', Index: 2, Width: 55},
-			{Type: 'FightSnake', Index: 3, Width: 55}
+			{Type: 'FightTime', IdProperty: 'FightId', Width: 120, Data: {cls: 'fight'}},
+			{Type: 'FightType', Width: 50},
+			{Type: 'PropertyText', Property: 'TurnLimit', Align: 'right', Width: 50},
+			{Type: 'PropertyText', Property: 'TurnCount', Align: 'right', Width: 50},
+			{Type: 'Gap'},
+			{Type: 'FightSnake', Index: 0, Width: 60},
+			{Type: 'FightSnake', Index: 1, Width: 60},
+			{Type: 'FightSnake', Index: 2, Width: 60},
+			{Type: 'FightSnake', Index: 3, Width: 60}
 		]
 	}
 
@@ -608,16 +610,15 @@ function AChallengedFightsWidget(Fields) {
 		ItemName: 'FightList',
 
 		Columns: [
-			{Label: 'Время', Width: 200},
-			{Label: 'Тип', Width: 70},
-			{Label: 'Ходов', Width: 70},
-			{Label: 'Змеи', Width: 290}
+			{Label: 'Время', Width: 120},
+			{Label: 'Ходов', Width: 50},
+			{Label: 'Змеи', Width: 450}
 		],
 
 		Fields: [
-			{Type: 'FightTime', IdProperty: 'FightId', Width: 200},
-			{Type: 'FightType', Width: 70},
-			{Type: 'PropertyText', Property: 'TurnCount', Align: 'right'},
+			{Type: 'FightTime', IdProperty: 'FightId', Width: 120, Data: {cls: 'fight'}},
+			{Type: 'PropertyText', Property: 'TurnCount', Align: 'right', Width: 50},
+			{Type: 'Gap'},
 			{Type: 'FightSnake', Index: 0, Width: 60},
 			{Type: 'FightSnake', Index: 1, Width: 60},
 			{Type: 'FightSnake', Index: 2, Width: 60},
@@ -639,19 +640,40 @@ function AFightSlotsWidget(Fields) {
 		ItemName: 'SlotList',
 
 		Columns: [
-			{Label: 'Имя', Width: 450},
-			{Label: 'Время', Width: 200},
-			{Label: 'Тип', Width: 70}
+			{Label: 'Имя', Width: 370},
+			{Label: 'Время', Width: 120},
+			{Label: 'Тип', Width: 50}
 		],
 
 		Fields: [
-			{Type: 'PropertyLink', Property: 'SlotName'},
-			{Type: 'FightTime', Width: 200},
-			{Type: 'FightType', Width: 70},
+			{Type: 'PropertyLink', Property: 'SlotName', Width: 370, Data: {cls: 'slot'}},
+			{Type: 'FightTime', Width: 120},
+			{Type: 'FightType', Width: 50},
+			{Type: 'Gap', Width: 10},
+			{Type: 'TextButton', Width: 70, Label: 'Удалить', Data: {cls: 'slot-delete'},
+				BackColor: CanvasColors.Delete}
 		]
+	}
+
+//---------------------------------------------------------------------------
+	this.OnClick = function (x, y, Dataset) {
+		var Id = Dataset.id
+		switch (Dataset.cls) {
+			case 'slot-delete':
+				var Slot = this.List.Items[Id]
+				if (!Slot) return
+
+				if (confirm('Удалить запись "' + Slot.SlotName + '"')) {
+					PostRequest(null, {Request: 'slot delete', SlotIndex: Id}, 10,
+						this.RefreshList, null, this)
+				}
+			break
+
+			default:
+				this.Parent.OnClick.call(this, x, y, Dataset)
+		}
 	}
 
 //---------------------------------------------------------------------------
 }
 Extend(AFightSlotsWidget, new AFightListWidget())
-

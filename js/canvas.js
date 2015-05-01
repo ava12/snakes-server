@@ -414,7 +414,7 @@ function ACanvas(Canvas, HtmlLayers) {
 //---------------------------------------------------------------------------
 	this.RenderTextButton = function(Text, Box, BackColor, Color) {
 		if (!Color) Color = '#000'
-		if (!BackColor) BackColor = CanvasColors.Button
+		if (!BackColor) BackColor = '#fff'
 		return this.RenderTextBox(Text, Box, Color, BackColor, Color, 'center', 'middle')
 	}
 

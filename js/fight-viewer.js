@@ -2,7 +2,7 @@ function AFightViewer(Fight) {
 	this.TabTitle = 'бой'
 	this.TabSprite = Sprites.Get('Fight')
 	if (Fight instanceof AFight) {
-		if (Fight.FightId) this.Fight = Fight
+		if (Fight.FightId || Fight.FightSlot != undefined) this.Fight = Fight
 		else return new AFightPlanner(Fight)
 	} else {
 		if (typeof Fight == 'number') this.Fight = new AFight({FightId: Fight})
