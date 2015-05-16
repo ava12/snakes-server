@@ -1,5 +1,7 @@
 function APlayer(Id) {
 	this.TabList = 'Players'
+	this.TabKey = Id
+
 	this.Player = {
 		Id: Id,
 		Name: null,
@@ -7,13 +9,14 @@ function APlayer(Id) {
 		Snakes: []
 	}
 
-	this.IsMe = (Id == Game.Player.Id)
+	this.IsMe = (Id == Game.Player.PlayerId)
 	this.TabSprite = Sprites.Get(this.IsMe ? '16.Labels.Me' : '16.Labels.Player')
 
 	this.TabControls = {Items: {
 		Name: {x: 10, y: 24, w: 520, h: 30},
 		Rating: {x: 530, y: 24, w: 100, h: 30},
-		Refresh: {x: 10, y: 56, w: 100, h: 26, Label: 'Обновить', Data: {cls: 'refresh'}},
+		Refresh: {x: 10, y: 56, w: 100, h: 26, Label: 'Обновить', Data: {cls: 'refresh'},
+			BackColor: CanvasColors.Info},
 		Challenge: {x: 120, y: 56, w: 70, h: 26, Data: {cls: 'challenge'},
 			Label: (this.IsMe ? 'Вызов' : 'Вызвать'), BackColor: CanvasColors.Create,
 			Title: (this.IsMe ? 'вызвать на бой других игроков' : 'вызвать игрока на бой')},
@@ -59,7 +62,7 @@ function APlayer(Id) {
 
 //---------------------------------------------------------------------------
 	this.TabInit = function () {
-		this.RegisterTab(this.Player.Id)
+		this.RegisterTab()
 	}
 
 //---------------------------------------------------------------------------
@@ -175,7 +178,7 @@ function APlayer(Id) {
 				{x: IC.Name.x, y: IC.Name.y + Box.y, w: IC.Name.w, h: IC.Name.h})
 
 			this.RenderTextButton(IC.Fight, 0, Box.y)
-			if (this.IsMe && Snake.SnakeId != FighterId) {
+			if (this.IsMe && Snake.SnakeType != 'B' && Snake.SnakeId != FighterId) {
 				this.RenderTextButton(IC.Assign, 0, Box.y)
 				this.RenderTextButton(IC.Delete, 0, Box.y)
 			}
@@ -217,6 +220,15 @@ function APlayer(Id) {
 				} else {
 					TabSet.Add(new AFightPlanner(new ASnake(this.Player.Snakes[Id])))
 				}
+			break
+
+			case 'snake-assign':
+				SnakeId = this.Player.Snakes[Id].SnakeId
+				PostRequest(null, {Request: 'snake assign', SnakeId: SnakeId}, 10, function (Data) {
+					this.LoadPlayer()
+				}, function (Status, Text, Data) {
+					this.LoadPlayer()
+				}, this)
 			break
 
 			default:

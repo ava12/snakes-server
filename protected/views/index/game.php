@@ -152,7 +152,7 @@ button, input[type=button] { cursor: pointer; }
 	foreach(array(
 		'canvas', 'sprites', 'tabs', 'snakes', 'skins',
 		'widgets', 'lists', 'player', 'viewer', 'editor',
-		'fight-planner', 'fight-viewer',
+		'fight-planner', 'challenge-planner', 'fight-viewer',
 	) as $name) {
 		echo '<script type="text/javascript" src="' . BASE_URL . "js/$name.js\"></script>\r\n";
 	}

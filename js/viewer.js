@@ -1,5 +1,6 @@
 function ASnakeViewer(SnakeId) {
 	this.TabList = 'Snakes'
+	this.TabKey = SnakeId
 	this.Snake = null
 	this.SnakeId = SnakeId
 
@@ -50,7 +51,7 @@ function ASnakeViewer(SnakeId) {
 
 //---------------------------------------------------------------------------
 	this.TabInit = function() {
-		this.RegisterTab(this.SnakeId)
+		this.RegisterTab()
 	}
 
 //---------------------------------------------------------------------------

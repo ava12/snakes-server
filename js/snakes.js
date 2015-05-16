@@ -200,9 +200,13 @@ function AFight(Fields) {
 //---------------------------------------------------------------------------
 var Game = {
 	Player: {
-		Id: null,
-		Name: null,
-		FightId: null
+		PlayerId: null,
+		PlayerName: null,
+		FightId: null,
+		Rating: null,
+		SnakeId: null,
+		SnakeName: null,
+		SkinId: null
 	},
 
 	Tabs: {
@@ -214,24 +218,25 @@ var Game = {
 	},
 
 //---------------------------------------------------------------------------
+	SetPlayer: function (Data) {
+		for (var Name in this.Player) {
+			this.Player[Name] = Data[Name]
+		}
+		if (Data.SnakeId) this.Player.Fighter = {
+			SnakeId: Data.SnakeId,
+			SnakeName: Data.SnakeName,
+			SkinId: Data.SkinId
+		}
+		if (this.Player.FightId) {
+			this.AddTab(new AFightViewer(new AFight({FightId: this.Player.FightId})))
+		}
+	},
+
+//---------------------------------------------------------------------------
 	Run: function () {
-		PostRequest(null, {Request: 'whoami'}, 20, function (Data) {
-			this.Player = {
-				Id: Data.PlayerId,
-				Name: Data.PlayerName,
-				FightId: Data.FightId,
-				Rating: Data.Rating
-			}
-			if (Data.SnakeId) this.Player.Fighter = {
-				SnakeId: Data.SnakeId,
-				SnakeName: Data.SnakeName,
-				SkinId: Data.SkinId
-			}
-			TabSet.Init()
-			if (this.Player.FightId) {
-				TabSet.Add(new AFightViewer(new AFight({FightId: this.Player.FightId})))
-			}
-		}, null, this, 'game-wait')
+		TabSet.Init()
+		SnakeSkins.Load()
+		PostRequest(null, {Request: 'whoami'}, 10, this.SetPlayer, null, this)
 	},
 
 //---------------------------------------------------------------------------

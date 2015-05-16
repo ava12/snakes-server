@@ -5,7 +5,7 @@ function AFightPlanner(Fight) {
 	this.TabKey = 'Fight'
 
 	if (Fight instanceof AFight) {
-		if (Fight.FightTime) return new AFightViewer(Fight)
+		if (Fight.FightId) return new AFightViewer(Fight)
 
 		this.Fight = Fight
 	} else {
@@ -43,26 +43,24 @@ function AFightPlanner(Fight) {
 			{x: 362, y: 212, Title: '+10', id: '10', Sprite: '16.Labels.Last'},
 		]},
 		RunButton: {x: 275, y: 260, w: 70, h: 30, Label: 'В бой!',
-			Data: {cls: 'run'}},
+			Data: {cls: 'run'}}
 	}}
 	this.ListBox = {x: 10, y: 40, w: 500, h: 30}
 	this.ListItems = {
 		Skin: {x: 20, y: 47, w: 48, h: 16},
 		Name: {x: 80, y: 41, w: 415, h: 28},
-		Remove: {x: 520, y: 42, w: 100, h: 26, Color: '#ffcccc', Label: 'Убрать'},
+		Remove: {x: 520, y: 42, w: 100, h: 26, Color: '#ffcccc', Label: 'Убрать'}
 	}
 
 
 //---------------------------------------------------------------------------
 	this.TabInit = function() {
-		this.Fight.TabId = this.TabId
 		this.RegisterTab()
 	}
 
 //---------------------------------------------------------------------------
 	this.OnClose = function() {
 		this.UnregisterTab()
-		this.Fight.TabId = null
 		return true
 	}
 
@@ -95,7 +93,7 @@ function AFightPlanner(Fight) {
 //---------------------------------------------------------------------------
 	this.RenderSnakeList = function() {
 		var Box = Clone(this.ListBox)
-		var Buttons = [/*'Change', */'Remove']
+		var Buttons = ['Remove']
 		var Items = this.TabControls.Items.SnakeButtons.Items
 		var ListItems = Clone(this.ListItems)
 
@@ -104,8 +102,7 @@ function AFightPlanner(Fight) {
 			for(var j in Buttons) {
 				var Button = ListItems[Buttons[j]]
 				if (Items[i]) {
-					Canvas.RenderTextBox(Button.Label, Button, '#000000',
-					                     Button.Color, '#000000', 'center')
+					Canvas.RenderTextBox(Button.Label, Button, '#000000', Button.Color, '#000000', 'center')
 				}
 				Button.y += Box.h
 			}

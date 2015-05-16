@@ -67,7 +67,8 @@ function AListWidget(Fields) {
 		{x: 0, y: 15, w: 15, h: 15, Sprites: ['Sort.Desc', 'Sort.IsDesc'],
 			id: 1, Title: 'по убыванию', Data: {cls: 'list-sort', name: ''}}
 	]
-	this.RefreshButton = {Label: 'Обновить', Title: 'перезагрузить страницу', Data: {cls: 'list-refresh'}}
+	this.RefreshButton = {Label: 'Обновить', Title: 'перезагрузить страницу',
+		Data: {cls: 'list-refresh'}, BackColor: CanvasColors.Info}
 	this.CancelButton = {Label: 'Отмена', Title: 'закрыть список', Data: {cls: 'list-cancel'}}
 	this.ItemHeight = 30
 	this.ItemWidth = 620
@@ -393,7 +394,7 @@ function ARatingListWidget(Fields) {
 
 //---------------------------------------------------------------------------
 	this.RenderChallengeButton = function (Item, Index, x, y, Params) {
-		if (Item.PlayerId == Game.Player.Id) return Params.Width
+		if (Item.PlayerId == Game.Player.PlayerId) return Params.Width
 
 		var Box = {x: x, y: y, Width: Params.Width, BackColor: Params.BackColor,
 			Label: Params.Label, Data: {cls: 'challenge'}, Title: 'вызвать игрока на бой'}

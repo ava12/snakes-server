@@ -192,6 +192,14 @@ function ABox(x, y, w, h) {
 }
 
 //---------------------------------------------------------------------------
+function TranslatedBox(Box, dx, dy) {
+	var Result = Clone(Box)
+	if (dx) Result.x += dx
+	if (dy) Result.y += dy
+	return Result
+}
+
+//---------------------------------------------------------------------------
 function Style(Dom, Name, Value) {
 	if (typeof Dom == 'string') Dom = document.getElementById(Dom)
 	if (!Dom) return false

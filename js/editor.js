@@ -1,5 +1,6 @@
 function ASnakeEditor(SnakeId) {
 	this.TabList = 'Snakes'
+	this.TabKey = SnakeId
 	this.SnakeId = SnakeId
 
 	this.Dirty = {
@@ -151,7 +152,7 @@ function ASnakeEditor(SnakeId) {
 
 //---------------------------------------------------------------------------
 	this.TabInit = function() {
-		this.RegisterTab(this.SnakeId)
+		this.RegisterTab()
 	}
 
 //---------------------------------------------------------------------------

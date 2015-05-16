@@ -73,7 +73,7 @@ function ASnakeListTab() {
 		switch (Dataset.cls) {
 			case 'snake':
 				var Snake = this.Widget.List.Items[Id]
-				Game.AddTab(Snake.PlayerId == Game.Player.Id ? new ASnakeEditor(Snake.SnakeId) : new ASnakeViewer(Snake.SnakeId))
+				Game.AddTab(Snake.PlayerId == Game.Player.PlayerId ? new ASnakeEditor(Snake.SnakeId) : new ASnakeViewer(Snake.SnakeId))
 			break
 
 			default:
@@ -108,6 +108,11 @@ function AFightListTab() {
 		ordered: {x: 5, y: 35, w: 50, h: 30, Label: 'Мои', id: 'ordered', Data: {cls: 'list'}},
 		challenged: {x: 60, y: 35, w: 100, h: 30, Label: 'Вызовы', id: 'challenged', Data: {cls: 'list'}},
 		slots: {x: 165, y: 35, w: 150, h: 30, Label: 'Сохраненные', id: 'slots', Data: {cls: 'list'}},
+
+		Fight: {x: 490, y: 35, w: 70, h: 30, Label: 'в бой',
+			Data: {cls: 'new-fight'}, BackColor: CanvasColors.Create},
+		Challenge: {x: 565, y: 35, w: 70, h: 30, Label: 'вызов',
+			Data: {cls: 'new-challenge'}, BackColor: CanvasColors.Create}
 	}}
 
 //---------------------------------------------------------------------------
@@ -117,7 +122,7 @@ function AFightListTab() {
 			if (Name == this.ListType) {
 				Canvas.RenderTextBox(Control.Label, Control, '#000', '#fff', null, 'center')
 			} else {
-				Canvas.RenderTextButton(Control.Label, Control, '#ddf')
+				Canvas.RenderTextButton(Control.Label, Control, (Control.BackColor ? Control.BackColor : '#ddf'))
 			}
 		}
 		this.RenderList()
@@ -135,6 +140,15 @@ function AFightListTab() {
 				this.ListType = Id
 				this.List = this.Lists[this.ListType]
 				this.Show()
+			break
+
+			case 'new-fight':
+				Game.AddTab(new AFightPlanner())
+			break
+
+			case 'new-challenge':
+				if (Game.Player.SnakeId) Game.AddTab(new AChallengePlanner())
+				else alert('Вы не участвуете в рейтинге')
 			break
 
 			default:

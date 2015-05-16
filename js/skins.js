@@ -1,19 +1,25 @@
 var SnakeSkins = {
 	Image: GetImage('img-skins'),
 
-	SkinList: [1, 2, 3, 4, 5, 6],
+	SkinList: [],
+	Skins: {},
 
-	Skins: {
-		1: '<по умолчанию>',
-		2: 'белая',
-		3: 'желтая',
-		4: 'зеленая',
-		5: 'красная',
-		6: 'синяя',
+//---------------------------------------------------------------------------
+	Load: function () {
+		PostRequest(null, {Request: 'skin list'}, 10, function (Data) {
+			this.SkinList = []
+			this.Skins = {}
+
+			for (var i in Data.SkinList) {
+				var Item = Data.SkinList[i]
+				this.SkinList.push(Item.SkinId)
+				this.Skins[Item.SkinId] = Item.SkinName
+			}
+		}, null, this, 'game-wait')
 	},
 
 //---------------------------------------------------------------------------
-	Get: function(Index) {
+	Get: function (Index) {
 		return {
 			Image: this.Image, Title: this.Skins[Index],
 			x: 0, y: (Number(Index) - 1) << 4, w: 48, h: 16

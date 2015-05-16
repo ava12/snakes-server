@@ -394,33 +394,25 @@ class Game {
 //---------------------------------------------------------------------------
 	protected function requestSnakeAssign() {
 		$snakeId = $this->request['SnakeId'];
-		/** @var CDbTransaction $transaction */
-		$transaction = Yii::app()->db->beginTransaction();
-
-		try {
-			$snake = Snake::model()->findByPk($snakeId);
-			if (!$snake) {
-				throw new NackException(NackException::ERR_UNKNOWN_SNAKE, $snakeId);
-			}
-
-			if ($snake->player_id <> $this->player->id) {
-				throw new NackException(NackException::ERR_NOT_MY_SNAKE, $snakeId);
-			}
-
-			if ($snake->type <> Snake::TYPE_NORMAL) {
-				throw new NackException(NackException::ERR_CANNOT_ASSIGN_BOT, $snakeId);
-			}
-
-			$this->player->fighter_id = $snakeId;
-			if (!$this->player->save()) {
-				throw new RuntimeException('не могу назначить бойца');
-			}
-		} catch (Exception $e) {
-			$transaction->rollback();
-			throw $e;
+		$snake = Snake::model()->findByPk($snakeId);
+		if (!$snake) {
+			throw new NackException(NackException::ERR_UNKNOWN_SNAKE, $snakeId);
 		}
 
-		$transaction->commit();
+		if ($snake->player_id <> $this->player->id) {
+			throw new NackException(NackException::ERR_NOT_MY_SNAKE, $snakeId);
+		}
+
+		if ($snake->type <> Snake::TYPE_NORMAL) {
+			throw new NackException(NackException::ERR_CANNOT_ASSIGN_BOT, $snakeId);
+		}
+
+		$this->player->fighter_id = $snakeId;
+		if (!$this->player->rating) $this->player->rating = 0;
+		if (!$this->player->save()) {
+			throw new RuntimeException('не могу назначить бойца');
+		}
+
 		return $this->ack;
 	}
 

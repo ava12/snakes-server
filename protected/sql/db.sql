@@ -274,13 +274,6 @@ CREATE TABLE IF NOT EXISTS `skin` (
   `name` char(40) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
---
--- Дамп данных таблицы `skin`
---
-
-INSERT INTO `skin` (`id`, `name`) VALUES
-(1, '- по умолчанию -');
-
 -- --------------------------------------------------------
 
 --

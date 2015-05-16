@@ -94,6 +94,15 @@ function PostRequest(Url, Data, Timeout, SuccessHandler, ErrorHandler, Context, 
 				return
 			}
 
+			if (Data.Response == 'relogin') {
+				if (ErrorHandler) {
+					ErrorHandler.call(Context, 200, 'не авторизован', Data)
+				} else {
+					alert('не авторизован')
+				}
+				return
+			}
+
 			if (SuccessHandler) {
 				SuccessHandler.call(Context, Data)
 			}

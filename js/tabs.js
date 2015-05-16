@@ -170,7 +170,7 @@ function AMainPageTab() {
 			break
 
 			case 'MySnakes':
-				Game.AddTab(new APlayer(Game.Player.Id))
+				Game.AddTab(new APlayer(Game.Player.PlayerId))
 			break
 
 			case 'Site':

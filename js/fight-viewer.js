@@ -86,17 +86,6 @@ function AFightViewer(Fight) {
 
 
 //---------------------------------------------------------------------------
-	this.TabInit = function() {
-		this.Fight.TabId = this.TabId
-	}
-
-//---------------------------------------------------------------------------
-	this.OnClose = function() {
-		this.Fight.TabId = null
-		return true
-	}
-
-//---------------------------------------------------------------------------
 	this.RenderTurnRuler = function() {
 		var Value = this.Turn
 		var Limit = this.Fight.Turns.length
