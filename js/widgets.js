@@ -379,7 +379,7 @@ function ARatingListWidget(Fields) {
 
 		Fields: [
 			{Type: 'Gap'},
-			{Type: 'PropertyLink', Width: 198, Property: 'PlayerName', Data: {cls: 'player'}},
+			{Type: 'PropertyLink', Width: 198, Property: 'PlayerName', Data: {cls: 'list-player'}},
 			{Type: 'Separator'},
 			{Type: 'PropertyText', Width: 84, Property: 'Rating', Align: 'right'},
 			{Type: 'Gap', Width: 15},
@@ -397,7 +397,7 @@ function ARatingListWidget(Fields) {
 		if (Item.PlayerId == Game.Player.PlayerId) return Params.Width
 
 		var Box = {x: x, y: y, Width: Params.Width, BackColor: Params.BackColor,
-			Label: Params.Label, Data: {cls: 'challenge'}, Title: 'вызвать игрока на бой'}
+			Label: Params.Label, Data: {cls: 'list-challenge'}, Title: 'вызвать игрока на бой'}
 		return this.RenderTextButton(Item, Index, x, y, Box)
 	}
 
@@ -438,7 +438,7 @@ function APlayerListWidget(Fields) {
 
 		Fields: [
 			{Type: 'Gap'},
-			{Type: 'PropertyLink', Width: 515, Property: 'PlayerName', Data: {cls: 'player'}},
+			{Type: 'PropertyLink', Width: 515, Property: 'PlayerName', Data: {cls: 'list-player'}},
 			{Type: 'Separator'},
 			{Type: 'PropertyText', Width: 84, Property: 'Rating', Align: 'right'},
 		]
@@ -478,7 +478,7 @@ function ASnakeListWidget(Fields) {
 			{Type: 'Gap'},
 			{Type: 'Skin'},
 			{Type: 'Gap'},
-			{Type: 'PropertyLink', Width: 234, Property: 'SnakeName', Data: {cls: 'snake'}},
+			{Type: 'PropertyLink', Width: 234, Property: 'SnakeName', Data: {cls: 'list-snake'}},
 			{Type: 'Separator'},
 			{Type: 'SnakeType', Width: 40},
 			{Type: 'Separator'},

@@ -48,7 +48,7 @@ class Controller extends CController {
 
 //---------------------------------------------------------------------------
 	protected function sweep() {
-		Yii::app()->db->createCommand('CALL delete_zero_refs')->exec();
+		Yii::app()->db->createCommand('CALL delete_zero_refs')->execute();
 	}
 
 //---------------------------------------------------------------------------

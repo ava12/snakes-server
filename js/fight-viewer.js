@@ -9,6 +9,8 @@ function AFightViewer(Fight) {
 		else return new AFightPlanner()
 	}
 
+	this.TurnCount = 0
+
 //---------------------------------------------------------------------------
 	this.Items = {
 		Field: {x: 12, y: 53, w: 400, h: 400},
@@ -88,12 +90,12 @@ function AFightViewer(Fight) {
 //---------------------------------------------------------------------------
 	this.RenderTurnRuler = function() {
 		var Value = this.Turn
-		var Limit = this.Fight.Turns.length
+		var Limit = this.TurnCount
 		var RulerBox = this.TabControls.Items.TurnRuler
 		var CounterBox = this.TabControls.Items.TurnCounter
 		Canvas.FillRect(ABox(RulerBox.x - 4, RulerBox.y, RulerBox.w + 8, RulerBox.h), '#ffffff')
 		Canvas.FillRect(RulerBox, '#dddddd')
-		var MarkX = RulerBox.x + Value * RulerBox.w / (Limit - 1)
+		var MarkX = RulerBox.x + Value * RulerBox.w / Limit
 		Canvas.Rect(ABox(MarkX - 4, RulerBox.y, 8, RulerBox.h), '#99ff99', '#000000')
 		Value = (Value + 1).toString() + '/' + Limit
 		Canvas.RenderTextBox(Value, CounterBox, '#000000', '#ffffff', '#000000',
@@ -103,7 +105,10 @@ function AFightViewer(Fight) {
 //---------------------------------------------------------------------------
 	this.ExtractTurnInfo = function() {
 		var Info = this.Fight.Turns[this.Turn]
-		if (Info == undefined) return
+		if (Info == undefined) {
+			if (this.Turn == this.TurnCount) Info = 0
+			else return
+		}
 
 		for(var i = 0; i < 4; i++) {
 			this.StepDirs[i] = (Info >> (6 + (i << 1))) & 3
@@ -226,7 +231,7 @@ function AFightViewer(Fight) {
 		this.Step = 0
 		this.IsEating = false
 		this.Field = Clone(this.TurnField)
-		if (this.DebuggedSnakeIndex != undefined && this.Turn < this.Fight.Turns.length - 1) {
+		if (this.DebuggedSnakeIndex != undefined && this.Turn < this.TurnCount) {
 			while(this.StepOrder[this.Step] != this.DebuggedSnakeIndex) {
 				this.MakeStep()
 			}
@@ -235,7 +240,7 @@ function AFightViewer(Fight) {
 
 //---------------------------------------------------------------------------
 	this.SelectTurn = function(Index) {
-		if (Index >= this.Fight.Turns.length) Index = this.Fight.Turns.length - 1
+		if (Index > this.TurnCount) Index = this.TurnCount
 		if (Index < 0) Index = 0
 
 		var KeyIndex = Math.floor(Index / this.KeyFrameRate)
@@ -273,8 +278,7 @@ function AFightViewer(Fight) {
 	this.RenderDebugInfo = function(Force) {
 	var Box = this.Items.Map
 	var Stats = this.Fight.SnakeStats[this.DebuggedSnakeIndex]
-	if (this.DebuggedSnakeIndex == undefined ||
-			Stats.DebugData.length <= this.Turn) {
+	if (this.DebuggedSnakeIndex == undefined || Stats.DebugData.length <= this.Turn) {
 		if (!Force) return
 
 		Canvas.RenderSprite(Sprites.Get('Debug.NoDebug'), Box.x, Box.y)
@@ -437,12 +441,12 @@ function AFightViewer(Fight) {
 		this.ExtractTurnInfo()
 		this.RenderDebugInfo()
 		this.RenderTurnRuler()
-		return (this.Turn < this.Fight.Turns.length - 1)
+		return (this.Turn < this.TurnCount)
 	}
 
 //---------------------------------------------------------------------------
 	this.OnTick = function(t) {
-		if (!t.IsRunning || t.Turn >= t.Fight.Turns.length - 1) {
+		if (!t.IsRunning || t.Turn >= t.TurnCount) {
 			t.Stop()
 			return
 		}
@@ -471,6 +475,8 @@ function AFightViewer(Fight) {
 
 //---------------------------------------------------------------------------
 	this.SelectSnake = function(Index) {
+		if (Index != undefined && !this.Fight.SnakeStats[Index].DebugData) return
+
 		this.DebuggedSnakeIndex = Index
 		this.SelectStep()
 		this.RenderField()
@@ -511,7 +517,7 @@ function AFightViewer(Fight) {
 			break
 
 			case 'ruler':
-				i = Math.floor(x * this.Fight.Turns.length / this.TabControls.Items.TurnRuler.w)
+				i = Math.floor(x * (this.TurnCount + 1) / this.TabControls.Items.TurnRuler.w)
 				this.SelectTurn(i)
 			break
 
@@ -575,6 +581,8 @@ function AFightViewer(Fight) {
 
 //---------------------------------------------------------------------------
 	this.Prepare = function () {
+		this.TurnCount = this.Fight.Turns.length
+
 		var Buttons = this.TabControls.Items.SnakeButtons.Items
 		for(var i = 0; i < 4; i++) {
 			if (!this.Fight.Snakes[i]) delete Buttons[i]

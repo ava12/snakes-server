@@ -15,8 +15,9 @@ function AChallengePlanner(Fight) {
 	this.Widget = new ARatingListWidget({y: 30, IsPopup: true})
 	this.PlayerListColors = ['#f99', '#ee6', '#6e6', '#9df']
 	this.OtherPlayers = []
+	this.PlayerIndex = 0
 
-		this.TabControls = {Items: {
+	this.TabControls = {Items: {
 		PlayerButtons: {Items: [
 			{x: 20, y: 71, w: 620, h: 28, Data: {cls: 'change', id: 0}},
 			{x: 20, y: 101, w: 620, h: 28, Data: {cls: 'change', id: 1}},
@@ -67,15 +68,101 @@ function AChallengePlanner(Fight) {
 
 		var Button = this.TabControls.Items.RunButton
 		Canvas.RenderTextButton(Button.Label, Button, Button.BackColor)
+
+		if (this.ShowWidget) this.Widget.Render()
 	}
 
 //---------------------------------------------------------------------------
+	this.RunFight = function () {
+		var Request = {Request: 'fight challenge', PlayerIds: []}
+		for (var i = 0; i < 3; i++) {
+			if (this.OtherPlayers[i]) {
+				Request.PlayerIds[i] = this.OtherPlayers[i].PlayerId
+			} else {
+				alert('Необходимо выбрать трех соперников')
+				return
+			}
+		}
+
+		PostRequest(null, Request, 10, function (Response) {
+			this.UnregisterTab()
+			TabSet.Replace(this, new AFightViewer(new AFight(Response)))
+		}, null, this)
+	}
+
 //---------------------------------------------------------------------------
+	this.SetPlayer = function (Index, Player) {
+		this.OtherPlayers[Index] = Player
+		this.Show()
+	}
+
 //---------------------------------------------------------------------------
+	this.OnClick = function (x, y, Dataset) {
+		var Id = Dataset.id
+
+		switch (Dataset.cls) {
+			case 'change':
+				this.PlayerIndex = Id
+				this.ShowWidget = true
+				this.Show()
+			break
+
+			case 'list-cancel':
+				this.ShowWidget = false
+				this.Show()
+			break
+
+			case 'list-challenge':
+			case 'list-player':
+				this.ShowWidget = false
+				var Player = this.Widget.List.Items[Id]
+				if (this.CanChallenge(Player)) {
+					this.SetPlayer(this.PlayerIndex, Player)
+				}
+				this.Show()
+			break
+
+			case 'run':
+				this.RunFight()
+			break
+
+			default:
+				if (this.ShowWidget) this.Widget.OnClick(x, y, Dataset)
+				else alert('не реализовано')
+		}
+	}
+
 //---------------------------------------------------------------------------
+	this.CanChallenge = function (Player) {
+		if (Player.PlayerId == Game.Player.PlayerId) return false
+
+		for (var i in this.OtherPlayers) {
+			if (this.OtherPlayers[i].PlayerId == Player.PlayerId) return false
+		}
+
+		return true
+	}
+
 //---------------------------------------------------------------------------
+	this.AddPlayer = function (Player) {
+		if (!this.CanChallenge(Player)) return false
+
+		var Index
+		for (var i = 0; i < 3; i++) {
+			if (!this.OtherPlayers[i]) {
+				this.SetPlayer(i, Player)
+				return true
+			}
+		}
+
+		return false
+	}
+
 //---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
+	this.RenderControls = function () {
+		Canvas.RenderHtml('controls', Canvas.MakeControlHtml(this.ShowWidget ? this.Widget.WidgetControls : this.TabControls))
+	}
+
 //---------------------------------------------------------------------------
 }
 Extend(AChallengePlanner, BPageTab)

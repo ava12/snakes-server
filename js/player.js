@@ -1,4 +1,5 @@
 function APlayer(Id) {
+	if (typeof Id == 'object') Id = Id.PlayerId
 	this.TabList = 'Players'
 	this.TabKey = Id
 
@@ -22,7 +23,7 @@ function APlayer(Id) {
 			Title: (this.IsMe ? 'вызвать на бой других игроков' : 'вызвать игрока на бой')},
 		Fight: {x: 200, y: 56, w: 100, h: 26, Data: {cls: 'fight'},
 			Label: 'Новый бой', BackColor: CanvasColors.Create},
-		NewSnake: {x: 84, y: 90, w: 70, h: 22, Label: 'Новая', Data: {cls: 'snake'},
+		NewSnake: {x: 84, y: 90, w: 70, h: 22, Label: 'Новая', Data: {cls: 'snake-new'},
 			BackColor: CanvasColors.Create},
 		Snakes: {Items: []}
 	}}
@@ -58,7 +59,10 @@ function APlayer(Id) {
 		}
 	}
 
-	if (!this.IsMe) delete this.TabControls.Items.Fight
+	if (!this.IsMe) {
+		delete this.TabControls.Items.Fight
+		delete this.TabControls.Items.NewSnake
+	}
 
 //---------------------------------------------------------------------------
 	this.TabInit = function () {
@@ -133,6 +137,8 @@ function APlayer(Id) {
 
 //---------------------------------------------------------------------------
 	this.RenderTextButton = function (Button, x, y) {
+		if (!Button) return
+
 		if (x || y) {
 			Button = Clone(Button)
 			if (x) Button.x += x
@@ -204,7 +210,7 @@ function APlayer(Id) {
 				Game.AddTab(Class == 'snake-view' ? new ASnakeViewer(SnakeId) : new ASnakeEditor(SnakeId))
 			break
 
-			case 'snake':
+			case 'snake-new':
 				if (this.Player.Snakes.length >= 10) alert('Не более 10 змей')
 				else {
 					this.Player.Name = null
@@ -220,6 +226,11 @@ function APlayer(Id) {
 				} else {
 					TabSet.Add(new AFightPlanner(new ASnake(this.Player.Snakes[Id])))
 				}
+			break
+
+			case 'fight':
+			case 'challenge':
+				Game.AddTab(Class == 'fight' ? new AFightPlanner() : new AChallengePlanner())
 			break
 
 			case 'snake-assign':

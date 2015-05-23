@@ -68,6 +68,8 @@ class Game {
 		catch (Exception $e) {
 			if ($this->debug) throw $e;
 
+			error_log(date('Y-m-d H:i:s') . ': ' . get_class($e) . ': ' . $e);
+
 			return array(
 				'Response' => 'error',
 				'ErrorCode' => $e->getCode(),
@@ -615,7 +617,7 @@ class Game {
 			if ($isChallenge) {
 				$ids = array();
 				for ($index = 0; $index < 3; $index++) {
-					$ids[] = $stats[$index]->snake->player_id;
+					$ids[] = $snakes[$index]->player_id;
 				}
 				$entry->addFight($fightId, FightEntry::TYPE_CHALLENGED, $ids);
 			}

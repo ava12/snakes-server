@@ -33,7 +33,20 @@ function ARatingListTab() {
 	this.List = new ARatingListWidget(this.ListFields)
 
 	this.OnClick = function (x, y, Dataset) {
-		this.List.OnClick(x, y, Dataset)
+		var Id = Dataset.id
+
+		switch (Dataset.cls) {
+			case 'list-player':
+				Game.AddTab(new APlayer(this.List.List.Items[Id]))
+			break
+
+			case 'list-challenge':
+				Game.AddTab(new AChallengePlanner()).AddPlayer(this.List.List.Items[Id])
+			break
+
+			default:
+				this.List.OnClick(x, y, Dataset)
+		}
 	}
 	this.RenderBody = this.RenderList
 
