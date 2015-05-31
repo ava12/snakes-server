@@ -2,7 +2,7 @@
 //---------------------------------------------------------------------------
 function AListTab() {
 	this.TabWidth = 24
-	this.ListX = 0
+	this.ListX = 5
 	this.ListY = 40
 	this.ListFields = {Width: 640, Height: 410, BorderColor: null}
 
@@ -63,7 +63,16 @@ function APlayerListTab() {
 	this.List = new APlayerListWidget(this.ListFields)
 
 	this.OnClick = function (x, y, Dataset) {
-		this.List.OnClick(x, y, Dataset)
+		var Id = Dataset.id
+
+		switch (Dataset.cls) {
+			case 'list-player':
+				Game.AddTab(new APlayer(this.List.List.Items[Id]))
+			break
+
+			default:
+				this.List.OnClick(x, y, Dataset)
+		}
 	}
 	this.RenderBody = this.RenderList
 
@@ -81,12 +90,15 @@ function ASnakeListTab() {
 
 	this.OnClick = function (x, y, Dataset) {
 		var Id = Dataset.id
-		var Tab
 
 		switch (Dataset.cls) {
-			case 'snake':
-				var Snake = this.Widget.List.Items[Id]
+			case 'list-snake':
+				var Snake = this.List.List.Items[Id]
 				Game.AddTab(Snake.PlayerId == Game.Player.PlayerId ? new ASnakeEditor(Snake.SnakeId) : new ASnakeViewer(Snake.SnakeId))
+			break
+
+			case 'list-player':
+				Game.AddTab(new APlayer(this.List.List.Items[Id]))
 			break
 
 			default:

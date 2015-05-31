@@ -88,10 +88,10 @@ function APlayer(Id) {
 	this.LoadPlayer = function () {
 		var Request = {Request: 'player info', PlayerId: this.Player.Id}
 		PostRequest(null, Request, 20, function (Data) {
-			var KeyMap = {PlayerId: 'Id', PlayerName: 'Name', Rating: 'Rating',
-				FighterId: 'FighterId', PlayerSnakes: 'Snakes'}
-			for (var n in KeyMap) this.Player[KeyMap[n]] = Data[n]
-			this.TabTitle = this.Player.Name
+			var KeyMap = {PlayerId: true, PlayerName: true, Rating: true,
+				FighterId: true, PlayerSnakes: true}
+			for (var n in KeyMap) this.Player[n] = Data[n]
+			this.TabTitle = this.Player.PlayerName
 
 			this.Clear()
 			this.TabControls.Items.Snakes.Items = []
@@ -101,11 +101,11 @@ function APlayer(Id) {
 			}
 
 			var Controls = this.TabControls.Items
-			Controls.Challenge.Skip = (Game.Player.Rating == undefined || this.Player.Rating == undefined)
+			Controls.Challenge.Skip = (this.Player.Rating == undefined)
 
 			var y = this.SnakeItemY
 			var IC = this.SnakeItems[this.IsMe ? 'Me' : 'Other']
-			var Snakes = this.Player.Snakes
+			var Snakes = this.Player.PlayerSnakes
 			var SnakeControls = Controls.Snakes.Items
 			var FighterId = this.Player.FighterId
 
@@ -149,13 +149,13 @@ function APlayer(Id) {
 
 //---------------------------------------------------------------------------
 	this.RenderBody = function () {
-		if (!this.Player.Name) {
+		if (!this.Player.PlayerName) {
 			this.LoadPlayer()
 			return
 		}
 
 		var Controls = this.TabControls.Items
-		Canvas.RenderText(this.Player.Name, Controls.Name)
+		Canvas.RenderText(this.Player.PlayerName, Controls.Name)
 		var Rating = (this.Player.Rating == undefined ? '---' : this.Player.Rating)
 		Canvas.RenderText(Rating, Controls.Rating, '#000', 'right')
 		this.RenderTextButton(Controls.Refresh)
@@ -169,7 +169,7 @@ function APlayer(Id) {
 
 		var Box = {x: this.SnakeItemX, y: this.SnakeItemY, w: this.SnakeItemWidth, h: this.SnakeItemHeight}
 		var IC = this.SnakeItems[this.IsMe ? 'Me' : 'Other']
-		var Snakes = this.Player.Snakes
+		var Snakes = this.Player.PlayerSnakes
 		var FighterId = Game.Player.FighterId
 
 		for (var i = 0; i < Snakes.length; i++) {
@@ -184,9 +184,13 @@ function APlayer(Id) {
 				{x: IC.Name.x, y: IC.Name.y + Box.y, w: IC.Name.w, h: IC.Name.h})
 
 			this.RenderTextButton(IC.Fight, 0, Box.y)
-			if (this.IsMe && Snake.SnakeType != 'B' && Snake.SnakeId != FighterId) {
-				this.RenderTextButton(IC.Assign, 0, Box.y)
-				this.RenderTextButton(IC.Delete, 0, Box.y)
+			if (this.IsMe) {
+				if (Snake.SnakeType != 'B' && Snake.SnakeId != FighterId) {
+					this.RenderTextButton(IC.Assign, 0, Box.y)
+				}
+				if (Snake.SnakeId != FighterId) {
+					this.RenderTextButton(IC.Delete, 0, Box.y)
+				}
 			}
 
 			Box.y += Box.h
@@ -206,14 +210,14 @@ function APlayer(Id) {
 
 			case 'snake-view':
 			case 'snake-edit':
-				SnakeId = this.Player.Snakes[Id].SnakeId
+				SnakeId = this.Player.PlayerSnakes[Id].SnakeId
 				Game.AddTab(Class == 'snake-view' ? new ASnakeViewer(SnakeId) : new ASnakeEditor(SnakeId))
 			break
 
 			case 'snake-new':
-				if (this.Player.Snakes.length >= 10) alert('Не более 10 змей')
+				if (this.Player.PlayerSnakes.length >= 10) alert('Не более 10 змей')
 				else {
-					this.Player.Name = null
+					this.Player.PlayerName = null
 					TabSet.Add(new ASnakeEditor())
 				}
 			break
@@ -221,20 +225,24 @@ function APlayer(Id) {
 			case 'snake-fight':
 				Tab = Game.FindTab('Unique', 'Fight')
 				if (Tab) {
-					Tab.AddSnake(new ASnake(this.Player.Snakes[Id]))
+					Tab.AddSnake(new ASnake(this.Player.PlayerSnakes[Id]))
 					TabSet.Select(Tab)
 				} else {
-					TabSet.Add(new AFightPlanner(new ASnake(this.Player.Snakes[Id])))
+					TabSet.Add(new AFightPlanner(new ASnake(this.Player.PlayerSnakes[Id])))
 				}
 			break
 
 			case 'fight':
+				Game.AddTab(new AFightPlanner())
+			break
+
 			case 'challenge':
-				Game.AddTab(Class == 'fight' ? new AFightPlanner() : new AChallengePlanner())
+				Tab = Game.AddTab(new AChallengePlanner())
+				if (!this.IsMe) Tab.AddPlayer(this.Player)
 			break
 
 			case 'snake-assign':
-				SnakeId = this.Player.Snakes[Id].SnakeId
+				SnakeId = this.Player.PlayerSnakes[Id].SnakeId
 				PostRequest(null, {Request: 'snake assign', SnakeId: SnakeId}, 10, function (Data) {
 					this.LoadPlayer()
 				}, function (Status, Text, Data) {
@@ -248,9 +256,6 @@ function APlayer(Id) {
 		}
 	}
 
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 }
 Extend(APlayer, BPageTab)

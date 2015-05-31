@@ -10,6 +10,7 @@ function AFightViewer(Fight) {
 	}
 
 	this.TurnCount = 0
+	this.Widget = null
 
 //---------------------------------------------------------------------------
 	this.Items = {
@@ -50,7 +51,8 @@ function AFightViewer(Fight) {
 			{x: 610, Title: '10 шагов вперед', id: '10', Sprite: '16.Labels.Last'},
 		]},
 		SaveButton: {x: 428, y: 370, w: 100, h: 24, Data: {cls: 'save'},
-			Labels: ['Сохранить', 'Удалить'], BackColors: ['#9f9', '#f99']},
+			Labels: ['Сохранить', 'Сохранить'],
+			BackColors: [CanvasColors.Create, CanvasColors.Modify]},
 		RefreshButton: {x: 538, y: 370, w: 90, h: 24, Data: {cls: 'refresh'},
 			Label: 'Обновить', Title: 'перезагрузить бой с сервера', BackColor: '#9cf'},
 	}}
@@ -408,6 +410,8 @@ function AFightViewer(Fight) {
 		this.RenderTurnRuler()
 		this.RenderField()
 		this.RenderDebugInfo(true)
+
+		if (this.Widget) this.Widget.Render()
 	}
 
 //---------------------------------------------------------------------------
@@ -505,6 +509,24 @@ function AFightViewer(Fight) {
 	}
 
 //---------------------------------------------------------------------------
+	this.SaveFight = function (Index, OldName) {
+		var Request = {
+			Request: 'slot save',
+			SlotIndex: Index,
+			FightId: this.Fight.FightId,
+			SlotName: prompt('Введите имя для сохраненного боя:', OldName)
+		}
+		if (!Request.SlotName) return
+
+		PostRequest(null, Request, 10, function () {
+			if (!this.Fight.SlotIndex) {
+				this.Fight.SlotIndex = Index
+				this.Show()
+			}
+		}, null, this)
+	}
+
+//---------------------------------------------------------------------------
 	this.OnClick = function(x, y, Dataset) {
 		var Class = Dataset.cls
 		var Id = Dataset.id
@@ -553,20 +575,29 @@ function AFightViewer(Fight) {
 
 			case 'current-snake': this.RenderDebugList(); break
 
-			case 'export': {
-				var w = window.open()
-				w.document.open('text/plain')
-				w.document.writeln(window.JSON.stringify(this.Fight.Serialize()))
-				w.document.close()
-				w.focus()
-			break }
-
 			case 'save':
-				if (this.Fight.SlotIndex == undefined) Game.Fights.Add(this.Fight)
-				else Game.Fights.Remove(this.Fight)
-				this.RenderSaveButton()
-				for(i = 0; i < 4; i++) this.RenderSnakeLength(i)
+				this.Widget = new AFightSlotsWidget({IsPopup: true})
+				this.Show()
 			break
+
+			case 'list-cancel':
+				this.Widget = null
+				this.Show()
+			break
+
+			case 'slot-name':
+			case 'slot-save':
+				var Item = this.Widget.List.Items[Id]
+				this.SaveFight(Id, (Item ? Item.SlotName : ''))
+				this.Widget = null
+				this.Show()
+			break
+
+			case 'slot-delete':
+			break
+
+			default:
+				if (this.Widget) this.Widget.OnClick(x, y, Dataset)
 		}
 	}
 
@@ -623,7 +654,12 @@ function AFightViewer(Fight) {
 		}
 
 		var Request = {Request: 'fight info', FightId: this.Fight.FightId}
-		PostRequest(null, Request, 10, this.ProcessResponse, null, this)
+		PostRequest(null, Request, 20, this.ProcessResponse, null, this)
+	}
+
+//---------------------------------------------------------------------------
+	this.RenderControls = function () {
+		Canvas.RenderHtml('controls', Canvas.MakeControlHtml(this.Widget ? this.Widget.WidgetControls : this.TabControls))
 	}
 
 //---------------------------------------------------------------------------

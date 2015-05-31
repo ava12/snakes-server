@@ -34,7 +34,7 @@ function ASnakeEditor(SnakeId) {
 		FightButton: {x: 468, y: 42, w: 70, h: 22, Data: {cls: 'fight'},
 			Label: 'В бой!', BackColor: CanvasColors.Create},
 		SaveButton: {x: 542, y: 42, w: 90, h: 22, Label: 'Сохранить', Data: {cls: 'save'},
-			BackColor: (this.SnakeId ? CanvasColors.Update : CanvasColors.Create)},
+			BackColor: (this.SnakeId ? CanvasColors.Modify : CanvasColors.Create)},
 		ProgramDescription: {x: 8, y: 79, w: 624, h: 58,
 			Data: {cls: 'desc', id: 'program'}, Back: false, Title: 'описание программы'},
 		Description: {x: 8, y: 268, w: 192, h: 108, Data: {cls: 'desc', id: 'map'},
@@ -170,7 +170,7 @@ function ASnakeEditor(SnakeId) {
 			Html += Canvas.MakeControlHtml(this.PrevMapControl)
 		}
 		if (this.MapIndex < (MapCnt - 1)) {
-			Html += Canvas.MakeControlHtml(this.PrevMapControl)
+			Html += Canvas.MakeControlHtml(this.NextMapControl)
 		}
 
 		Canvas.RenderHtml('controls', Html)
@@ -808,7 +808,7 @@ function ASnakeEditor(SnakeId) {
 			if (!this.SnakeId) {
 				this.SnakeId = Data.SnakeId
 				this.Snake.SnakeId = Data.SnakeId
-				this.Controls.Items.SaveButton.BackColor = CanvasColors.Update
+				this.Controls.Items.SaveButton.BackColor = CanvasColors.Modify
 				this.RegisterTab(this.SnakeId)
 			}
 		}, null, this)

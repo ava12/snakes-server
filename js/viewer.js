@@ -6,12 +6,12 @@ function ASnakeViewer(SnakeId) {
 
 	this.CurrentMap = 0
 
-	this.TabControls = {Items: {
+	this.Controls = {
 		ProgramDescription: {x: 251, y: 52, w: 381, h: 54,
 			Data: {cls: 'desc', id: 'program'}, Back: false, Title: 'описание программы'},
 		Description: {x: 21, y: 336, w: 224, h: 70, Data: {cls: 'desc', id: 'map'},
 			Back: false, Title: 'описание карты'},
-		MapButtons: {w: 32, h: 32,	Data: {cls: 'map'}, Items: [
+		MapButtons: {w: 32, h: 32, Data: {cls: 'map'}, Items: [
 			{x : 45, y: 409, id: '0', Title: 'карта № 1'},
 			{x : 81, y: 409, id: '1', Title: 'карта № 2'},
 			{x : 117, y: 409, id: '2', Title: 'карта № 3'},
@@ -20,7 +20,7 @@ function ASnakeViewer(SnakeId) {
 			{x : 45, y: 445, id: '5', Title: 'карта № 6'},
 			{x : 81, y: 445, id: '6', Title: 'карта № 7'},
 			{x : 117, y: 445, id: '7', Title: 'карта № 8'},
-			{x : 153, y: 445, id: '8', Title: 'карта № 9'},
+			{x : 153, y: 445, id: '8', Title: 'карта № 9'}
 		]},
 		Maps: {w: 112, h: 112, Data: {cls: 'map'}, Items: [
 			{x : 265, y: 116, id: '0', Title: 'карта № 1'},
@@ -31,11 +31,11 @@ function ASnakeViewer(SnakeId) {
 			{x : 507, y: 237, id: '5', Title: 'карта № 6'},
 			{x : 265, y: 358, id: '6', Title: 'карта № 7'},
 			{x : 386, y: 358, id: '7', Title: 'карта № 8'},
-			{x : 507, y: 358, id: '8', Title: 'карта № 9'},
+			{x : 507, y: 358, id: '8', Title: 'карта № 9'}
 		]},
 		RefreshButton: {x: 532, y: 27, w: 100, h: 22, Data: {cls: 'refresh'},
-			Label: 'Обновить', BackColor: CanvasColors.Button},
-	}}
+			Label: 'Обновить', BackColor: CanvasColors.Info},
+	}
 
 	this.SkinControl = {x: 8, y: 29, w: 48, h: 16}
 	this.NameControl = {x: 60, y: 27, w: 462, h: 22}
@@ -131,17 +131,20 @@ function ASnakeViewer(SnakeId) {
 			return
 		}
 
+		var Controls = this.TabControls.Items
+		var Button = Controls.RefreshButton
+		Canvas.RenderSprite(this.TabSprite, this.SkinControl.x, this.SkinControl.y)
+		this.RenderTextBox(this.NameControl, this.TabTitle)
+		Canvas.RenderTextBox(Button.Label, Button, '#000', Button.BackColor,
+			'#000', 'center', 'middle')
+
+		if (!Controls.Maps) return
+
 		this.RenderMaps()
 		this.RenderTemplates()
 
 		this.SelectMap(0)
-		var Controls = this.TabControls.Items
-		Canvas.RenderSprite(this.TabSprite, this.SkinControl.x, this.SkinControl.y)
-		this.RenderTextBox(this.NameControl, this.TabTitle)
 		this.RenderTextBox(Controls.ProgramDescription, this.Snake.ProgramDescription)
-		var Button = Controls.RefreshButton
-		Canvas.RenderTextBox(Button.Label, Button, '#000', Button.BackColor,
-			'#000', 'center', 'middle')
 	}
 
 //---------------------------------------------------------------------------
@@ -185,10 +188,15 @@ function ASnakeViewer(SnakeId) {
 			this.TabTitle = this.Snake.SnakeName + ' (' + this.Snake.PlayerName + ')'
 			this.TabSprite = SnakeSkins.Get(this.Snake.SkinId)
 
-			var MapCnt = this.Snake.Maps.length
-			var Controls = this.TabControls.Items
-			Controls.Maps.Items = Controls.Maps.Items.slice(0, MapCnt)
-			Controls.MapButtons.Items = Controls.MapButtons.Items.slice(0, MapCnt)
+			if (this.Snake.PlayerId != Game.Player.PlayerId && this.Snake.SnakeType != 'B') {
+				this.TabControls.Items = {RefreshButton: this.Controls.RefreshButton}
+			} else {
+				var MapCnt = this.Snake.Maps.length
+				this.TabControls.Items = Clone(this.Controls)
+				var Controls = this.TabControls.Items
+				Controls.Maps.Items = Controls.Maps.Items.slice(0, MapCnt)
+				Controls.MapButtons.Items = Controls.MapButtons.Items.slice(0, MapCnt)
+			}
 
 			this.Clear()
 			TabSet.RenderTabs()

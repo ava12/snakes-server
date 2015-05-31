@@ -342,7 +342,7 @@ class Game {
 			array(
 				'X' => $offset % 7,
 				'Y' => (int)($offset / 7),
-				'Line' => str_replace('--', '', $lines),
+				'Line' => trim($lines, '-'),
 			),
 		);
 
@@ -565,12 +565,20 @@ class Game {
 
 //---------------------------------------------------------------------------
 	protected function updateRatings($fight) {
+		$ratings = array(0, 0, 0, 0);
+		$lengths = array();
 		foreach ($fight->stats as $index => $stat) {
 			$rating = (int)$fight->snakes[$index]->player->rating;
 			$stat->pre_rating = $rating;
-			$stat->post_rating = $rating;
-			$fight->snakes[$index]->player->rating = $rating;
+			$lengths[$index] = $stat->length;
+			$ratings[$index] = $rating;
 		}
+		$ratings = $this->computeRatings($ratings, $lengths);
+		foreach ($fight->stats as $index => $stat) {
+			$stat->post_rating = $ratings[$index];
+			$fight->snakes[$index]->player->rating = $ratings[$index];
+		}
+		$this->player->rating = $ratings[0];
 	}
 
 //---------------------------------------------------------------------------
@@ -949,7 +957,9 @@ class Game {
 				throw new NackException(NackException::ERR_UNKNOWN_FIGHT, $fightId);
 			}
 
-			FightSlot::model()->forPlayer($playerId)->byIndex($index)->deleteAll();
+			FightSlot::model()->deleteAllByAttributes(array(
+				'player_id' => $playerId, 'index' => $index,
+			));
 
 			$slot = new FightSlot;
 			$slot->player_id = $playerId;
@@ -965,6 +975,22 @@ class Game {
 
 		$transaction->commit();
 		return $this->ack;
+	}
+
+//---------------------------------------------------------------------------
+	public function computeRatings($ratings, $lengths) {
+		$result = array();
+		$rc = 0;
+		foreach ($ratings as $rating) $rc += $rating;
+		$rc = (400 - $rc) / 4;
+		foreach ($ratings as $index => $rating) {
+			$dr = ($lengths[$index] * 10 - $rating + $rc) / 2;
+			if ($dr >= 0) $dr += 0.875;
+			else $dr -= 0.875;
+			$result[$index] = $rating + (int)$dr;
+		}
+
+		return $result;
 	}
 
 //---------------------------------------------------------------------------

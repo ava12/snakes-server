@@ -9,7 +9,7 @@
  */
 class DelayedFight extends ActiveRecord {
 	const BATCH_CNT = 50;
-	const DEFAULT_TIMEOUT = 30;
+	const DEFAULT_TIMEOUT = 5;
 
 	const FREE_CELL = 1;
 	const BORDER_CELL = 2;

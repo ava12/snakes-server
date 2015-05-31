@@ -53,6 +53,7 @@ function AListWidget(Fields) {
 		Request: {},
 		Columns: [], // [{Label:, Width:, Name:?}+]
 		Fields: [],
+		EmptyFields: null,
 		Pages: 0,
 		Page: 0, // начиная с 1
 		SortName: '',
@@ -209,7 +210,7 @@ function AListWidget(Fields) {
 			var Color = this.ItemBackColor[Index % this.ItemBackColor.length]
 			Canvas.FillRect(ABox(x, y, this.ItemWidth, this.ItemHeight), Color)
 		}
-		if (!Item) return
+		//if (!Item) return
 
 		for (var i = 0; i < Fields.length; i++) {
 			x += this.RenderField(Fields[i], Item, Index, x, y)
@@ -253,7 +254,7 @@ function AListWidget(Fields) {
 		var Items = List.Items
 		if (Items) {
 			for (i = 0; i < Items.length; i++) {
-				this.RenderItem(Items[i], List.Fields, y, i)
+				this.RenderItem(Items[i], (Items[i] ? List.Fields : List.EmptyFields), y, i)
 				y += this.ItemHeight
 			}
 		}
@@ -309,7 +310,7 @@ function AListWidget(Fields) {
 		if (SortBy.length) Request.SortBy = SortBy
 
 		List.Loaded = true
-		PostRequest(null, Request, 20, function (Response) {
+		PostRequest(null, Request, 10, function (Response) {
 			List.Items = Response[List.ItemName].slice(0, PageSize)
 			if (Response.FirstIndex != undefined) {
 				List.Page = Math.floor(Response.FirstIndex / PageSize) + 1
@@ -483,7 +484,7 @@ function ASnakeListWidget(Fields) {
 			{Type: 'SnakeType', Width: 40},
 			{Type: 'Separator'},
 			{Type: 'Gap'},
-			{Type: 'PropertyLink', Width: 260, Property: 'PlayerName', IdProperty: 'PlayerId', Data: {cls: 'player'}}
+			{Type: 'PropertyLink', Width: 260, Property: 'PlayerName', Data: {cls: 'list-player'}}
 		]
 	}
 
@@ -641,18 +642,27 @@ function AFightSlotsWidget(Fields) {
 		ItemName: 'SlotList',
 
 		Columns: [
-			{Label: 'Имя', Width: 370},
+			{Label: 'Имя', Width: 230},
 			{Label: 'Время', Width: 120},
 			{Label: 'Тип', Width: 50}
 		],
 
 		Fields: [
-			{Type: 'PropertyLink', Property: 'SlotName', Width: 370, Data: {cls: 'slot'}},
+			{Type: 'PropertyLink', Property: 'SlotName', Width: 234, Data: {cls: 'slot-name'}},
 			{Type: 'FightTime', Width: 120},
 			{Type: 'FightType', Width: 50},
 			{Type: 'Gap', Width: 10},
+			{Type: 'TextButton', Width: 90, Label: 'Сохранить', Data: {cls: 'slot-save'},
+				BackColor: CanvasColors.Modify},
+			{Type: 'Gap'},
 			{Type: 'TextButton', Width: 70, Label: 'Удалить', Data: {cls: 'slot-delete'},
 				BackColor: CanvasColors.Delete}
+		],
+
+		EmptyFields: [
+			{Type: 'Gap', Width: 438},
+			{Type: 'TextButton', Width: 90, Label: 'Сохранить', Data: {cls: 'slot-save'},
+				BackColor: CanvasColors.Create},
 		]
 	}
 
@@ -660,11 +670,23 @@ function AFightSlotsWidget(Fields) {
 	this.OnClick = function (x, y, Dataset) {
 		var Id = Dataset.id
 		switch (Dataset.cls) {
+			case 'slot-name':
+				var Item = this.List.Items[Id]
+				var NewName = prompt('Введите имя для сохраненного боя:', Item.SlotName)
+				if (NewName && NewName != Item.SlotName) {
+					var Request = {Request: 'slot rename', SlotIndex: Id, SlotName: NewName}
+					PostRequest(null, Request, 10, function () {
+						Item.SlotName = NewName
+						this.Render()
+					}, null, this)
+				}
+			break
+
 			case 'slot-delete':
 				var Slot = this.List.Items[Id]
 				if (!Slot) return
 
-				if (confirm('Удалить запись "' + Slot.SlotName + '"')) {
+				if (confirm('Удалить запись "' + Slot.SlotName + '"?')) {
 					PostRequest(null, {Request: 'slot delete', SlotIndex: Id}, 10,
 						this.RefreshList, null, this)
 				}
