@@ -623,12 +623,14 @@ class Game {
 			$entry->addFight($fightId, FightEntry::TYPE_ORDERED, $player->id);
 
 			if ($isChallenge) {
+				$fightSnakes = $fight->snakes;
 				$ids = array();
-				for ($index = 0; $index < 3; $index++) {
-					$ids[] = $snakes[$index]->player_id;
+				for ($index = 1; $index < 4; $index++) {
+					$ids[] = $fightSnakes[$index]->player_id;
 				}
 				$entry->addFight($fightId, FightEntry::TYPE_CHALLENGED, $ids);
 			}
+			$entry->saveList();
 
 			$player->delayed_id = NULL;
 
@@ -937,7 +939,7 @@ class Game {
 //---------------------------------------------------------------------------
 	protected function requestSlotDelete() {
 		$slotIndex = (int)$this->request['SlotIndex'];
-		FightSlot::model()->forPlayer($this->player->id)->byIndex($slotIndex)->deleteAll();
+		FightSlot::model()->deleteSingle($this->player->id, $slotIndex);
 		return $this->ack;
 	}
 
@@ -949,6 +951,12 @@ class Game {
 		$fightId = $request['FightId'];
 		$playerId = $this->player->id;
 
+		$slot = new FightSlot;
+		$slot->player_id = $playerId;
+		$slot->index = $index;
+		$slot->name = $name;
+		$slot->fight_id = $fightId;
+
 		/** @var CDbTransaction $transaction */
 		$transaction = Yii::app()->db->beginTransaction();
 
@@ -957,15 +965,7 @@ class Game {
 				throw new NackException(NackException::ERR_UNKNOWN_FIGHT, $fightId);
 			}
 
-			FightSlot::model()->deleteAllByAttributes(array(
-				'player_id' => $playerId, 'index' => $index,
-			));
-
-			$slot = new FightSlot;
-			$slot->player_id = $playerId;
-			$slot->index = $index;
-			$slot->name = $name;
-			$slot->fight_id = $fightId;
+			FightSlot::model()->deleteSingle($playerId, $index);
 			$slot->save();
 
 		} catch (Exception $e) {

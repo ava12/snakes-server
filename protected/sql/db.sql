@@ -35,18 +35,18 @@ begin
 end$$
 
 DROP PROCEDURE IF EXISTS `update_fight_list`$$
-CREATE PROCEDURE `update_fight_list`(IN `@player_id` INT, IN `@list_type` ENUM('ordered','challenged'), IN `@fight_id` INT)
+CREATE PROCEDURE `update_fight_list`(IN `@list_type` ENUM('ordered','challenged'), IN `@player_id` INT, IN `@fight_id` INT, IN `@time` INT)
     MODIFIES SQL DATA
     SQL SECURITY INVOKER
 begin
- insert into `fightlist` (`player_id`, `type`, `fight_id`)
- values (`@player_id`, `@list_type`, `@fight_id`);
+ insert ignore into `fightlist` (`player_id`, `type`, `fight_id`, `time`)
+ values (`@player_id`, `@list_type`, `@fight_id`, `@time`);
  delete from `fightlist`
  where `player_id` = `@player_id` and `type` = `@list_type` and `fight_id` in (
   select * from (
    select `fight_id` from `fightlist`
    inner join `fight` on `fightlist`.`fight_id` = `fight`.`id`
-   where `player_id` = `@player_id` and `fightlist`.`type` = `@list_type`
+   where `fightlist`.`player_id` = `@player_id` and `fightlist`.`type` = `@list_type`
    order by `fight`.`time` desc limit 1000 offset 10
 	) as t
  );

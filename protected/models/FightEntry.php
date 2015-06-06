@@ -20,6 +20,9 @@ class FightEntry extends CActiveRecord {
 		self::TYPE_CHALLENGED => self::LIST_SIZE_CHALLENGED,
 	);
 
+	protected $sqlSave = 'CALL update_fight_list(\'%s\', %d, %d, %d)';
+	protected $list = array();
+
 //---------------------------------------------------------------------------
 	/**
 	 * @param string $className
@@ -75,20 +78,29 @@ class FightEntry extends CActiveRecord {
 
 //---------------------------------------------------------------------------
 	public function addFight($fightId, $listType, $playerIds) {
-		$time = new CDbExpression('NOW()');
-		$list = array();
-
 		foreach ((array)$playerIds as $playerId) {
-			$list[] = array(
+			$this->list[] = array(
 				'type' => $listType,
-				'player_id' => $playerId,
-				'time' => $time,
-				'fight_id' => $fightId,
+				'player_id' => (int)$playerId,
+				'fight_id' => (int)$fightId,
+				'time' => 0,
 			);
 		}
+	}
 
-		$collection = new ActiveRecordCollection($list, $this);
-		return $collection->save(false);
+//---------------------------------------------------------------------------
+	public function saveList() {
+		if (!$this->list) return;
+
+		$sql = array();
+		$time = time();
+		foreach ($this->list as $entry) {
+			$entry['time'] = $time;
+			$sql[] = vsprintf($this->sqlSave, $entry);
+		}
+		$sql = implode('; ', $sql);
+		$this->getDbConnection()->createCommand($sql)->execute();
+		$this->list = array();
 	}
 
 //---------------------------------------------------------------------------
