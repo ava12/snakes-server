@@ -2,6 +2,7 @@ function ASnakeEditor(SnakeId) {
 	this.TabList = 'Snakes'
 	this.TabKey = SnakeId
 	this.SnakeId = SnakeId
+	this.Templates = {}
 
 	this.Dirty = {
 		Dirty: false,
@@ -11,14 +12,6 @@ function ASnakeEditor(SnakeId) {
 		Templates: false,
 		Description: false,
 		Maps: false
-	}
-
-	if (SnakeId) this.Snake = null
-	else {
-		this.Snake = new ASnake()
-		this.TabSprite = SnakeSkins.Get(this.Snake.SkinId)
-		this.TabTitle = '<без имени>'
-		for (var n in this.Dirty) this.Dirty[n] = true
 	}
 
 	this.BaseControlHtml = ''
@@ -148,7 +141,6 @@ function ASnakeEditor(SnakeId) {
 	this.Not = false
 	this.HeadX = null
 	this.HeadY = null
-	this.Templates = {}
 
 //---------------------------------------------------------------------------
 	this.TabInit = function() {
@@ -234,7 +226,7 @@ function ASnakeEditor(SnakeId) {
 //---------------------------------------------------------------------------
 	this.RenderSnakeType = function () {
 		var Box = this.Controls.Items.SnakeType
-		Canvas.RenderTextBox(Box.Labels[this.Snake.SnakeType], Box, null, '#fff')
+		Canvas.RenderTextBox(Box.Labels[this.Snake.SnakeType], Box, null, '#fff', '#000', 'center')
 	}
 
 //---------------------------------------------------------------------------
@@ -802,7 +794,7 @@ function ASnakeEditor(SnakeId) {
 			}
 		}
 
-		PostRequest(null, Request, 20, function (Data) {
+		PostRequest(null, Request, 10, function (Data) {
 			for (var Name in this.Dirty) this.Dirty[Name] = false
 			this.RenderDirtyMark()
 			if (!this.SnakeId) {
@@ -813,6 +805,26 @@ function ASnakeEditor(SnakeId) {
 			}
 		}, null, this)
 	}
+
+//---------------------------------------------------------------------------
+	;(function () {
+		if (SnakeId) this.Snake = null
+		else {
+			this.Snake = new ASnake()
+			this.TabSprite = SnakeSkins.Get(this.Snake.SkinId)
+			this.TabTitle = '<без имени>'
+			for (var n in this.Dirty) this.Dirty[n] = true
+
+			var Sets = this.Controls.Items.UserSetButtons.Items
+			for (n in Sets) {
+				var Set = {Count: 0}
+				for (var i in Sets[n]) Set[i] = false
+				Set.s = true
+				this.Templates[n] = Set
+			}
+		}
+	}).call(this)
+
 
 //---------------------------------------------------------------------------
 }

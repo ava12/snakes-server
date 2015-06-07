@@ -85,6 +85,7 @@ button, input[type=button] { cursor: pointer; }
 }
 .json-wait-dialog div { padding: 1em; }
 .json-wait-dialog input { padding: 1ex; }
+input, textarea { padding: 0.5ex; }
 
 </style>
 <script type="text/javascript">
