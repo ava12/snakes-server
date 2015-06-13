@@ -229,6 +229,8 @@ var Game = {
 		}
 		if (this.Player.FightId) {
 			this.AddTab(new AFightViewer(new AFight({FightId: this.Player.FightId})))
+		} else {
+			TabSet.CurrentTab.Show()
 		}
 	},
 

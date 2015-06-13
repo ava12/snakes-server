@@ -20,7 +20,7 @@ button, input[type=button] { cursor: pointer; }
 #control-frame>div, #load-screen {
 	position: absolute; width: 100%; height: 100%; left: 0px; top: 0px;
 }
-#control-frame>div>div, #load-screen>div { position: absolute; }
+#control-frame>div>*, #load-screen>div { position: absolute; }
 #control-frame>div>div {
 	background-image: url(../img/empty.png); background-repeat: repeat;
 }

@@ -142,6 +142,8 @@ function ASnakeEditor(SnakeId) {
 	this.HeadX = null
 	this.HeadY = null
 
+	this.Popup = null
+
 //---------------------------------------------------------------------------
 	this.TabInit = function() {
 		this.RegisterTab()
@@ -150,6 +152,12 @@ function ASnakeEditor(SnakeId) {
 //---------------------------------------------------------------------------
 	this.RenderControls = function() {
 		if (!this.Snake) return
+
+		if (this.Popup) {
+			Canvas.RenderHtml('controls', Canvas.MakeControlHtml(this.Popup.WidgetControls))
+			this.Popup.Focus()
+			return
+		}
 
 		var MapCnt = this.Snake.Maps.length
 		var Mbc = this.MapButtonControls
@@ -281,6 +289,8 @@ function ASnakeEditor(SnakeId) {
 		}
 
 		this.SelectMap(this.MapIndex)
+
+		if (this.Popup) this.Popup.Render()
 	}
 
 //---------------------------------------------------------------------------
@@ -623,13 +633,17 @@ function ASnakeEditor(SnakeId) {
 		if (Id == 'skin') return this.HandleSkinClick()
 
 		var Params = {
-			name: ['Имя змеи', 'text', this.Snake.SnakeName],
-			program: ['Описание программы', 'textarea', this.Snake.ProgramDescription],
-			map: ['Описание карты', 'textarea', this.Snake.Maps[this.MapIndex].Description]
+			name: [AInputWidget, 'Имя змеи', 40, this.Snake.SnakeName],
+			program: [ATextWidget, 'Описание программы', 1024, this.Snake.ProgramDescription],
+			map: [ATextWidget, 'Описание карты', 1024, this.Snake.Maps[this.MapIndex].Description]
 		}
-		Canvas.RenderInput(
-			Params[Id][1], Params[Id][0], Params[Id][2], this.HandleInput, Id, true
-		)
+
+		var Widget = Params[Id][0]
+		Widget = new Widget({WidgetId: Id, Title: Params[Id][1], Max: Params[Id][2]})
+		this.Popup = Widget
+
+		this.Show()
+		Widget.SetValue(Params[Id][3])
 	}
 
 //---------------------------------------------------------------------------
@@ -642,26 +656,6 @@ function ASnakeEditor(SnakeId) {
 		if (Text) Text = Text.trim()
 
 		switch(Id) {
-			case 'name': {
-				if (Text == Snake.SnakeName) return
-
-				Snake.SnakeName = Text
-				Editor.TabTitle = (Text ? Text : '<без имени>')
-				Editor.MarkDirty('Name')
-				Editor.RenderSnakeName()
-				TabSet.RenderTabs()
-			break }
-
-			case 'program':
-				Editor.Snake.ProgramDescription = Text
-				Editor.RenderProgramDescription()
-			break
-
-			case 'map':
-				Editor.Snake.Maps[Editor.MapIndex].Description = Text
-				Editor.RenderDescription()
-			break
-
 			case 'skin':
 				Editor.SetSkin(parseInt(Text))
 				Editor.RenderButton(Editor.Controls, 'SkinId')
@@ -698,6 +692,29 @@ function ASnakeEditor(SnakeId) {
 	}
 
 //---------------------------------------------------------------------------
+	this.HandlePopupClick = function () {
+		var Value = this.Popup.GetValue()
+		switch (this.Popup.WidgetId) {
+			case 'name': {
+				this.Snake.SnakeName = Value
+				this.TabTitle = (Value ? Value : '<без имени>')
+				this.MarkDirty('Name')
+				TabSet.RenderTabs()
+			break }
+
+			case 'program':
+				this.Snake.ProgramDescription = Value
+				this.MarkDirty('Description')
+			break
+
+			case 'map':
+				this.Snake.Maps[this.MapIndex].Description = Value
+				this.MarkDirty('Maps')
+			break
+		}
+	}
+
+//---------------------------------------------------------------------------
 	this.OnClick = function(x, y, Dataset) {
 		var Id = Dataset.id
 		switch(Dataset.cls) {
@@ -710,6 +727,12 @@ function ASnakeEditor(SnakeId) {
 			case 'fight': this.HandleFightClick(); break
 			case 'save': this.SaveSnake(); break
 			case 'type': this.HandleTypeClick(); break
+
+			case 'widget-ack': this.HandlePopupClick() // nobr!
+			case 'widget-cancel':
+				this.Popup = null
+				this.Show()
+			break
 		}
 	}
 

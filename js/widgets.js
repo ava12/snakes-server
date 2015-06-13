@@ -9,6 +9,7 @@ function AWidget() {
 	this.x = 5
 	this.y = 29
 	this.IsPopup = false
+	this.WidgetId = ''
 
 //---------------------------------------------------------------------------
 	this.Render = function (x, y) {
@@ -38,6 +39,16 @@ function AWidget() {
 
 //---------------------------------------------------------------------------
 	this.RenderBody = function () {}
+
+//---------------------------------------------------------------------------
+	this.AddControl = function (Control) {
+		Control = Clone(Control)
+		Control.x += this.x
+		Control.y += this.y
+		if (Control.Data) Control.Data.widget = this.WidgetId
+		else Control.Data = {widget: this.WidgetId}
+		this.WidgetControls.Items.push(Control)
+	}
 
 //---------------------------------------------------------------------------
 }
@@ -82,14 +93,6 @@ function AListWidget(Fields) {
 		Name = Name.split('.')
 		for(var i = 0; i < Name.length; i++) Item = Item[Name[i]]
 		return Item
-	}
-
-//---------------------------------------------------------------------------
-	this.AddControl = function (Control) {
-		Control = Clone(Control)
-		Control.x += this.x
-		Control.y += this.y
-		this.WidgetControls.Items.push(Control)
 	}
 
 //---------------------------------------------------------------------------
@@ -700,3 +703,93 @@ function AFightSlotsWidget(Fields) {
 //---------------------------------------------------------------------------
 }
 Extend(AFightSlotsWidget, new AFightListWidget())
+
+
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+function AInputWidget(Fields) {
+	this.Title = 'Введите текст'
+	this.Max = 255
+
+	this.SetFields(Fields)
+
+	this.IsPopup = true
+	this.Height = 145
+	this.y = 60
+	this.Labels = {
+		Title: {x: 5, y: 5, w: 620, h: 25},
+		Warning: {x: 5, y: 35, w: 620, h: 25}
+	}
+	this.Controls = {
+		Input: {Type: 'input', x: 10, y: 65, w: 600, h: 20, Max: this.Max, id: 'widget-input'},
+		Cancel: {x: 550, y: 105, w: 70, h: 30, Label: 'Отмена', Data: {cls: 'widget-cancel'},
+			BackColor: CanvasColors.Button},
+		Set: {x: 475, y: 105, w: 70, h: 30, Label: 'Готово', Data: {cls: 'widget-ack'},
+			BackColor: CanvasColors.Create}
+	}
+	this.WidgetControls = {Items: []}
+
+//---------------------------------------------------------------------------
+	this.GetValue = function () {
+		return document.getElementById('widget-input').value.substr(0, this.Max)
+	}
+
+//---------------------------------------------------------------------------
+	this.SetValue = function (Value) {
+		document.getElementById('widget-input').value = Value
+	}
+
+//---------------------------------------------------------------------------
+	this.RenderBody = function () {
+		var Name
+
+		if (!this.WidgetControls.Items.length) {
+			for (Name in this.Controls) {
+				this.AddControl(this.Controls[Name])
+			}
+
+			this.Labels.Title.Label = this.Title
+			this.Labels.Warning.Label = '(не более ' + this.Max + ' символов)'
+		}
+
+		for (Name in this.Labels) {
+			var Box = this.Labels[Name]
+			Canvas.RenderTextBox(Box.Label, Box)
+		}
+
+		for (Name in {Set: true, Cancel: true}) {
+			Box = this.Controls[Name]
+			Canvas.RenderTextButton(Box.Label, Box, Box.BackColor)
+		}
+	}
+
+//---------------------------------------------------------------------------
+	this.Focus = function () {
+		document.getElementById('widget-input').focus()
+	}
+
+//---------------------------------------------------------------------------
+}
+Extend(AInputWidget, new AWidget)
+
+
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+function ATextWidget(Fields) {
+	this.Max = 1024
+
+	this.SetFields(Fields)
+
+	this.Height = 225
+
+	this.Controls = {
+		Input: {Type: 'text', x: 10, y: 65, w: 600, h: 100, Max: this.Max, id: 'widget-input'},
+		Cancel: {x: 550, y: 185, w: 70, h: 30, Label: 'Отмена', Data: {cls: 'widget-cancel'},
+			BackColor: CanvasColors.Button},
+		Set: {x: 475, y: 185, w: 70, h: 30, Label: 'Готово', Data: {cls: 'widget-ack'},
+			BackColor: CanvasColors.Create}
+	}
+
+//---------------------------------------------------------------------------
+}
+Extend(ATextWidget, new AInputWidget)

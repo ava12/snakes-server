@@ -77,13 +77,41 @@ function ACanvas(Canvas, HtmlLayers) {
 		}
 
 		if (!Control.Items) {
+			var IsText = (Control.Type == 'text')
+			var IsTextInput = (IsText || Control.Type == 'input')
 			var Class = (Context.Class ? ' class="' + Context.Class + '"': '')
-			var Result = ['<div ' + Class]
-			for(i in Context.Data) {
-				if (i == 'prototype') continue
-
-				Result.push(' data-' + i + '="' + Context.Data[i] + '"')
+			var Prefix, Suffix
+			if (IsTextInput) {
+				if (IsText) {
+					Prefix = '<textarea '
+					Suffix = '</textarea>'
+				} else {
+					Prefix = '<input type="text" '
+					Suffix = ''
+				}
+			} else {
+				Prefix = '<div '
+				Suffix = '</div>'
 			}
+
+			var Result = [Prefix + Class]
+			if (IsTextInput) {
+				Result.push(' id="' + (Control.id ? Control.id : 'input-control') + '"')
+				if (Context.Max) {
+					Result.push(' maxlength="' + Context.Max + '"')
+					if (IsText) {
+						Result.push(' onkeyup="LimitInput(this, ' + Context.Max + ')"')
+						Result.push(' oninput="LimitInput(this, ' + Context.Max + ')"')
+					}
+				}
+			} else {
+				for(i in Context.Data) {
+					if (i == 'prototype') continue
+
+					Result.push(' data-' + i + '="' + Context.Data[i] + '"')
+				}
+			}
+
 			if (Context.Title) Result.push(' title="' + Context.Title.encode() + '"')
 			Result.push(' style="')
 			var Css = {x: 'left', y: 'top', w: 'width', h: 'height'}
@@ -92,7 +120,8 @@ function ACanvas(Canvas, HtmlLayers) {
 					Result.push(Css[i] + ':' + Context[i] + 'px;')
 				}
 			}
-			Result.push('"></div>\n')
+			if (IsText) Result.push('resize:none;')
+			Result.push('">' + Suffix + '\n')
 			return Result.join('')
 		}
 

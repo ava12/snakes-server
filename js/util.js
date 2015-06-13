@@ -344,3 +344,13 @@ var Ajax = {
 		return true
 	}
 }
+
+//---------------------------------------------------------------------------
+function LimitInput(Dom, MaxLen) {
+	if (Dom.value.length < MaxLen) return
+
+	setTimeout(function() {
+		var Value = Dom.value
+		if (Value.length > MaxLen) Dom.value = Value.substr(0, MaxLen)
+	}, 1)
+}
