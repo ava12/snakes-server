@@ -5,12 +5,17 @@ function AListTab() {
 	this.ListX = 5
 	this.ListY = 40
 	this.ListFields = {Width: 640, Height: 410, BorderColor: null}
+	this.Popup = null
 
 //---------------------------------------------------------------------------
 	this.RenderControls = function () {
-		var Html =
-			Canvas.MakeControlHtml(this.TabControls) +
-			Canvas.MakeControlHtml(this.List.WidgetControls)
+		var Html
+		if (this.Popup) {
+			Html = Canvas.MakeControlHtml(this.Popup.WidgetControls)
+		} else {
+			Html = Canvas.MakeControlHtml(this.TabControls) +
+				Canvas.MakeControlHtml(this.List.WidgetControls)
+		}
 		Canvas.RenderHtml('controls', Html)
 	}
 
@@ -151,6 +156,7 @@ function AFightListTab() {
 			}
 		}
 		this.RenderList()
+		if (this.Popup) this.Popup.Render()
 	}
 
 //---------------------------------------------------------------------------

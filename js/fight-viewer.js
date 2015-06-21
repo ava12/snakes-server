@@ -10,7 +10,8 @@ function AFightViewer(Fight) {
 	}
 
 	this.TurnCount = 0
-	this.Widget = null
+	this.Popup = null
+	this.DebugSelectWidget = null
 
 //---------------------------------------------------------------------------
 	this.Items = {
@@ -316,7 +317,7 @@ function AFightViewer(Fight) {
 	this.RenderDebuggedSnake = function() {
 		var Box = this.TabControls.Items.MapSnake
 		if (this.DebuggedSnakeIndex == undefined) {
-			Canvas.Rect(Box, '#eee', '#000')
+			Canvas.RenderTextButton('---', Box, '#eee')
 		} else {
 			Canvas.FillRect(Box, this.SnakeColors[this.DebuggedSnakeIndex])
 			Canvas.RenderSprite(SnakeSkins.Get(this.Fight.Snakes[this.DebuggedSnakeIndex].SkinId), Box.x, Box.y)
@@ -411,7 +412,7 @@ function AFightViewer(Fight) {
 		this.RenderField()
 		this.RenderDebugInfo(true)
 
-		if (this.Widget) this.Widget.Render()
+		if (this.Popup) this.Popup.Render()
 	}
 
 //---------------------------------------------------------------------------
@@ -483,40 +484,25 @@ function AFightViewer(Fight) {
 
 		this.DebuggedSnakeIndex = Index
 		this.SelectStep()
+		this.Show()
+/*
 		this.RenderField()
 		this.RenderDebugInfo(true)
 		this.RenderDebuggedSnake()
+*/
 	}
 
 //---------------------------------------------------------------------------
-	this.RenderDebugList = function() {
-		var Snakes = this.Fight.Snakes
-		var Html = '<ul class="debug-list" style="left:550px;top:' +
-			(this.TabControls.Items.MapSnake.y + 17) + 'px;">\r\n'
-		for(var i = 0; i < 4; i++) {
-			Html += '<li>'
-			if (Snakes[i]) {
-				Html += '<span class="skin skin' +
-					Snakes[i].SkinId + '" style="background-color:' + this.SnakeColors[i] +
-					'" onclick="Canvas.Input(' + i + ')"></span>'
-			}
-			Html += '</li>\r\n'
-		}
-		Html += '<li><input type="button" value=" - нет - " onclick="Canvas.Input(null)"></ul>'
-		Canvas.RenderCustomInputHtml(Html, function(Dataset, Context) {
-			Context.SelectSnake(Dataset.value)
-		}, this)
-	}
+	this.SaveFight = function (Index, NewName) {
+		NewName = NewName.trim()
+		if (!NewName) return
 
-//---------------------------------------------------------------------------
-	this.SaveFight = function (Index, OldName) {
 		var Request = {
 			Request: 'slot save',
 			SlotIndex: Index,
 			FightId: this.Fight.FightId,
-			SlotName: prompt('Введите имя для сохраненного боя:', OldName)
+			SlotName: NewName
 		}
-		if (!Request.SlotName) return
 
 		PostRequest(null, Request, 10, function () {
 			if (!this.Fight.SlotIndex) {
@@ -573,40 +559,46 @@ function AFightViewer(Fight) {
 				}
 			break }
 
-			case 'current-snake': this.RenderDebugList(); break
+			case 'current-snake':
+				this.Popup = this.DebugSelectWidget
+				this.Show()
+			break
+
+			case 'debug-none':
+				Id = null
+				// nobr
+			case 'debug-snake':
+				this.Popup = null
+				this.SelectSnake(Id)
+			break
 
 			case 'save':
-				this.Widget = new AFightSlotsWidget({IsPopup: true})
+				this.Popup = new ASlotSelectWidget()
 				this.Show()
 			break
 
 			case 'list-cancel':
-				this.Widget = null
+				this.Popup = null
 				this.Show()
 			break
 
 			case 'slot-name':
-			case 'slot-save':
-				var Item = this.Widget.List.Items[Id]
-				this.SaveFight(Id, (Item ? Item.SlotName : ''))
-				this.Widget = null
+				var Item = this.Popup.List.Items[Id]
+				this.Popup = new AInputWidget({Title: 'Название для сохраненного боя', WidgetId: Id})
+				this.Show()
+				if (Item && Item.SlotName) this.Popup.SetValue(Item.SlotName)
+			break
+
+			case 'widget-ack':
+				this.SaveFight(Dataset.widget, this.Popup.GetValue())
+				//nobr
+			case 'widget-cancel':
+				this.Popup = null
 				this.Show()
 			break
 
-			case 'slot-delete':
-			break
-
 			default:
-				if (this.Widget) this.Widget.OnClick(x, y, Dataset)
-		}
-	}
-
-//---------------------------------------------------------------------------
-	this.Serialize = function() {
-		var Fight = this.Fight
-		return {
-			Object: 'AFightViewer',
-			Data: [Fight.SlotIndex == undefined ? Fight.Serialize() : Fight.SlotIndex]
+				if (this.Popup) this.Popup.OnClick(x, y, Dataset)
 		}
 	}
 
@@ -642,6 +634,11 @@ function AFightViewer(Fight) {
 		this.TurnField = Clone(this.Field)
 		this.KeyFrames[0] = Clone(this.Field)
 		this.ExtractTurnInfo()
+
+		var Box = this.TabControls.Items.MapSnake
+		this.DebugSelectWidget = new ADebugSelectWidget({
+			x: Box.x - 3, y: Box.y - 3, Snakes: Snakes
+		})
 	}
 
 //---------------------------------------------------------------------------
@@ -659,7 +656,7 @@ function AFightViewer(Fight) {
 
 //---------------------------------------------------------------------------
 	this.RenderControls = function () {
-		Canvas.RenderHtml('controls', Canvas.MakeControlHtml(this.Widget ? this.Widget.WidgetControls : this.TabControls))
+		Canvas.RenderHtml('controls', Canvas.MakeControlHtml(this.Popup ? this.Popup.WidgetControls : this.TabControls))
 	}
 
 //---------------------------------------------------------------------------
@@ -676,15 +673,3 @@ function AFightViewer(Fight) {
 //---------------------------------------------------------------------------
 }
 Extend(AFightViewer, BPageTab)
-
-AFightViewer.Restore = function(Fight) {
-	if (typeof Fight != 'object') {
-		return new AFightViewer(Game.Fights.List[Fight])
-	} else {
-		for(var i in Fight.Snakes) {
-			if (Fight.Snakes[i]) Fight.Snakes[i] = new ASnake(Fight.Snakes[i])
-		}
-		return new AFightViewer(new AFight(Fight))
-	}
-}
-

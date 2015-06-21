@@ -10,6 +10,7 @@ function AWidget() {
 	this.y = 29
 	this.IsPopup = false
 	this.WidgetId = ''
+	this.Popup = null
 
 //---------------------------------------------------------------------------
 	this.Render = function (x, y) {
@@ -21,6 +22,10 @@ function AWidget() {
 		this.Clear()
 		this.RenderBody()
 		Canvas.RestoreState()
+		if (this.Popup) {
+			this.Popup.Render()
+			this.WidgetControls = this.Popup.WidgetControls
+		}
 	}
 
 //---------------------------------------------------------------------------
@@ -48,6 +53,11 @@ function AWidget() {
 		if (Control.Data) Control.Data.widget = this.WidgetId
 		else Control.Data = {widget: this.WidgetId}
 		this.WidgetControls.Items.push(Control)
+	}
+
+//---------------------------------------------------------------------------
+	this.OnClick = function (x, y, Dataset) {
+		alert('- не реализовано -')
 	}
 
 //---------------------------------------------------------------------------
@@ -161,6 +171,7 @@ function AListWidget(Fields) {
 
 //---------------------------------------------------------------------------
 	this.RenderLink = function (Label, Id, x, y, Params) {
+		if (!Label) Label = Params.Label
 		var Width = Canvas.GetTextMetrics(Label).w
 		var Box = Clone(Params)
 		Box.x = x
@@ -645,44 +656,50 @@ function AFightSlotsWidget(Fields) {
 		ItemName: 'SlotList',
 
 		Columns: [
-			{Label: 'Имя', Width: 230},
+			{Label: 'Имя', Width: 324},
 			{Label: 'Время', Width: 120},
 			{Label: 'Тип', Width: 50}
 		],
 
 		Fields: [
-			{Type: 'PropertyLink', Property: 'SlotName', Width: 234, Data: {cls: 'slot-name'}},
+			{Type: 'PropertyLink', Property: 'SlotName', Width: 328, Data: {cls: 'slot-name'}},
 			{Type: 'FightTime', Width: 120},
 			{Type: 'FightType', Width: 50},
 			{Type: 'Gap', Width: 10},
-			{Type: 'TextButton', Width: 90, Label: 'Сохранить', Data: {cls: 'slot-save'},
-				BackColor: CanvasColors.Modify},
-			{Type: 'Gap'},
 			{Type: 'TextButton', Width: 70, Label: 'Удалить', Data: {cls: 'slot-delete'},
 				BackColor: CanvasColors.Delete}
 		],
 
-		EmptyFields: [
-			{Type: 'Gap', Width: 438},
-			{Type: 'TextButton', Width: 90, Label: 'Сохранить', Data: {cls: 'slot-save'},
-				BackColor: CanvasColors.Create},
-		]
+		EmptyFields: []
 	}
+
+	this.SelectedId = null
 
 //---------------------------------------------------------------------------
 	this.OnClick = function (x, y, Dataset) {
 		var Id = Dataset.id
 		switch (Dataset.cls) {
 			case 'slot-name':
-				var Item = this.List.Items[Id]
-				var NewName = prompt('Введите имя для сохраненного боя:', Item.SlotName)
+				this.SelectedId = Id
+				var Popup = new AInputWidget({Title: 'Имя для сохраненного боя:'})
+				TabSet.CurrentTab.Popup = Popup
+				TabSet.CurrentTab.Show()
+				Popup.SetValue(this.List.Items[Id].SlotName)
+			break
+
+			case 'widget-ack':
+				var Item = this.List.Items[this.SelectedId]
+				var NewName = TabSet.CurrentTab.Popup.GetValue()
 				if (NewName && NewName != Item.SlotName) {
-					var Request = {Request: 'slot rename', SlotIndex: Id, SlotName: NewName}
+					var Request = {Request: 'slot rename', SlotIndex: this.SelectedId, SlotName: NewName}
 					PostRequest(null, Request, 10, function () {
 						Item.SlotName = NewName
 						this.Render()
 					}, null, this)
-				}
+				} // nobr
+			case 'widget-cancel':
+				TabSet.CurrentTab.Popup = null
+				TabSet.CurrentTab.Show()
 			break
 
 			case 'slot-delete':
@@ -707,6 +724,37 @@ Extend(AFightSlotsWidget, new AFightListWidget())
 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
+function ASlotSelectWidget(Fields) {
+	this.SetFields(Fields)
+	this.IsPopup = true
+	this.List = {
+		Request: {Request: 'slot list'},
+		ItemName: 'SlotList',
+
+		Columns: [
+			{Label: 'Имя', Width: 404},
+			{Label: 'Время', Width: 120},
+			{Label: 'Тип', Width: 50}
+		],
+
+		Fields: [
+			{Type: 'PropertyLink', Property: 'SlotName', Width: 408, Data: {cls: 'slot-name'}},
+			{Type: 'FightTime', Width: 120},
+			{Type: 'FightType', Width: 50},
+		],
+
+		EmptyFields: [
+			{Type: 'Link', Label: '- пусто -', Width: 408, Data: {cls: 'slot-name'}}
+		]
+	}
+
+//---------------------------------------------------------------------------
+}
+Extend(ASlotSelectWidget, new AFightListWidget())
+
+
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 function AInputWidget(Fields) {
 	this.Title = 'Введите текст'
 	this.Max = 255
@@ -715,7 +763,7 @@ function AInputWidget(Fields) {
 
 	this.IsPopup = true
 	this.Height = 145
-	this.y = 60
+	this.y = 150
 	this.Labels = {
 		Title: {x: 5, y: 5, w: 620, h: 25},
 		Warning: {x: 5, y: 35, w: 620, h: 25}
@@ -781,6 +829,7 @@ function ATextWidget(Fields) {
 	this.SetFields(Fields)
 
 	this.Height = 225
+	this.y = 100
 
 	this.Controls = {
 		Input: {Type: 'text', x: 10, y: 65, w: 600, h: 100, Max: this.Max, id: 'widget-input'},
@@ -793,3 +842,53 @@ function ATextWidget(Fields) {
 //---------------------------------------------------------------------------
 }
 Extend(ATextWidget, new AInputWidget)
+
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+function ADebugSelectWidget(Fields) {
+	this.SnakeColors = ['#f99', '#ee6', '#6e6', '#9df']
+	this.Snakes = []
+
+	this.SetFields(Fields)
+
+	this.IsPopup = true
+	this.Width = 54
+	this.Height = 98
+
+	this.ControlX = 3
+	this.ControlY = 3
+	this.ControlHeight = 19
+
+//---------------------------------------------------------------------------
+	this.RenderBody = function () {
+		var Box = {x: this.ControlX, y: this.ControlY, w: 48, h: 16}
+		Canvas.RenderTextButton('---', Box)
+		for (var i = 0; i < 4; i++) {
+			Box.y += this.ControlHeight
+			if (this.Snakes[i] &&
+				(this.Snakes[i].SnakeType == 'B' || this.Snakes[i].PlayerId == Game.Player.PlayerId)
+			) {
+				Canvas.FillRect(Box, this.SnakeColors[i])
+				Canvas.RenderSprite(SnakeSkins.Get(this.Snakes[i].SkinId), Box.x, Box.y)
+			}
+		}
+	}
+
+//---------------------------------------------------------------------------
+	;(function () {
+		var x = this.ControlX
+		var y = this.ControlY
+		this.AddControl({x: x, y: y, w: 48, h: 16, Data: {cls: 'debug-none'}})
+		for (var i = 0; i < 4; i++) {
+			y += this.ControlHeight
+			if (this.Snakes[i] &&
+				(this.Snakes[i].SnakeType == 'B' || this.Snakes[i].PlayerId == Game.Player.PlayerId)
+			) {
+				this.AddControl({x: x, y: y, w: 48, h: 16, id: i, Data: {cls: 'debug-snake'}})
+			}
+		}
+	}).call(this)
+
+//---------------------------------------------------------------------------
+}
+Extend(ADebugSelectWidget, new AWidget)

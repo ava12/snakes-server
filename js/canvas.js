@@ -307,7 +307,7 @@ function ACanvas(Canvas, HtmlLayers) {
 
 //---------------------------------------------------------------------------
 	this.OnClick = function(e) {
-		if (e.target.hasChildNodes()) return false;
+		if (e.target.hasChildNodes() || e.target.value != undefined) return false;
 
 		var x = (e.offsetX == undefined ? e.layerX : e.offsetX)
 		var y = (e.offsetY == undefined ? e.layerY : e.offsetY)
