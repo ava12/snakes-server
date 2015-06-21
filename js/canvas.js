@@ -25,24 +25,8 @@ function ACanvas(Canvas, HtmlLayers) {
 		[-1, 0, 0, 1, 1, 0, 0, 0],
 		[0, -1, -1, 0, 0, 0, 1, 1],
 		[1, 0, 0, -1, 0, 1, 0, 0],
-		[0, 1, 1, 0, 0, 0, 0, 0],
+		[0, 1, 1, 0, 0, 0, 0, 0]
 	]
-
-	this.SavedHtml = null
-
-	this.InputApplyButtonHtml =
-		'<input type="button" value="Сохранить" onclick="Canvas.Input(true)">'
-	this.InputFrameHtml =
-		'<div class="input"><div><div class="title">{{title}}</div><br>{{input}}' +
-		'<br><br>{{apply}}' +
-		' <input type="button" value="Закрыть" onclick="Canvas.Input(false)"></div></div>'
-	this.InputHtml = {
-		text: '<input type="text" id="canvas-input" value="{{value}}">',
-		textarea: '<textarea id="canvas-input">{{value}}</textarea>',
-		div: '<div class="content">{{value}}</div>',
-	}
-	this.InputHandler = null
-	this.InputContext = null
 
 //---------------------------------------------------------------------------
 	this.MakeControlHtml = function(Control, Context) {
@@ -445,51 +429,6 @@ function ACanvas(Canvas, HtmlLayers) {
 		if (!Color) Color = '#000'
 		if (!BackColor) BackColor = '#fff'
 		return this.RenderTextBox(Text, Box, Color, BackColor, Color, 'center', 'middle')
-	}
-
-//---------------------------------------------------------------------------
-	this.RenderCustomInputHtml = function(Html, Handler, Context) {
-		this.InputHandler = Handler
-		this.InputContext = Context
-		var Layer = document.getElementById('control-frame')
-		this.SavedHtml = Layer.innerHTML
-		Layer.innerHTML = Html
-		var Input = document.getElementById('canvas-input')
-		if (Input) Input.focus()
-	}
-
-//---------------------------------------------------------------------------
-	this.RenderInputHtml = function(Html, Title, Handler, Context, RenderApplyButton) {
-		var Input = this.InputFrameHtml.subst(
-			{title: Title, input: Html, apply: (RenderApplyButton ? this.InputApplyButtonHtml : '')})
-		this.RenderCustomInputHtml(Input, Handler, Context)
-	}
-
-//---------------------------------------------------------------------------
-	this.RenderInput = function(
-		Type, Title, Value, Handler, Context, RenderApplyButton, Encode
-	) {
-		if (Encode == undefined || Encode) Value = String(Value).encode()
-		var Html = this.InputHtml[Type].subst({value: Value})
-		this.RenderInputHtml(Html, Title, Handler, Context, RenderApplyButton)
-	}
-
-//---------------------------------------------------------------------------
-	this.Input = function(Dom) {
-		if (Dom === true) Dom = document.getElementById('canvas-input')
-		document.getElementById('control-frame').innerHTML = this.SavedHtml
-		this.SavedHtml = null
-		if (this.InputHandler) {
-			if (typeof Dom == 'object' && Dom) {
-				var Dataset = GetDataset(Dom)
-				Dataset.value = Dom.value
-			} else {
-				Dataset = {value: Dom}
-			}
-			this.InputHandler(Dataset, this.InputContext)
-		}
-		this.InputHandler = null
-		this.InputContext = null
 	}
 
 //---------------------------------------------------------------------------

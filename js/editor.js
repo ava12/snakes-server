@@ -155,7 +155,7 @@ function ASnakeEditor(SnakeId) {
 
 		if (this.Popup) {
 			Canvas.RenderHtml('controls', Canvas.MakeControlHtml(this.Popup.WidgetControls))
-			this.Popup.Focus()
+			if (this.Popup.Focus) this.Popup.Focus()
 			return
 		}
 
@@ -614,18 +614,8 @@ function ASnakeEditor(SnakeId) {
 
 //---------------------------------------------------------------------------
 	this.HandleSkinClick = function() {
-		var Html = []
-		for(var i in SnakeSkins.SkinList) {
-			var Id = SnakeSkins.SkinList[i]
-			var Title = SnakeSkins.Skins[Id]
-			Html.push(
-				'<button class="skin skin' + Id + '" value="' + Id +
-					'" onclick="Canvas.Input(this)" title="' + Title.encode() + '"></button>'
-			)
-		}
-		Html = Html.join(' ')
-		Canvas.RenderInputHtml(Html, 'Шкура для змеи', this.HandleInput, 'skin')
-		this.MarkDirty('Skin')
+		this.Popup = new ASkinSelectWidget()
+		this.Show()
 	}
 
 //---------------------------------------------------------------------------
@@ -727,6 +717,17 @@ function ASnakeEditor(SnakeId) {
 			case 'fight': this.HandleFightClick(); break
 			case 'save': this.SaveSnake(); break
 			case 'type': this.HandleTypeClick(); break
+
+			case 'skin':
+				this.Popup = null
+				if (Id != this.Snake.SkinId) {
+					this.Snake.SkinId = Id
+					this.MarkDirty('Skin')
+					this.TabSprite = SnakeSkins.Get(Id)
+					TabSet.RenderTabs()
+				}
+				this.Show()
+			break
 
 			case 'widget-ack': this.HandlePopupClick() // nobr!
 			case 'widget-cancel':

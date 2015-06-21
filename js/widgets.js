@@ -892,3 +892,76 @@ function ADebugSelectWidget(Fields) {
 //---------------------------------------------------------------------------
 }
 Extend(ADebugSelectWidget, new AWidget)
+
+
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+function ASkinSelectWidget(Fields) {
+	this.x = 5
+	this.y = 35
+	this.SetFields(Fields)
+
+	this.IsPopup = true
+	this.ItemX = 18
+	this.ItemY = 48
+	this.ItemsPerLine = 8
+	this.ItemW = 78
+	this.ItemH = 32
+
+	this.Label = {x: 18, y: 18, Label: 'Выберите шкуру для змеи:'}
+	this.CancelButton = {x: 542, y: this.ItemY, w: 70, h: 30, Label: 'Отмена', Data: {cls: 'widget-cancel'}}
+
+	this.SkinIds = []
+
+//---------------------------------------------------------------------------
+	this.RenderBody = function () {
+		Canvas.RenderText(this.Label.Label, this.Label)
+
+		var x = this.ItemX
+		var y = this.ItemY
+		var cnt = 0
+		for (var i in this.SkinIds) {
+			Canvas.RenderSprite(SnakeSkins.Get(this.SkinIds[i]), x, y)
+			cnt++
+			if (cnt < this.ItemsPerLine) {
+				x += this.ItemW
+			} else {
+				cnt = 0
+				x = this.ItemX
+				y += this.ItemH
+			}
+		}
+
+		Canvas.RenderTextButton(this.CancelButton.Label, this.CancelButton, CanvasColors.Button)
+	}
+
+//---------------------------------------------------------------------------
+	;(function () {
+		this.SkinIds = SnakeSkins.SkinList
+		var SkinNames = SnakeSkins.Skins
+		var Control = {x: this.ItemX, y: this.ItemY, w: 48, h: 16, Title: '', id: 0, Data: {cls: 'skin'}}
+		var y = this.ItemY
+		var cnt = 0
+		for (var i in this.SkinIds) {
+			Control.id = this.SkinIds[i]
+			Control.Title = SkinNames[this.SkinIds[i]]
+			this.AddControl(Control)
+
+			Control.x += this.ItemW
+			cnt++
+			if (cnt == this.ItemsPerLine) {
+				cnt = 0
+				Control.x = this.ItemX
+				Control.y += this.ItemH
+			}
+		}
+
+		this.CancelButton.y += Math.floor((this.SkinIds.length + this.ItemsPerLine - 1) / this.ItemsPerLine) * this.ItemH
+		this.AddControl(this.CancelButton)
+
+		this.Height = this.CancelButton.y + this.CancelButton.h + 18
+	}).call(this)
+
+//---------------------------------------------------------------------------
+}
+Extend(ASkinSelectWidget, new AWidget)

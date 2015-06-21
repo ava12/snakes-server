@@ -34,7 +34,7 @@ function ASnakeViewer(SnakeId) {
 			{x : 507, y: 358, id: '8', Title: 'карта № 9'}
 		]},
 		RefreshButton: {x: 532, y: 27, w: 100, h: 22, Data: {cls: 'refresh'},
-			Label: 'Обновить', BackColor: CanvasColors.Info},
+			Label: 'Обновить', BackColor: CanvasColors.Info}
 	}
 
 	this.SkinControl = {x: 8, y: 29, w: 48, h: 16}
@@ -45,7 +45,7 @@ function ASnakeViewer(SnakeId) {
 		A: {x: 8, y: 52},
 		B: {x: 8, y: 79},
 		C: {x: 129, y: 52},
-		D: {x: 129, y: 79},
+		D: {x: 129, y: 79}
 	}
 
 
@@ -149,14 +149,13 @@ function ASnakeViewer(SnakeId) {
 
 //---------------------------------------------------------------------------
 	this.RenderDescription = function(Id) {
-		var Params
+		var Text
 		if (Id == 'program') {
-			Params = ['div', 'Описание змеи', this.Snake.ProgramDescription]
+			Text = 'Описание змеи:\n\n' + this.Snake.ProgramDescription
 		} else {
-			Params = ['div', 'Описание карты', this.Snake.Maps[this.CurrentMap].Description]
+			Text = 'Описание карты:\n\n' + this.Snake.Maps[this.CurrentMap].Description
 		}
-		Params[2] = Params[2].replace('\n', '<br>\n')
-		Canvas.RenderInput(Params[0], Params[1], Params[2], null, null, false, false)
+		alert(Text)
 	}
 
 //---------------------------------------------------------------------------

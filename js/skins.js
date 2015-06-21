@@ -24,7 +24,7 @@ var SnakeSkins = {
 			Image: this.Image, Title: this.Skins[Index],
 			x: 0, y: (Number(Index) - 1) << 4, w: 48, h: 16
 		}
-	},
+	}
 
 //---------------------------------------------------------------------------
 }
@@ -41,7 +41,7 @@ function ASkin(Index) {
 			x: this.TypeX[Type.charAt(0).toLowerCase()],
 			y: Dir << 4,
 			w: 16,
-			h: 16,
+			h: 16
 		}
 	}
 

@@ -63,7 +63,7 @@ function ASnakeMap(Fields) {
 //---------------------------------------------------------------------------
 	this.Serialize = function() {
 		var Result = {
-			Description: this.Description, HeadX: this.HeadX, HeadY: this.HeadY,
+			Description: this.Description, HeadX: this.HeadX, HeadY: this.HeadY
 		}
 		var Match = /^(-*)(.*?)-*$/.exec(this.Lines)
 		if (!Match || !Match[2]) Result.Lines = [{X: 0, Y: 0, Line: '--'}]
