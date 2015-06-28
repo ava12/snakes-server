@@ -751,15 +751,6 @@ function ASnakeEditor(SnakeId) {
 	}
 
 //---------------------------------------------------------------------------
-	this.Serialize = function() {
-		this.SaveMap()
-		return {
-			Object: 'ASnakeEditor',
-			Data: [this.Snake.SnakeName ? this.Snake.SnakeName : this.Snake.Serialize()]
-		}
-	}
-
-//---------------------------------------------------------------------------
 	this.LoadSnake = function () {
 		var Request = {Request: 'snake info', SnakeId: this.SnakeId}
 		PostRequest(null, Request, 20, function (Data) {
@@ -853,7 +844,3 @@ function ASnakeEditor(SnakeId) {
 //---------------------------------------------------------------------------
 }
 Extend(ASnakeEditor, BPageTab)
-
-ASnakeEditor.Restore = function(Snake) {
-	return new ASnakeEditor(Snake)
-}

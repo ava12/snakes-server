@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style type="text/css">
+input { margin: 1em; }
+#skin-list span {
+	display: inline-block; width: 48px; height: 16px; background: url(img/16/skins.png);
+	cursor: pointer; margin: 16px;
+}
+</style>
+</head>
+<body>
+<iframe style="width:1px;height:1px" src="f2b64.php" frameborder="0"></iframe>
+Окраска змеи: <span id="file-name">img/16/skin1.png</span><br><br>
+<img id="img" style="width:80px;height:64px;" alt="" src="img/16/skin1.png">
+<input type="button" value="URL" onclick="SetSkinUrl()">
+<input type="button" value="Загрузить" onclick="Upload()">
+<br><br>Выбрать:<br><div id="skin-list"></div><br>
+
+<script>
+
+var Dom = {
+	Img: 'img',
+	FileName: 'file-name',
+	SkinList: 'skin-list'
+}
+
+;(function () {
+	for (var Name in Dom) Dom[Name] = document.getElementById(Dom[Name])
+
+	var Img = new Image()
+	Img.onload = function () {
+		var SkinCnt = Img.height / 16
+		var List = []
+		for (var i = 1; i <= SkinCnt; i++) {
+			List.push('<span style="background-position:0px ' + (16 * (1 - i)) +
+				'px" onclick="SetSkinId(' + i + ')"></span>')
+		}
+		Dom.SkinList.innerHTML = List.join(' ')
+	}
+	Img.src = 'img/16/skins.png'
+})()
+
+function FileCallback(Name, Type, Data) {
+	Dom.FileName.innerHTML = Name.replace('<', '&lt;')
+	Dom.Img.src = 'data:image;base64,' + Data
+}
+
+function Upload() {
+	Dom.FileName.innerHTML = ''
+	Dom.Img.src = ''
+	window.frames[0].document.getElementById('file-input').click()
+}
+
+function SetSkinSrc(Src, Protocol) {
+	if (!Src) return
+
+	if (!Src.match(/^(?:[a-z]+:)?\/\//)) Src = Protocol + Src
+	Dom.Img.src = Src
+	Dom.FileName.innerHTML = Src
+}
+
+function SetSkinUrl() {
+	SetSkinSrc(prompt('Укажите URL изображения:'), 'http://')
+}
+
+function SetSkinId(Id) {
+	SetSkinSrc('img/16/skin' + Id + '.png', '')
+}
+
+</script>
+
+</body>
+</html>

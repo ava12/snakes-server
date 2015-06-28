@@ -10,7 +10,6 @@ var BPageTab = {
 	TabBackColor: '#dddddd',
 	TabSelectedColor: '#ffffff',
 	TabControlHtml: null,
-	TabImageData: null,
 	TabControls: {},
 	TabTitle: false,
 	TabStackIndex: 0,
@@ -72,20 +71,6 @@ var BPageTab = {
 	},
 
 //---------------------------------------------------------------------------
-	SaveImageData: function() {
-		//this.TabImageData = Canvas.GetImageData(0, 24)
-	},
-
-//---------------------------------------------------------------------------
-	RestoreImageData: function() {
-		if (!this.TabImageData) {
-			Canvas.FillRect(this.TabBox, '#ffffff')
-			this.RenderBody()
-		}
-		else Canvas.SetImageData(this.TabImageData, TabSet.TabBox.x, TabSet.TabBox.y)
-	},
-
-//---------------------------------------------------------------------------
 	OnShow: function() {},
 	OnHide: function() {},
 
@@ -109,15 +94,9 @@ var BPageTab = {
 
 //---------------------------------------------------------------------------
 	Clear: function() {
-		this.TabImageData = null
 		this.TabControlHtml = null
 		if (this.IsActive) Canvas.FillRect(TabSet.TabBox, '#ffffff')
 	},
-
-//---------------------------------------------------------------------------
-	Serialize: function() {
-		return null //{Object: '', Data: []}
-	}
 
 //---------------------------------------------------------------------------
 }

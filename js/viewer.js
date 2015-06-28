@@ -175,11 +175,6 @@ function ASnakeViewer(SnakeId) {
 	}
 
 //---------------------------------------------------------------------------
-	this.Serialize = function() {
-		return {Object: 'ASnakeViewer', Data: [this.SnakeId]}
-	}
-
-//---------------------------------------------------------------------------
 	this.LoadSnake = function () {
 		var Request = {Request: 'snake info', SnakeId: this.SnakeId}
 		PostRequest(null, Request, 20, function(Data) {
@@ -209,7 +204,3 @@ function ASnakeViewer(SnakeId) {
 //---------------------------------------------------------------------------
 }
 Extend(ASnakeViewer, BPageTab)
-
-ASnakeViewer.Restore = function(Snake) {
-	return new ASnakeViewer(Snake)
-}
