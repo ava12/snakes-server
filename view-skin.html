@@ -2,25 +2,62 @@
 <html>
 <head>
 <style type="text/css">
-input { margin: 1em; }
+* {
+	margin: 0px; padding: 0px;
+}
+
+body { padding: 2em; }
+
+#container {
+	position: relative; border: 1px solid black; width: 176px; height: 112px;
+	margin: auto;
+}
+
+#board {
+	position: absolute; left: 0px; top: 0px; right: 0px; bottom: 0px;
+	width: 176px; height: 112px;
+	background: #999 url(img/client/tile.png) repeat;
+}
+
+input[type=button] {
+	margin: 1ex; padding: 0.5ex;
+}
 #skin-list span {
 	display: inline-block; width: 48px; height: 16px; background: url(img/16/skins.png);
 	cursor: pointer; margin: 16px;
 }
+.float { float: left; margin: 1em; }
 </style>
 </head>
 <body>
-<iframe style="width:1px;height:1px" src="f2b64.php" frameborder="0"></iframe>
+
+<div class="float">
+<div id="container">
+<canvas id="board" width="176" height="112"></canvas>
+</div>
+<div style="text-align:center;margin-top:1ex">
+<input type="button" value="Пуск" onclick="Snake.Timer.Start()">
+<input type="button" value="Шаг" onclick="Snake.Timer.Stop(); Snake.Move()">
+<input type="button" value="Стоп" onclick="Snake.Timer.Stop()">
+</div>
+</div>
+
+<div class="float">
 Окраска змеи: <span id="file-name">img/16/skin1.png</span><br><br>
-<img id="img" style="width:80px;height:64px;" alt="" src="img/16/skin1.png">
+<img id="skin" style="width:80px;height:64px;" alt="" src="img/16/skin1.png">
 <input type="button" value="URL" onclick="SetSkinUrl()">
 <input type="button" value="Загрузить" onclick="Upload()">
-<br><br>Выбрать:<br><div id="skin-list"></div><br>
+<iframe style="width:1px;height:1px" src="f2b64.php" frameborder="0"></iframe>
+</div>
+
+<div class="float">
+Выбрать:<br><div id="skin-list"></div>
+</div>
 
 <script>
 
 var Dom = {
-	Img: 'img',
+	Skin: 'skin',
 	FileName: 'file-name',
 	SkinList: 'skin-list'
 }
@@ -43,12 +80,13 @@ var Dom = {
 
 function FileCallback(Name, Type, Data) {
 	Dom.FileName.innerHTML = Name.replace('<', '&lt;')
-	Dom.Img.src = 'data:image;base64,' + Data
+	Dom.Skin.src = 'data:image;base64,' + Data
+	Snake.DrawSnake()
 }
 
 function Upload() {
 	Dom.FileName.innerHTML = ''
-	Dom.Img.src = ''
+	Dom.Skin.src = ''
 	window.frames[0].document.getElementById('file-input').click()
 }
 
@@ -56,8 +94,9 @@ function SetSkinSrc(Src, Protocol) {
 	if (!Src) return
 
 	if (!Src.match(/^(?:[a-z]+:)?\/\//)) Src = Protocol + Src
-	Dom.Img.src = Src
+	Dom.Skin.src = Src
 	Dom.FileName.innerHTML = Src
+	Snake.DrawSnake()
 }
 
 function SetSkinUrl() {
@@ -66,6 +105,207 @@ function SetSkinUrl() {
 
 function SetSkinId(Id) {
 	SetSkinSrc('img/16/skin' + Id + '.png', '')
+}
+
+
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+function Timer(Handler, Context, Delay) {
+	this.Handler = Handler
+	this.Context = Context
+	this.Delay = Delay
+
+	this.Timer = 0
+
+	this.Start = function() {
+		if(this.Timer) return
+
+		this.Timer = setInterval(function(ctx) {
+			ctx.Handler.call(ctx.Context)
+		}, this.Delay, this)
+		this.Handler.call(this.Context)
+	}
+
+	this.Stop = function() {
+		if(!this.Timer) return
+
+		var v = this.Timer
+		this.Timer = 0
+		clearInterval(v)
+	}
+}
+
+
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+var Board = {
+	Dc: null,
+	Width: 0,
+	Height: 0,
+	CanvasWidth: 0,
+	CanvasHeight: 0,
+	TileWidth: 16,
+	TileHeight: 16,
+	LightColors: ['#f99', '#ee6', '#6e6', '#9df'],
+	CurrentLightColor: '',
+	Sprites: {
+		head: 0,
+		body: 1,
+		right: 2,
+		left: 3,
+		tail: 4,
+	},
+
+//- public ------------------------------------------------------------------
+	Init: function() {
+		var Dc = document.getElementById('board').getContext('2d')
+		this.Dc = Dc
+		var Canvas = Dc.canvas
+		this.CurrentLightColor = this.LightColors[0]
+		this.CanvasWidth = Canvas.width
+		this.CanvasHeight = Canvas.height
+		this.Width = Canvas.width / this.TileWidth
+		this.Height = Canvas.height / this.TileHeight
+	},
+
+	SetLightColor: function(Index) {
+		this.CurrentLightColor = this.LightColors[Index]
+		return this
+	},
+
+	ClearSprite: function(x, y) {
+		var w = this.TileWidth
+		var h = this.TileHeight
+		this.Dc.clearRect(x * w, y * h, w, h)
+		return this
+	},
+
+	DrawSprite: function(Index, Direction, x, y) {
+		if(typeof Index == 'string' || Index instanceof String) Index = this.Sprites[Index]
+		var w = this.TileWidth
+		var h = this.TileHeight
+		Index *= w
+		Direction *= h
+		x *= w
+		y *= h
+		Dc = this.Dc
+		Dc.clearRect(x, y, w, h)
+		Dc.fillStyle = this.CurrentLightColor
+		Dc.fillRect(x, y, w, h)
+		Dc.globalAlpha = 1.0
+		Dc.drawImage(Dom.Skin, Index, Direction, w, h, x, y, w, h)
+		return this
+	},
+}
+
+
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+var Snake = {
+	Length: 16,
+	StartX: 1,
+	StartY: 1,
+	StartDir: 1,
+	Path: [1,1,1,2,1,1,0,1,1,2,2,2,2,3,3,0,3,2,3,3,3,0,3,3,0,0,1,0],
+	FrameDelay: 100,
+
+	DirX: [0, 1, 0, -1],
+	DirY: [-1, 0, 1, 0],
+	Step: 0,
+	Color: 0,
+	Pos: [], // 0 - head, [[x, y, dir]*] (dir - ориентация элемента)
+	Timer: false,
+
+	DrawSnake: function() {
+		var Pos = this.Pos
+		var Len = Pos.length - 1
+		Board.DrawSprite(0, Pos[1][2], Pos[0][0], Pos[0][1])
+		Board.DrawSprite(4, Pos[Len][2], Pos[Len][0], Pos[Len][1])
+		var PrevDir = Pos[Len][2]
+		for(var i = Len - 1; i > 0; i--) {
+			var Dir = Pos[i][2]
+			if(Dir == PrevDir) {
+				Board.DrawSprite(1, Dir, Pos[i][0], Pos[i][1])
+			}
+			else {
+				var Sprite
+				if(Dir == ((PrevDir + 1) & 3)) Sprite = 2 // направо
+				else Sprite = 3 // налево
+				Board.DrawSprite(Sprite, Dir, Pos[i][0], Pos[i][1])
+				PrevDir = Dir
+			}
+		}
+	},
+
+	Prepare: function() {
+		var x = this.StartX
+		var y = this.StartY
+		var Dir = this.StartDir
+		var dx = this.DirX[Dir ^ 2]
+		var dy = this.DirY[Dir ^ 2]
+		var Pos = []
+		for(var i = this.Length; i > 0; i--) {
+			Pos.push([x, y, Dir])
+			x += dx
+			y += dy
+		}
+		this.Pos = Pos
+		this.DrawSnake()
+	},
+
+	CutTail: function() {
+		var OldPos = this.Pos.pop()
+		var TailPos = this.Pos[this.Pos.length - 1]
+		Board.ClearSprite(OldPos[0], OldPos[1])
+		Board.DrawSprite(4, TailPos[2], TailPos[0], TailPos[1])
+	},
+
+	MoveHead: function(StepDir) {
+		var HeadPos = this.Pos[0]
+		var Sprite = 1 // прямо
+		var Dir = HeadPos[2]
+		if(Dir != this.Pos[1][2]) {
+			if(Dir == ((this.Pos[1][2] + 1) & 3)) Sprite = 2 // направо
+			else Sprite = 3 // налево
+		}
+		var NewPos = [
+			HeadPos[0] + this.DirX[Dir],
+			HeadPos[1] + this.DirY[Dir],
+			StepDir
+		]
+		this.Pos.unshift(NewPos)
+		Board.DrawSprite(Sprite, Dir, HeadPos[0], HeadPos[1])
+		Board.DrawSprite(0, Dir, NewPos[0], NewPos[1])
+	},
+
+	Move: function() {
+		var Step = this.Step
+		if(Step >= this.Path.length) {
+			Step = 0
+			this.Color = (this.Color + 1) & 3
+			Board.SetLightColor(this.Color)
+			this.DrawSnake()
+		}
+		this.MoveHead(this.Path[Step])
+		this.CutTail()
+		this.Step = Step + 1
+	},
+
+//- public ------------------------------------------------------------------
+	Run: function() {
+		this.Prepare()
+		Board.Flush
+		this.Timer = new Timer(this.Move, this, this.FrameDelay)
+	},
+}
+
+
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+window.onload = function() {
+	Dom.Skin.onload = function () { Snake.DrawSnake() }
+	Board.Init()
+	Snake.Run()
 }
 
 </script>
