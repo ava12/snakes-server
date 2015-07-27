@@ -553,10 +553,7 @@ function AFightListWidget() {
 
 //---------------------------------------------------------------------------
 	this.RenderFightTime = function (Item, Index, x, y, Params) {
-		var d = (new Date(Item.FightTime * 1000))
-		var Label = d.getDate() + '.' + ('0' + (d.getMonth() + 1)).substr(-2) + ' ' +
-			('0' + d.getHours()).substr(-2) + ':' + ('0' + d.getMinutes()).substr(-2) +
-			':' + ('0' + d.getSeconds()).substr(-2)
+		var Label = FormatDate(Item.FightTime)
 		var Id = (Params.IdProperty ? Item[Params.IdProperty] : Index)
 		return this.RenderLink(Label, Id, x, y, Params)
 	}

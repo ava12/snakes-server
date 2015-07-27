@@ -604,6 +604,7 @@ function AFightViewer(Fight) {
 
 //---------------------------------------------------------------------------
 	this.Prepare = function () {
+		this.TabTitle += ' (' + FormatDate(this.Fight.FightTime) + ')'
 		this.TurnCount = this.Fight.Turns.length
 
 		var Buttons = this.TabControls.Items.SnakeButtons.Items

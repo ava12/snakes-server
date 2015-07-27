@@ -354,3 +354,11 @@ function LimitInput(Dom, MaxLen) {
 		if (Value.length > MaxLen) Dom.value = Value.substr(0, MaxLen)
 	}, 1)
 }
+
+//---------------------------------------------------------------------------
+function FormatDate(d) {
+	if (!(d instanceof Date)) d = (new Date(d * 1000))
+	return d.getDate() + '.' + ('0' + (d.getMonth() + 1)).substr(-2) + ' ' +
+		('0' + d.getHours()).substr(-2) + ':' + ('0' + d.getMinutes()).substr(-2) +
+		':' + ('0' + d.getSeconds()).substr(-2)
+}
