@@ -1,8 +1,8 @@
 --
--- Дамп данных таблицы `skin`
+-- Дамп данных таблицы `snakes_skin`
 --
 
-INSERT INTO `skin` (`id`, `name`) VALUES
+INSERT INTO `snakes_skin` (`id`, `name`) VALUES
 (1, '- по умолчанию -'),
 (2, 'белая'),
 (3, 'желтая'),

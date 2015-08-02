@@ -18,36 +18,36 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8 */;
 
 --
--- База данных: `snakes_denorm`
+-- База данных: `snakes`
 --
 
 DELIMITER $$
 --
 -- Процедуры
 --
-DROP PROCEDURE IF EXISTS `delete_zero_refs`$$
-CREATE PROCEDURE `delete_zero_refs`()
+DROP PROCEDURE IF EXISTS `snakes_delete_zero_refs`$$
+CREATE PROCEDURE `snakes_delete_zero_refs`()
     MODIFIES SQL DATA
     SQL SECURITY INVOKER
 begin
- delete from `fight` where `refs` <= 0;
- delete from `session` where `expires` >= NOW();
+ delete from `snakes_fight` where `refs` <= 0;
+ delete from `snakes_session` where `expires` >= NOW();
 end$$
 
-DROP PROCEDURE IF EXISTS `update_fight_list`$$
-CREATE PROCEDURE `update_fight_list`(IN `@list_type` ENUM('ordered','challenged'), IN `@player_id` INT, IN `@fight_id` INT, IN `@time` INT)
+DROP PROCEDURE IF EXISTS `snakes_update_fight_list`$$
+CREATE PROCEDURE `snakes_update_fight_list`(IN `@list_type` ENUM('ordered','challenged'), IN `@player_id` INT, IN `@fight_id` INT, IN `@time` INT)
     MODIFIES SQL DATA
     SQL SECURITY INVOKER
 begin
- insert ignore into `fightlist` (`player_id`, `type`, `fight_id`, `time`)
+ insert ignore into `snakes_fightlist` (`player_id`, `type`, `fight_id`, `time`)
  values (`@player_id`, `@list_type`, `@fight_id`, `@time`);
- delete from `fightlist`
+ delete from `snakes_fightlist`
  where `player_id` = `@player_id` and `type` = `@list_type` and `fight_id` in (
   select * from (
-   select `fight_id` from `fightlist`
-   inner join `fight` on `fightlist`.`fight_id` = `fight`.`id`
-   where `fightlist`.`player_id` = `@player_id` and `fightlist`.`type` = `@list_type`
-   order by `fight`.`time` desc limit 1000 offset 10
+   select `fight_id` from `snakes_fightlist`
+   inner join `snakes_fight` on `snakes_fightlist`.`fight_id` = `snakes_fight`.`id`
+   where `snakes_fightlist`.`player_id` = `@player_id` and `snakes_fightlist`.`type` = `@list_type`
+   order by `snakes_fight`.`time` desc limit 1000 offset 10
 	) as t
  );
 end$$
@@ -55,21 +55,21 @@ end$$
 --
 -- Функции
 --
-DROP FUNCTION IF EXISTS `can_view_fight`$$
-CREATE FUNCTION `can_view_fight`(`@player_id` INT, `@fight_id` INT) RETURNS int(11)
+DROP FUNCTION IF EXISTS `snakes_can_view_fight`$$
+CREATE FUNCTION `snakes_can_view_fight`(`@player_id` INT, `@fight_id` INT) RETURNS int(11)
     READS SQL DATA
     SQL SECURITY INVOKER
 begin
 SELECT COUNT(*) FROM (
-  (SELECT `fight_id` FROM `fightlist` AS `lo`
+  (SELECT `fight_id` FROM `snakes_fightlist` AS `lo`
    WHERE `player_id` = `@player_id` AND `type` = 'ordered'
    ORDER BY `time` DESC LIMIT 10)
   UNION
-  (SELECT `fight_id` FROM `fightlist` AS `lc`
+  (SELECT `fight_id` FROM `snakes_fightlist` AS `lc`
    WHERE `player_id` = `@player_id` AND `type` = 'challenged'
    ORDER BY `time` DESC LIMIT 10)
   UNION
-  (SELECT `fight_id` FROM `fightslot` AS `fs`
+  (SELECT `fight_id` FROM `snakes_fightslot` AS `fs`
   WHERE `player_id` = `@player_id` AND `fight_id` = `@fight_id`)
  ) AS `total`
  WHERE `fight_id` = `@fight_id`
@@ -82,24 +82,24 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
--- Структура таблицы `delayedfight`
+-- Структура таблицы `snakes_delayedfight`
 --
 
-DROP TABLE IF EXISTS `delayedfight`;
-CREATE TABLE IF NOT EXISTS `delayedfight` (
+DROP TABLE IF EXISTS `snakes_delayedfight`;
+CREATE TABLE IF NOT EXISTS `snakes_delayedfight` (
   `fight_id` int(11) NOT NULL,
   `delay_till` int(11) NOT NULL,
   `data` text
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Триггеры `delayedfight`
+-- Триггеры `snakes_delayedfight`
 --
-DROP TRIGGER IF EXISTS `delayedfight_before_delete_t`;
+DROP TRIGGER IF EXISTS `snakes_delayedfight_before_delete_t`;
 DELIMITER $$
-CREATE TRIGGER `delayedfight_before_delete_t` BEFORE DELETE ON `delayedfight`
+CREATE TRIGGER `snakes_delayedfight_before_delete_t` BEFORE DELETE ON `snakes_delayedfight`
  FOR EACH ROW BEGIN
- update `fight` set `refs` = `refs` - 1
+ update `snakes_fight` set `refs` = `refs` - 1
  where `id` = old.`fight_id`;
 END
 $$
@@ -108,11 +108,11 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
--- Структура таблицы `fight`
+-- Структура таблицы `snakes_fight`
 --
 
-DROP TABLE IF EXISTS `fight`;
-CREATE TABLE IF NOT EXISTS `fight` (
+DROP TABLE IF EXISTS `snakes_fight`;
+CREATE TABLE IF NOT EXISTS `snakes_fight` (
   `id` int(11) NOT NULL,
   `refs` int(11) NOT NULL DEFAULT '1',
   `type` enum('train','challenge') NOT NULL,
@@ -126,11 +126,11 @@ CREATE TABLE IF NOT EXISTS `fight` (
 -- --------------------------------------------------------
 
 --
--- Структура таблицы `fightlist`
+-- Структура таблицы `snakes_fightlist`
 --
 
-DROP TABLE IF EXISTS `fightlist`;
-CREATE TABLE IF NOT EXISTS `fightlist` (
+DROP TABLE IF EXISTS `snakes_fightlist`;
+CREATE TABLE IF NOT EXISTS `snakes_fightlist` (
   `type` enum('ordered','challenged') NOT NULL,
   `player_id` int(11) NOT NULL,
   `time` int(11) NOT NULL,
@@ -138,22 +138,22 @@ CREATE TABLE IF NOT EXISTS `fightlist` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Триггеры `fightlist`
+-- Триггеры `snakes_fightlist`
 --
-DROP TRIGGER IF EXISTS `fightlist_after_insert_t`;
+DROP TRIGGER IF EXISTS `snakes_fightlist_after_insert_t`;
 DELIMITER $$
-CREATE TRIGGER `fightlist_after_insert_t` AFTER INSERT ON `fightlist`
+CREATE TRIGGER `snakes_fightlist_after_insert_t` AFTER INSERT ON `snakes_fightlist`
  FOR EACH ROW BEGIN
- update `fight` set `refs` = `refs` + 1
+ update `snakes_fight` set `refs` = `refs` + 1
  where `id` = new.`fight_id`;
 END
 $$
 DELIMITER ;
-DROP TRIGGER IF EXISTS `fightlist_before_delete_t`;
+DROP TRIGGER IF EXISTS `snakes_fightlist_before_delete_t`;
 DELIMITER $$
-CREATE TRIGGER `fightlist_before_delete_t` BEFORE DELETE ON `fightlist`
+CREATE TRIGGER `snakes_fightlist_before_delete_t` BEFORE DELETE ON `snakes_fightlist`
  FOR EACH ROW BEGIN
- update `fight` set `refs` = `refs` - 1
+ update `snakes_fight` set `refs` = `refs` - 1
  where `id` = old.`fight_id`;
 END
 $$
@@ -162,11 +162,11 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
--- Структура таблицы `fightslot`
+-- Структура таблицы `snakes_fightslot`
 --
 
-DROP TABLE IF EXISTS `fightslot`;
-CREATE TABLE IF NOT EXISTS `fightslot` (
+DROP TABLE IF EXISTS `snakes_fightslot`;
+CREATE TABLE IF NOT EXISTS `snakes_fightslot` (
   `player_id` int(11) NOT NULL,
   `index` tinyint(1) unsigned NOT NULL,
   `fight_id` int(11) NOT NULL,
@@ -174,24 +174,24 @@ CREATE TABLE IF NOT EXISTS `fightslot` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Триггеры `fightslot`
+-- Триггеры `snakes_fightslot`
 --
-DROP TRIGGER IF EXISTS `fightslot_after_insert_t`;
+DROP TRIGGER IF EXISTS `snakes_fightslot_after_insert_t`;
 DELIMITER $$
-CREATE TRIGGER `fightslot_after_insert_t` AFTER INSERT ON `fightslot`
+CREATE TRIGGER `snakes_fightslot_after_insert_t` AFTER INSERT ON `snakes_fightslot`
  FOR EACH ROW BEGIN
- update `fight` set `refs` = `refs` + 1
+ update `snakes_fight` set `refs` = `refs` + 1
  where `id` = new.`fight_id`;
 END
 $$
 DELIMITER ;
 DROP TRIGGER IF EXISTS `fightslot_after_update_t`;
 DELIMITER $$
-CREATE TRIGGER `fightslot_after_update_t` AFTER UPDATE ON `fightslot`
+CREATE TRIGGER `fightslot_after_update_t` AFTER UPDATE ON `snakes_fightslot`
  FOR EACH ROW BEGIN
  CASE WHEN new.`fight_id` <> old.`fight_id` THEN
-  update `fight` set `refs` = `refs` + 1 where `id` = new.`fight_id`;
-  update `fight` set `refs` = `refs` - 1 where `id` = old.`fight_id`;
+  update `snakes_fight` set `refs` = `refs` + 1 where `id` = new.`fight_id`;
+  update `snakes_fight` set `refs` = `refs` - 1 where `id` = old.`fight_id`;
  ELSE BEGIN END;
  END CASE;
 END
@@ -199,9 +199,9 @@ $$
 DELIMITER ;
 DROP TRIGGER IF EXISTS `fightslot_before_delete_t`;
 DELIMITER $$
-CREATE TRIGGER `fightslot_before_delete_t` BEFORE DELETE ON `fightslot`
+CREATE TRIGGER `fightslot_before_delete_t` BEFORE DELETE ON `snakes_fightslot`
  FOR EACH ROW BEGIN
- update `fight` set `refs` = `refs` - 1
+ update `snakes_fight` set `refs` = `refs` - 1
  where `id` = old.`fight_id`;
 END
 $$
@@ -210,11 +210,11 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
--- Структура таблицы `player`
+-- Структура таблицы `snakes_player`
 --
 
-DROP TABLE IF EXISTS `player`;
-CREATE TABLE IF NOT EXISTS `player` (
+DROP TABLE IF EXISTS `snakes_player`;
+CREATE TABLE IF NOT EXISTS `snakes_player` (
 `id` int(11) NOT NULL,
   `name` char(40) NOT NULL,
   `login` char(30) CHARACTER SET ascii NOT NULL,
@@ -231,15 +231,15 @@ CREATE TABLE IF NOT EXISTS `player` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Триггеры `player`
+-- Триггеры `snakes_player`
 --
-DROP TRIGGER IF EXISTS `player_after_update_t`;
+DROP TRIGGER IF EXISTS `snakes_player_after_update_t`;
 DELIMITER $$
-CREATE TRIGGER `player_after_update_t` AFTER UPDATE ON `player`
+CREATE TRIGGER `snakes_player_after_update_t` AFTER UPDATE ON `snakes_player`
  FOR EACH ROW BEGIN
  CASE WHEN new.`viewed_id` <> old.`viewed_id` THEN
-  update `fight` set `refs` = `refs` + 1 where `id` = new.`viewed_id`;
-  update `fight` set `refs` = `refs` - 1 where `id` = old.`viewed_id`;
+  update `snakes_fight` set `refs` = `refs` + 1 where `id` = new.`viewed_id`;
+  update `snakes_fight` set `refs` = `refs` - 1 where `id` = old.`viewed_id`;
  ELSE BEGIN END;
  END CASE;
 END
@@ -249,11 +249,11 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
--- Структура таблицы `session`
+-- Структура таблицы `snakes_session`
 --
 
-DROP TABLE IF EXISTS `session`;
-CREATE TABLE IF NOT EXISTS `session` (
+DROP TABLE IF EXISTS `snakes_session`;
+CREATE TABLE IF NOT EXISTS `snakes_session` (
   `sid` char(32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
   `cid` char(32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
   `flags` tinyint(1) NOT NULL,
@@ -265,11 +265,11 @@ CREATE TABLE IF NOT EXISTS `session` (
 -- --------------------------------------------------------
 
 --
--- Структура таблицы `skin`
+-- Структура таблицы `snakes_skin`
 --
 
-DROP TABLE IF EXISTS `skin`;
-CREATE TABLE IF NOT EXISTS `skin` (
+DROP TABLE IF EXISTS `snakes_skin`;
+CREATE TABLE IF NOT EXISTS `snakes_skin` (
   `id` int(11) NOT NULL,
   `name` char(40) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -277,11 +277,11 @@ CREATE TABLE IF NOT EXISTS `skin` (
 -- --------------------------------------------------------
 
 --
--- Структура таблицы `snake`
+-- Структура таблицы `snakes_snake`
 --
 
-DROP TABLE IF EXISTS `snake`;
-CREATE TABLE IF NOT EXISTS `snake` (
+DROP TABLE IF EXISTS `snakes_snake`;
+CREATE TABLE IF NOT EXISTS `snakes_snake` (
 `id` int(11) NOT NULL,
   `player_id` int(11) NOT NULL,
   `name` char(40) NOT NULL,
@@ -296,51 +296,51 @@ CREATE TABLE IF NOT EXISTS `snake` (
 --
 
 --
--- Индексы таблицы `delayedfight`
+-- Индексы таблицы `snakes_delayedfight`
 --
-ALTER TABLE `delayedfight`
+ALTER TABLE `snakes_delayedfight`
  ADD PRIMARY KEY (`fight_id`);
 
 --
--- Индексы таблицы `fight`
+-- Индексы таблицы `snakes_fight`
 --
-ALTER TABLE `fight`
+ALTER TABLE `snakes_fight`
  ADD PRIMARY KEY (`id`), ADD KEY `refs` (`refs`,`player_id`);
 
 --
--- Индексы таблицы `fightlist`
+-- Индексы таблицы `snakes_fightlist`
 --
-ALTER TABLE `fightlist`
+ALTER TABLE `snakes_fightlist`
  ADD PRIMARY KEY (`type`,`player_id`,`time`,`fight_id`);
 
 --
--- Индексы таблицы `fightslot`
+-- Индексы таблицы `snakes_fightslot`
 --
-ALTER TABLE `fightslot`
+ALTER TABLE `snakes_fightslot`
  ADD PRIMARY KEY (`player_id`,`index`);
 
 --
--- Индексы таблицы `player`
+-- Индексы таблицы `snakes_player`
 --
-ALTER TABLE `player`
+ALTER TABLE `snakes_player`
  ADD PRIMARY KEY (`id`), ADD UNIQUE KEY `login_k` (`login`), ADD UNIQUE KEY `name_k` (`name`), ADD KEY `rating_k` (`rating`), ADD KEY `player_ibfk_1` (`delayed_id`), ADD KEY `player_ibfk_2` (`viewed_id`);
 
 --
--- Индексы таблицы `session`
+-- Индексы таблицы `snakes_session`
 --
-ALTER TABLE `session`
+ALTER TABLE `snakes_session`
  ADD UNIQUE KEY `sid_k` (`sid`), ADD UNIQUE KEY `cid_k` (`cid`), ADD KEY `expires_k` (`expires`);
 
 --
--- Индексы таблицы `skin`
+-- Индексы таблицы `snakes_skin`
 --
-ALTER TABLE `skin`
+ALTER TABLE `snakes_skin`
  ADD PRIMARY KEY (`id`);
 
 --
--- Индексы таблицы `snake`
+-- Индексы таблицы `snakes_snake`
 --
-ALTER TABLE `snake`
+ALTER TABLE `snakes_snake`
  ADD PRIMARY KEY (`id`), ADD KEY `player_id_current_k` (`player_id`), ADD KEY `type_current_k` (`type`), ADD KEY `name_current_k` (`name`), ADD KEY `skin_id_k` (`skin_id`);
 
 --
@@ -348,19 +348,19 @@ ALTER TABLE `snake`
 --
 
 --
--- AUTO_INCREMENT для таблицы `fight`
+-- AUTO_INCREMENT для таблицы `snakes_fight`
 --
-ALTER TABLE `fight`
+ALTER TABLE `snakes_fight`
 MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 --
--- AUTO_INCREMENT для таблицы `player`
+-- AUTO_INCREMENT для таблицы `snakes_player`
 --
-ALTER TABLE `player`
+ALTER TABLE `snakes_player`
 MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 --
--- AUTO_INCREMENT для таблицы `snake`
+-- AUTO_INCREMENT для таблицы `snakes_snake`
 --
-ALTER TABLE `snake`
+ALTER TABLE `snakes_snake`
 MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 SET FOREIGN_KEY_CHECKS=1;
 

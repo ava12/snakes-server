@@ -5,6 +5,7 @@ class Controller extends CController {
 
 	protected $accessRights = array();
 
+	/** @var null|Player */
 	protected $player = null;
 
 //---------------------------------------------------------------------------
@@ -48,7 +49,7 @@ class Controller extends CController {
 
 //---------------------------------------------------------------------------
 	protected function sweep() {
-		Yii::app()->db->createCommand('CALL delete_zero_refs')->execute();
+		Yii::app()->db->createCommand('CALL {{delete_zero_refs}}')->execute();
 	}
 
 //---------------------------------------------------------------------------

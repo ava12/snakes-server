@@ -20,7 +20,7 @@ class FightEntry extends CActiveRecord {
 		self::TYPE_CHALLENGED => self::LIST_SIZE_CHALLENGED,
 	);
 
-	protected $sqlSave = 'CALL update_fight_list(\'%s\', %d, %d, %d)';
+	protected $sqlSave = 'CALL {{update_fight_list}}(\'%s\', %d, %d, %d)';
 	protected $list = array();
 
 //---------------------------------------------------------------------------

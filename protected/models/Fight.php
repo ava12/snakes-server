@@ -89,7 +89,7 @@ class Fight extends ActiveRecord {
 		if (!$id) $id = $this->id;
 		if (!$playerId) $playerId = $this->player_id;
 		return (bool)$this->getDbConnection()
-			->createCommand('SELECT `can_view_fight`(:pid, :fid)')
+			->createCommand('SELECT `{{can_view_fight}}`(:pid, :fid)')
 			->queryScalar(array(':pid' => $playerId, ':fid' => $id));
 	}
 

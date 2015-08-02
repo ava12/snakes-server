@@ -23,7 +23,6 @@ return array(
 			'serverLifetime' => 365 * 86400,
 		),
 		'db' => array(
-			'tablePrefix' => '',
 			'charset' => 'UTF8',
 		),
 		'session' => array(
