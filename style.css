@@ -8,7 +8,7 @@ h1 { font-weight: bold; font-size: 150%; margin-bottom: 1em; }
 .ar { text-align: right; }
 
 #header { height: 2em; line-height: 1.5em; border-bottom: 1px solid; padding: 0.5ex 1ex 0px; }
-.fl-right { float: right; }
+.fl-right { float: right; margin-left: 1em; }
 #content { padding: 1ex; }
 input[type=text], input[type=password] { font-family: monospace; padding: 0.1em 0.2em; }
 input[type=button] { padding: 0.3em; }

@@ -127,6 +127,11 @@ class User extends CApplicationComponent implements IWebUser {
 	}
 
 //---------------------------------------------------------------------------
+	/**
+	 * @param UserIdentity $identity
+	 * @param bool $isClient
+	 * @return bool
+	 */
 	public function login($identity, $isClient = false) {
 		$player = $identity->getPlayer();
 		if (!$player) return false;
@@ -179,7 +184,7 @@ class User extends CApplicationComponent implements IWebUser {
 
 		$fieldName = ($isClient ? 'cid' : 'sid');
 		Yii::app()->db->createCommand()
-			->delete($this->sessionTable, array($fieldName => $sid));
+			->delete($this->sessionTable, "`$fieldName` = '$sid'");
 
 		if (!$isClient and $sid == $this->sid) {
 			$this->sid = NULL;

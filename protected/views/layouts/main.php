@@ -18,6 +18,7 @@
 <noscript><div class="error">Необходимо включить поддержку JavaScript</div></noscript>
 <div id="header">
 <a href="<?= BASE_URL ?>">@</a> |
+<a class="fl-right" href="<?= BASE_URL ?>help.html">Справка</a>
 <?php
 
 $user = Yii::app()->user;
