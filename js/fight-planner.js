@@ -173,6 +173,7 @@ function AFightPlanner(Fight) {
 
 //---------------------------------------------------------------------------
 	this.OnClick = function(x, y, Dataset) {
+		var Limit
 		switch(Dataset.cls) {
 			case 'ruler':
 				this.Fight.TurnLimit = (x * this.MaxTurnLimit / this.TabControls.Items.TurnRuler.w + 1)
@@ -180,7 +181,7 @@ function AFightPlanner(Fight) {
 			break
 
 			case 'turn':
-				var Limit = this.Fight.TurnLimit + parseInt(Dataset.id)
+				Limit = this.Fight.TurnLimit + parseInt(Dataset.id)
 				if (Limit < 1) Limit = 1
 				if (Limit > this.MaxTurnLimit) Limit = this.MaxTurnLimit
 				this.Fight.TurnLimit = Limit
@@ -188,7 +189,7 @@ function AFightPlanner(Fight) {
 			break
 
 			case 'limit':
-				var Limit = parseInt(prompt('Лимит ходов:', this.Fight.TurnLimit))
+				Limit = parseInt(prompt('Лимит ходов:', this.Fight.TurnLimit))
 				if (Limit > 0 && Limit <= this.MaxTurnLimit) {
 					this.Fight.TurnLimit = Limit
 					this.RenderTurnRuler(Limit)
@@ -213,8 +214,8 @@ function AFightPlanner(Fight) {
 				this.Show()
 			break
 
-			case 'snake':
-				this.Fight.Snakes[this.SnakeIndex] = this.Widget.List.Items[Id]
+			case 'list-snake':
+				this.Fight.Snakes[this.SnakeIndex] = this.Widget.List.Items[Dataset.id]
 				this.ShowWidget = false
 				this.Show()
 			break

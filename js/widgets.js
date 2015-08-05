@@ -737,7 +737,7 @@ function ASlotSelectWidget(Fields) {
 		Fields: [
 			{Type: 'PropertyLink', Property: 'SlotName', Width: 408, Data: {cls: 'slot-name'}},
 			{Type: 'FightTime', Width: 120},
-			{Type: 'FightType', Width: 50},
+			{Type: 'FightType', Width: 50}
 		],
 
 		EmptyFields: [

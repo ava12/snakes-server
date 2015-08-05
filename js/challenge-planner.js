@@ -147,7 +147,6 @@ function AChallengePlanner(Fight) {
 	this.AddPlayer = function (Player) {
 		if (!this.CanChallenge(Player)) return false
 
-		var Index
 		for (var i = 0; i < 3; i++) {
 			if (!this.OtherPlayers[i]) {
 				this.SetPlayer(i, Player)
