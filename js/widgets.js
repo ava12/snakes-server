@@ -564,7 +564,7 @@ function AFightListWidget() {
 		var Snake = Item.Snakes[Params.Index]
 		if (!Snake) return Width
 
-		var Title = Snake.SnakeName + '(' + Snake.PlayerName + ')'
+		var Title = Snake.SnakeName + ' (' + Snake.PlayerName + ')'
 		this.AddControl({x: x, y: y + ((this.ItemHeight - 16) >> 1), w: 48, h: 16, Title: Title})
 		this.RenderSkin(Snake, Index, x, y)
 		return Width
