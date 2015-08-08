@@ -38,7 +38,9 @@ function ACanvas(Canvas, HtmlLayers) {
 
 		if (Control.Skip) return ''
 
-		for(var i in Control) {
+		var i, j, Result
+
+		for(i in Control) {
 			switch(i) {
 				case 'Items': case 'prototype':
 					continue
@@ -46,7 +48,7 @@ function ACanvas(Canvas, HtmlLayers) {
 
 				case 'Data':
 					if (!Context.Data) Context.Data = {}
-					for(var j in Control.Data) Context.Data[j] = Control.Data[j]
+					for(j in Control.Data) Context.Data[j] = Control.Data[j]
 				break
 
 				case 'id':
@@ -78,7 +80,7 @@ function ACanvas(Canvas, HtmlLayers) {
 				Suffix = '</div>'
 			}
 
-			var Result = [Prefix + Class]
+			Result = [Prefix + Class]
 			if (IsTextInput) {
 				Result.push(' id="' + (Control.id ? Control.id : 'input-control') + '"')
 				if (Context.Max) {
@@ -109,7 +111,7 @@ function ACanvas(Canvas, HtmlLayers) {
 			return Result.join('')
 		}
 
-		var Result = []
+		Result = []
 
 		if (!Control.Type) {
 			for(i in Control.Items) {
@@ -118,13 +120,14 @@ function ACanvas(Canvas, HtmlLayers) {
 			return Result.join('')
 		}
 
+		var BaseX
 		switch(Control.Type) {
 			case 'grid':
-				var BaseX = Context.x
-				for(var i in Control.Items) {
+				BaseX = Context.x
+				for(i in Control.Items) {
 					var Row = Control.Items[i]
 					Context.x = BaseX
-					for(var j in Row) {
+					for(j in Row) {
 						Result.push(this.MakeControlHtml(Row[j], Context))
 						Context.x += Context.dx
 					}
@@ -133,10 +136,10 @@ function ACanvas(Canvas, HtmlLayers) {
 			break;
 
 			case 'box':
-				var BaseX = Context.x
+				BaseX = Context.x
 				if (!Context.bdx) Context.bdx = 0
 				if (!Context.bdy) Context.bdy = 0
-				for(var i in Control.Items) {
+				for(i in Control.Items) {
 					Result.push(this.MakeControlHtml(Control.Items[i], Context))
 					Context.x += Context.dx
 					if (Context.x > Context.dw + BaseX) {
@@ -304,7 +307,7 @@ function ACanvas(Canvas, HtmlLayers) {
 		else this.FontFamily = Family
 		if (!Size) Size = this.FontSize
 		else this.FontSize = Size
-		if (!LineHeight) LineHeight = Size * 1.3
+		if (!LineHeight) this.LineHeight = Size * 1.3
 		else this.LineHeight = LineHeight
 		if (Family.indexOf(' ') >= 0) Family = '"' + Family + '"'
 		this.DrawContext.font = Size + 'px ' + Family

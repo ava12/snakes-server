@@ -3,6 +3,7 @@
 class ActiveRecordCollection {
 
 	protected $items = array();
+	/** @var CDbConnection */
 	protected $dbConnection;
 	protected $table = '';
 	protected $defaults = array();
@@ -37,6 +38,7 @@ class ActiveRecordCollection {
 	protected function validate() {
 		$this->applyDefaults();
 
+		/** @var Model $item */
 		foreach($this->items as $item) {
 			if (!is_object($item)) continue;
 
@@ -68,6 +70,7 @@ class ActiveRecordCollection {
 		if ($this->columns) return $this->columns;
 
 		$columns = array();
+		/** @var Model $item */
 		foreach ($this->items as $item) {
 			if (is_object($item)) $item = $item->getAttributes();
 			foreach ($item as $name => $value) {
@@ -97,6 +100,7 @@ class ActiveRecordCollection {
 		$columns = array_keys(array_flip($this->getColumns()) + $this->defaults);
 		$values = array();
 
+		/** @var Model|array $item */
 		foreach ($this->items as $item) {
 			if (is_object($item)) $item = $item->getAttributes();
 			$row = array();

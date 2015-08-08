@@ -55,7 +55,7 @@ function APlayer(Id) {
 			Name: {x: 118, y: 3, w: 415, h: 26},
 			Link: {x: 12, y: 3, w: 533, h: 26, Data: {cls: 'snake-view'}},
 			Fight: {x: 550, y: 3, w: 70, h: 26, Label: 'В бой!',
-				BackColor: CanvasColors.Create, Data: {cls: 'snake-fight'}},
+				BackColor: CanvasColors.Create, Data: {cls: 'snake-fight'}}
 		}
 	}
 
@@ -89,7 +89,7 @@ function APlayer(Id) {
 		var Request = {Request: 'player info', PlayerId: this.Player.Id}
 		PostRequest(null, Request, 20, function (Data) {
 			var KeyMap = {PlayerId: true, PlayerName: true, Rating: true,
-				FighterId: true, PlayerSnakes: true}
+				SnakeId: true, PlayerSnakes: true}
 			for (var n in KeyMap) this.Player[n] = Data[n]
 			this.TabTitle = this.Player.PlayerName
 
@@ -97,7 +97,7 @@ function APlayer(Id) {
 			this.TabControls.Items.Snakes.Items = []
 			if (this.IsMe) {
 				Game.Player.Rating = this.Player.Rating
-				Game.Player.FighterId = this.Player.FighterId
+				Game.Player.SnakeId = this.Player.SnakeId
 			}
 
 			var Controls = this.TabControls.Items
@@ -107,10 +107,10 @@ function APlayer(Id) {
 			var IC = this.SnakeItems[this.IsMe ? 'Me' : 'Other']
 			var Snakes = this.Player.PlayerSnakes
 			var SnakeControls = Controls.Snakes.Items
-			var FighterId = this.Player.FighterId
+			var FighterId = this.Player.SnakeId
 
 			for (var i = 0; i < Snakes.length; i++) {
-				Item = Snakes[i]
+				var Item = Snakes[i]
 
 				SnakeControls.push(this.MakeControl(IC.Fight, 0, y, {id: i}))
 
@@ -170,7 +170,7 @@ function APlayer(Id) {
 		var Box = {x: this.SnakeItemX, y: this.SnakeItemY, w: this.SnakeItemWidth, h: this.SnakeItemHeight}
 		var IC = this.SnakeItems[this.IsMe ? 'Me' : 'Other']
 		var Snakes = this.Player.PlayerSnakes
-		var FighterId = Game.Player.FighterId
+		var FighterId = Game.Player.SnakeId
 
 		for (var i = 0; i < Snakes.length; i++) {
 			var Snake = Snakes[i]
@@ -243,9 +243,9 @@ function APlayer(Id) {
 
 			case 'snake-assign':
 				SnakeId = this.Player.PlayerSnakes[Id].SnakeId
-				PostRequest(null, {Request: 'snake assign', SnakeId: SnakeId}, 10, function (Data) {
+				PostRequest(null, {Request: 'snake assign', SnakeId: SnakeId}, 10, function () {
 					this.LoadPlayer()
-				}, function (Status, Text, Data) {
+				}, function () {
 					this.LoadPlayer()
 				}, this)
 			break

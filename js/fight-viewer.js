@@ -27,7 +27,7 @@ function AFightViewer(Fight) {
 		MapStepText: {x: 608, y: 206, w: 20, h: 24},
 		MapIndexLabel: {x: 548, y: 238, w: 60, h: 24, Label: 'Карта:'},
 		MapIndexText: {x: 608, y: 238, w: 20, h: 24},
-		MapReasonText: {x: 548, y: 260, w: 80, h: 24},
+		MapReasonText: {x: 548, y: 260, w: 80, h: 24}
 	}
 
 	this.TabControls = {Items: {
@@ -35,7 +35,7 @@ function AFightViewer(Fight) {
 			{y: 53, id: 0, Title: ''},
 			{y: 83, id: 1, Title: ''},
 			{y: 113, id: 2, Title: ''},
-			{y: 143, id: 3, Title: ''},
+			{y: 143, id: 3, Title: ''}
 		]},
 		MapSnake: {x: 548, y: 182, w: 48, h: 16, Title: 'выбранная змея',
 			Data: {cls: 'current-snake'}},
@@ -49,13 +49,13 @@ function AFightViewer(Fight) {
 			{x: 430, Title: '10 шагов назад', id: '-10', Sprite: '16.Labels.First'},
 			{x: 454, Title: 'шаг назад', id: '-1', Sprite: '16.Labels.Back'},
 			{x: 586, Title: 'шаг вперед', id: '1', Sprite: '16.Labels.Forth'},
-			{x: 610, Title: '10 шагов вперед', id: '10', Sprite: '16.Labels.Last'},
+			{x: 610, Title: '10 шагов вперед', id: '10', Sprite: '16.Labels.Last'}
 		]},
 		SaveButton: {x: 428, y: 370, w: 100, h: 24, Data: {cls: 'save'},
 			Labels: ['Сохранить', 'Сохранить'],
 			BackColors: [CanvasColors.Create, CanvasColors.Modify]},
 		RefreshButton: {x: 538, y: 370, w: 90, h: 24, Data: {cls: 'refresh'},
-			Label: 'Обновить', Title: 'перезагрузить бой с сервера', BackColor: '#9cf'},
+			Label: 'Обновить', Title: 'перезагрузить бой с сервера', BackColor: '#9cf'}
 	}}
 
 	this.ReasonSprites = ['Debug.NoDebug', 'Debug.NoMove', 'Debug.SingleMove', 'Debug.NoMap']
@@ -607,8 +607,9 @@ function AFightViewer(Fight) {
 		this.TabTitle += ' (' + FormatDate(this.Fight.FightTime) + ')'
 		this.TurnCount = this.Fight.Turns.length
 
+		var i
 		var Buttons = this.TabControls.Items.SnakeButtons.Items
-		for(var i = 0; i < 4; i++) {
+		for(i = 0; i < 4; i++) {
 			if (!this.Fight.Snakes[i]) delete Buttons[i]
 			else Buttons[i].Title = this.Fight.Snakes[i].SnakeName
 		}
@@ -616,7 +617,7 @@ function AFightViewer(Fight) {
 		var StartX = [12, 9, 12, 15], StartY = [15, 12, 9, 12]
 		var DeltaX = [0, -1, 0, 1], DeltaY = [1, 0, -1, 0]
 		var Snakes = this.Fight.Snakes
-		for(var i = 0; i < 4; i++) {
+		for(i = 0; i < 4; i++) {
 			if (!Snakes[i]) continue
 
 			var x = StartX[i], y = StartY[i]

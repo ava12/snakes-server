@@ -253,7 +253,7 @@ final class RequestTest extends RequestTestBase {
 			'PlayerId' => '5',
 			'PlayerName' => 'p',
 			'Rating' => NULL,
-			'FighterId' => NULL,
+			'SnakeId' => NULL,
 			'PlayerSnakes' => array(
 				array('SnakeId' => '5', 'SnakeName' => 'sn', 'SnakeType' => 'B', 'SkinId' => 1),
 			),

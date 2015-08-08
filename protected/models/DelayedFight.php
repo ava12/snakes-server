@@ -201,7 +201,7 @@ class DelayedFight extends ActiveRecord {
 		$result = array();
 		$templates = $this->makeTemplateMasks($snake->templates, $index);
 		foreach ($snake->maps as $map) {
-			$result[] = $this->makeMapVariants($map, $templates, $index);
+			$result[] = $this->makeMapVariants($map, $templates);
 		}
 
 		return $result;
@@ -237,7 +237,7 @@ class DelayedFight extends ActiveRecord {
 	}
 
 //---------------------------------------------------------------------------
-	protected function makeMapVariants($map, $templates, $index) {
+	protected function makeMapVariants($map, $templates) {
 		$result = array_fill(0, 8, NULL);
 		$baseMasks = $this->fillMapVariant($map->lines, $templates);
 		$headCoords = array($map->head_x, $map->head_y);

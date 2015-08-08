@@ -46,7 +46,7 @@ var BPageTab = {
 	OnClick: function(x, y, Dataset) {},
 
 //---------------------------------------------------------------------------
-	RenderTab: function(Selected) {
+	RenderTab: function() {
 		if (!this.TabSprite) return
 
 		var dx = this.TabPos + ((this.TabWidth - this.TabSprite.w) >> 1)
@@ -96,7 +96,7 @@ var BPageTab = {
 	Clear: function() {
 		this.TabControlHtml = null
 		if (this.IsActive) Canvas.FillRect(TabSet.TabBox, '#ffffff')
-	},
+	}
 
 //---------------------------------------------------------------------------
 }
@@ -202,7 +202,7 @@ var TabSet = {
 		{x: 2, y: 0, w: 24, h: 24, Title: 'Главная вкладка'},
 		{x: 30, Data: {id: 'left'}, Title: 'прокрутить влево', Sprite: '16.Buttons.Left'},
 		{x: 602, Data: {id: 'right'}, Title: 'прокрутить вправо', Sprite: '16.Buttons.Right'},
-		{x: 622, Data: {id: 'close'}, Title: 'закрыть вкладку', Sprite: '16.Buttons.Del'},
+		{x: 622, Data: {id: 'close'}, Title: 'закрыть вкладку', Sprite: '16.Buttons.Del'}
 	]},
 
 //---------------------------------------------------------------------------
@@ -343,7 +343,6 @@ var TabSet = {
 		var RightDif = (this.TabSetPos + this.TabViewWidth) - (Tab.TabPos + Tab.TabWidth)
 		if (RightDif < 0) {
 			this.TabSetPos = RightDif - this.TabSetPos
-			return
 		}
 	},
 

@@ -284,7 +284,7 @@ class Game {
 			'PlayerId' => $player->id,
 			'PlayerName' => $player->name,
 			'Rating' => (isset($rating) ? (int)$rating : NULL),
-			'FighterId' => (isset($rating) ? $player->fighter_id : NULL),
+			'SnakeId' => (isset($rating) ? $player->fighter_id : NULL),
 			'PlayerSnakes' => $snakes,
 		);
 	}
@@ -502,6 +502,7 @@ class Game {
 	protected function requestSnakeEdit() {
 		$request = $this->request;
 		$snakeId = $request['SnakeId'];
+		/** @var Snake $snake */
 		$snake = Snake::model()->findByPk($snakeId);
 		if (!$snake) {
 			throw new NackException(NackException::ERR_UNKNOWN_SNAKE, $snakeId);

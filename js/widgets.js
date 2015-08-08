@@ -56,7 +56,7 @@ function AWidget() {
 	}
 
 //---------------------------------------------------------------------------
-	this.OnClick = function (x, y, Dataset) {
+	this.OnClick = function () {
 		alert('- не реализовано -')
 	}
 
@@ -66,7 +66,7 @@ function AWidget() {
 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-function AListWidget(Fields) {
+function AListWidget() {
 	this.ItemBackColor = CanvasColors.Items
 	this.LinkColor = '#3333ff'
 	this.LinkBackColor = null
@@ -409,7 +409,7 @@ function ARatingListWidget(Fields) {
 
 //---------------------------------------------------------------------------
 	this.RenderChallengeButton = function (Item, Index, x, y, Params) {
-		if (Item.PlayerId == Game.Player.PlayerId) return Params.Width
+		if (!Game.Player.SnakeId || Item.PlayerId == Game.Player.PlayerId) return Params.Width
 
 		var Box = {x: x, y: y, Width: Params.Width, BackColor: Params.BackColor,
 			Label: Params.Label, Data: {cls: 'list-challenge'}, Title: 'вызвать игрока на бой'}
@@ -419,7 +419,6 @@ function ARatingListWidget(Fields) {
 //---------------------------------------------------------------------------
 	this.OnClick = function (x, y, Dataset) {
 		var Class = Dataset.cls
-		var Id = Dataset.id
 
 		switch (Class) {
 			case 'challenge':
@@ -448,14 +447,14 @@ function APlayerListWidget(Fields) {
 
 		Columns: [
 			{Label: 'Игрок', Width: 520, Name: 'PlayerName'},
-			{Label: 'Рейтинг', Width: 100},
+			{Label: 'Рейтинг', Width: 100}
 		],
 
 		Fields: [
 			{Type: 'Gap'},
 			{Type: 'PropertyLink', Width: 515, Property: 'PlayerName', Data: {cls: 'list-player'}},
 			{Type: 'Separator'},
-			{Type: 'PropertyText', Width: 84, Property: 'Rating', Align: 'right'},
+			{Type: 'PropertyText', Width: 84, Property: 'Rating', Align: 'right'}
 		]
 	}
 
@@ -937,7 +936,6 @@ function ASkinSelectWidget(Fields) {
 		this.SkinIds = SnakeSkins.SkinList
 		var SkinNames = SnakeSkins.Skins
 		var Control = {x: this.ItemX, y: this.ItemY, w: 48, h: 16, Title: '', id: 0, Data: {cls: 'skin'}}
-		var y = this.ItemY
 		var cnt = 0
 		for (var i in this.SkinIds) {
 			Control.id = this.SkinIds[i]

@@ -30,7 +30,7 @@ function AFightPlanner(Fight) {
 			{Items: {Change: {x: 20, y: 101, w: 500, h: 28, Data: {cls: 'change', id: 2}},
 				Remove: {x: 530, y: 101, w: 100, h: 28, Data: {cls: 'remove', id: 2}}}},
 			{Items: {Change: {x: 20, y: 131, w: 500, h: 28, Data: {cls: 'change', id: 3}},
-				Remove: {x: 530, y: 131, w: 100, h: 28, Data: {cls: 'remove', id: 3}}}},
+				Remove: {x: 530, y: 131, w: 100, h: 28, Data: {cls: 'remove', id: 3}}}}
 		]},
 		TurnRuler: {x: 70, y: 180, w: 500, h: 16, Title: 'Лимит ходов',
 			Data: {cls: 'ruler'}},
@@ -40,7 +40,7 @@ function AFightPlanner(Fight) {
 			{x: 242, y: 212, Title: '-10', id: '-10', Sprite: '16.Labels.First'},
 			{x: 262, y: 212, Title: '-1', id: '-1', Sprite: '16.Labels.Back'},
 			{x: 342, y: 212, Title: '+1', id: '1', Sprite: '16.Labels.Forth'},
-			{x: 362, y: 212, Title: '+10', id: '10', Sprite: '16.Labels.Last'},
+			{x: 362, y: 212, Title: '+10', id: '10', Sprite: '16.Labels.Last'}
 		]},
 		RunButton: {x: 275, y: 260, w: 70, h: 30, Label: 'В бой!',
 			Data: {cls: 'run'}}

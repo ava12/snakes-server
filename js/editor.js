@@ -639,7 +639,6 @@ function ASnakeEditor(SnakeId) {
 //---------------------------------------------------------------------------
 	this.HandleInput = function(Dataset, Id) {
 		var Editor = TabSet.CurrentTab
-		var Snake = Editor.Snake
 		var Text = Dataset.value
 		if (typeof Text == 'boolean') return
 
@@ -671,7 +670,7 @@ function ASnakeEditor(SnakeId) {
 
 //---------------------------------------------------------------------------
 	this.HandleTypeClick = function () {
-		if (this.Snake.SnakeType == 'N' && this.SnakeId && Game.Player.FighterId == this.SnakeId) {
+		if (this.Snake.SnakeType == 'N' && this.SnakeId && Game.Player.SnakeId == this.SnakeId) {
 			alert('Нельзя сменить тип бойца.')
 			return
 		}

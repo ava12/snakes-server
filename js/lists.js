@@ -179,7 +179,7 @@ function AFightListTab() {
 
 			case 'new-challenge':
 				if (Game.Player.SnakeId) Game.AddTab(new AChallengePlanner())
-				else alert('Вы не участвуете в рейтинге')
+				else alert('Для участия в рейтинговых боях нужно назначить бойца.')
 			break
 
 			default:

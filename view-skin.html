@@ -73,11 +73,13 @@ var Dom = {
 			List.push('<span style="background-position:0px ' + (16 * (1 - i)) +
 				'px" onclick="SetSkinId(' + i + ')"></span>')
 		}
+		//noinspection JSPrimitiveTypeWrapperUsage
 		Dom.SkinList.innerHTML = List.join(' ')
 	}
 	Img.src = 'img/16/skins.png'
 })()
 
+//noinspection JSUnusedLocalSymbols
 function FileCallback(Name, Type, Data) {
 	Dom.FileName.innerHTML = Name.replace('<', '&lt;')
 	Dom.Skin.src = 'data:image;base64,' + Data
@@ -153,7 +155,7 @@ var Board = {
 		body: 1,
 		right: 2,
 		left: 3,
-		tail: 4,
+		tail: 4
 	},
 
 //- public ------------------------------------------------------------------
@@ -188,14 +190,14 @@ var Board = {
 		Direction *= h
 		x *= w
 		y *= h
-		Dc = this.Dc
+		var Dc = this.Dc
 		Dc.clearRect(x, y, w, h)
 		Dc.fillStyle = this.CurrentLightColor
 		Dc.fillRect(x, y, w, h)
 		Dc.globalAlpha = 1.0
 		Dc.drawImage(Dom.Skin, Index, Direction, w, h, x, y, w, h)
 		return this
-	},
+	}
 }
 
 
@@ -294,9 +296,8 @@ var Snake = {
 //- public ------------------------------------------------------------------
 	Run: function() {
 		this.Prepare()
-		Board.Flush
 		this.Timer = new Timer(this.Move, this, this.FrameDelay)
-	},
+	}
 }
 
 

@@ -24,6 +24,7 @@ class UserIdentity implements IUserIdentity {
 	public function authenticate() {
 		if (!$this->login) return false;
 
+		/** @var Player $player */
 		$player = Player::model()->findByAttributes(array('login' => $this->login));
 		if (!$player or
 			!$player->checkLoginHash($this->hash, $this->timestamp)) return false;

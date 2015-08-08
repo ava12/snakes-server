@@ -42,6 +42,7 @@ class AdminController extends Controller {
 			}
 		}
 
+		/** @var Player $player */
 		$player = Player::model()->findByAttributes(array('login' => $_POST['Login']));
 		if (!$player) throw new CHttpException(404);
 

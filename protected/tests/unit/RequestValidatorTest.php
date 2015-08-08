@@ -243,15 +243,6 @@ final class RequestValidatorTest extends CTestCase {
 		'Lines' => array(array('X' => '0', 'Y' => '0', 'Line' => 'A4--c6'))
 	);
 
-	private static $defaultSnake = array(
-		'Id' => '1',
-		'Name' => 'ы',
-		'Type' => 'N',
-		'SkinId' => '1',
-		'PlayerId' => '1',
-		'PlayerName' => 'я'
-	);
-
 	private static $defaultProgram = array(
 		'Description' => 'ы',
 		'Templates' => array('S', 'S', 'S', 'S'),

@@ -66,10 +66,11 @@ function ArrayFill(Len, Value, DoClone) {
 	var Arr = new Array(Len)
 	if (DoClone == undefined) DoClone = true
 	if (Len) {
+		var i
 		if(DoClone && Value instanceof Array) {
-			for(var i = 0; i < Len; i++) Arr[i] = Clone(Value)
+			for(i = 0; i < Len; i++) Arr[i] = Clone(Value)
 		} else {
-			for(var i = 0; i < Len; i++) Arr[i] = Value
+			for(i = 0; i < Len; i++) Arr[i] = Value
 		}
 	}
 	return Arr
@@ -83,17 +84,18 @@ function Clone(Obj) {
 
 	if (typeof Obj == 'function') return Obj
 
+	var Result, i
 	if (Obj instanceof Array) {
-		var Result = []
+		Result = []
 		var Len = Obj.length
-		for(var i = 0; i < Len; i++) {
+		for(i = 0; i < Len; i++) {
 			Result[i] = Clone(Obj[i])
 		}
 	} else {
 		//var c = Obj.constructor
-		var Result = {}
+		Result = {}
 		Result.__proto__ = Obj.prototype
-		for(var i in Obj) {
+		for(i in Obj) {
 			if (Obj.hasOwnProperty(i) && i !== 'prototype') {
 				Result[i] = Clone(Obj[i])
 			}

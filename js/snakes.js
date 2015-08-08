@@ -6,15 +6,16 @@ function ASnakeMap(Fields) {
 	this.HeadX = 3
 	this.HeadY = 3
 
+	var i
 	if (Fields) {
-		for(var i in Fields) {
+		for(i in Fields) {
 			if (i in this) this[i] = Fields[i]
 		}
 	}
 
 	this.Lines = '--'.repeat(49)
 	if (Fields && Fields.Lines) {
-		for(var i in Fields.Lines) {
+		for(i in Fields.Lines) {
 			var Line = Fields.Lines[i]
 			var Pos = Line.Y * 14 + Line.X * 2
 			this.Lines = this.Lines.splice(Pos, Pos + Line.Line.length, Line.Line)
@@ -35,16 +36,16 @@ function ASnakeMap(Fields) {
 		Canvas.RotateReflect(ABox(x, y, Size * 7, Size * 7), RotRef)
 
 		var Cells = ArrayChunk(this.Lines.chunk(2), 7)
-		for(var y in Cells) {
-			for(var x in Cells[y]) {
-				var Cell = Cells[y][x].chunk()
+		for(var cy in Cells) {
+			for(var cx in Cells[cy]) {
+				var Cell = Cells[cy][cx].chunk()
 				if (Cell[1] == '-') {
-					this.RenderCell(Size + '.Any', x, y, Size)
+					this.RenderCell(Size + '.Any', cx, cy, Size)
 				} else {
-					this.RenderCell(Size + '.Group.' + Cell[1], x, y, Size)
+					this.RenderCell(Size + '.Group.' + Cell[1], cx, cy, Size)
 					var t = Cell[0].toUpperCase()
-					this.RenderCell(Size + '.' + t, x, y, Size)
-					if (t != Cell[0]) this.RenderCell(Size + '.Not', x, y, Size)
+					this.RenderCell(Size + '.' + t, cx, cy, Size)
+					if (t != Cell[0]) this.RenderCell(Size + '.Not', cx, cy, Size)
 				}
 			}
 		}
@@ -90,9 +91,10 @@ function ASnake(Fields) {
 	this.ProgramDescription = ''
 	this.Templates = ['S', 'S', 'S', 'S']
 
+	var i
 	if(Fields) {
 		if (!(Fields instanceof Object)) Fields = {SnakeId: Fields}
-		for(var i in Fields) {
+		for(i in Fields) {
 			if (i in this) this[i] = Fields[i]
 		}
 	}
@@ -100,7 +102,7 @@ function ASnake(Fields) {
 	if (!Fields || !Fields.Maps) this.Maps = [new ASnakeMap()]
 	else {
 		this.Maps = []
-		for(var i in Fields.Maps) this.Maps.push(new ASnakeMap(Fields.Maps[i]))
+		for(i in Fields.Maps) this.Maps.push(new ASnakeMap(Fields.Maps[i]))
 	}
 
 //---------------------------------------------------------------------------
@@ -154,9 +156,9 @@ function AFight(Fields) {
 		for(i in this.Snakes) {
 			if (this.Snakes[i]) {
 				if (!this.Snakes[i].Serialize) {
-					var Fields = this.Snakes[i]
-					for (var j in this.SnakeStats[i]) Fields[j] = this.SnakeStats[i][j]
-					this.Snakes[i] = new ASnake(Fields)
+					var SnakeFields = this.Snakes[i]
+					for (var j in this.SnakeStats[i]) SnakeFields[j] = this.SnakeStats[i][j]
+					this.Snakes[i] = new ASnake(SnakeFields)
 				}
 			}
 		}
@@ -185,7 +187,7 @@ function AFight(Fields) {
 			'TurnLimit', 'Turns', 'SnakeStats', 'SlotIndex']
 		for(var i in Names) Result[Names[i]] = this[Names[i]]
 		Result.Snakes = [null, null, null, null]
-		for(var i in this.Snakes) {
+		for(i in this.Snakes) {
 			if (this.Snakes[i]) Result.Snakes[i] = this.Snakes[i].Serialize()
 		}
 		return Result
