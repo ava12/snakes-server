@@ -41,13 +41,19 @@ CREATE PROCEDURE `snakes_update_fight_list`(IN `@list_type` ENUM('ordered','chal
 begin
  insert ignore into `snakes_fightlist` (`player_id`, `type`, `fight_id`, `time`)
  values (`@player_id`, `@list_type`, `@fight_id`, `@time`);
+end$$
+
+DROP PROCEDURE IF EXISTS `snakes_truncate_fight_list`$$
+CREATE PROCEDURE `snakes_truncate_fight_list`(IN `@list_type` ENUM('ordered','challenged'), IN `@player_id` INT)
+    MODIFIES SQL DATA
+    SQL SECURITY INVOKER
+begin
  delete from `snakes_fightlist`
  where `player_id` = `@player_id` and `type` = `@list_type` and `fight_id` in (
   select * from (
    select `fight_id` from `snakes_fightlist`
-   inner join `snakes_fight` on `snakes_fightlist`.`fight_id` = `snakes_fight`.`id`
-   where `snakes_fightlist`.`player_id` = `@player_id` and `snakes_fightlist`.`type` = `@list_type`
-   order by `snakes_fight`.`time` desc limit 1000 offset 10
+   where `player_id` = `@player_id` and `type` = `@list_type`
+   order by `time` desc limit 1000 offset 10
 	) as t
  );
 end$$
