@@ -5,8 +5,12 @@ if ($this->player and $this->player->isConfirmed()) {
 ?>
 <a href="<?= BASE_URL ?>game" class="fl-right">Играть</a>
 <?php } ?>
+<br>
 <h1>Рекорды</h1>
-<table class="list-table" cellspacing="0" border="1">
+<table class="list-table ratings" cellspacing="0" border="1">
+<col width="2*">
+<col width="1*">
+<col width="3*">
 <tr><th>Игрок<th>Рекорд<th>Боец</tr>
 <?php
 foreach ($provider->data as $player) {

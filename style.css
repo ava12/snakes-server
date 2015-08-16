@@ -32,8 +32,10 @@ label { line-height: 1.7em; }
 	background-color: #fff; opacity: 1; text-align: center; z-index: 10000;
 	border: 1px solid; padding: 1em;
 }
-.list-table { width: 95%; margin-bottom: 1em; }
+.list-table { margin: auto; margin-bottom: 1em; }
+.list-table.ratings { width: 50em; table-layout: fixed; }
 .list-table td, .list-table th { padding: 0.2em 0.4em; }
+h1 { text-align: center; }
 
 .skin {
 	display: inline-block; width: 48px; height: 16px; margin-right: 1em;
