@@ -664,6 +664,11 @@ function ASnakeEditor(SnakeId) {
 
 //---------------------------------------------------------------------------
 	this.HandleFightClick = function() {
+		if (!this.Snake.SnakeName) {
+			alert('Нужно задать имя змеи!')
+			return
+		}
+
 		this.SaveMap()
 		TabSet.Add(new AFightPlanner(this.Snake))
 	}

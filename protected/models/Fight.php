@@ -96,7 +96,7 @@ class Fight extends ActiveRecord {
 //---------------------------------------------------------------------------
 	public function setSnakes($snakes) {
 		foreach ($snakes as $index => $snake) {
-			if (!is_object($snake)) {
+			if (!is_object($snake) and $snake) {
 				$snake = Snake::model()->findByPk($snake);
 			}
 			if ($snake) {

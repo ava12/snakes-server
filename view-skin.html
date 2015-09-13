@@ -44,7 +44,7 @@ input[type=button] {
 
 <div class="float">
 Окраска змеи: <span id="file-name">img/16/skin1.png</span><br><br>
-<img id="skin" style="width:80px;height:64px;" alt="" src="img/16/skin1.png">
+<img id="skin" style="max-width:80px;max-height:64px;" alt="" src="img/16/skin1.png">
 <input type="button" value="URL" onclick="SetSkinUrl()">
 <input type="button" value="Загрузить" onclick="Upload()">
 <iframe style="width:1px;height:1px" src="f2b64.php" frameborder="0"></iframe>
@@ -83,7 +83,45 @@ var Dom = {
 function FileCallback(Name, Type, Data) {
 	Dom.FileName.innerHTML = Name.replace('<', '&lt;')
 	Dom.Skin.src = 'data:image;base64,' + Data
+	if (Dom.Skin.width != 80) {
+		FixSkin()
+	}
 	Snake.DrawSnake()
+}
+
+function FixSkin() {
+	var TilePos = [
+		[0, 0, 0],
+		[1, 2, 0],
+		[0, 1, 0],
+		[1, 1, 3],
+		[1, 3, 0]
+	]
+	var Transforms = [
+		[1, 0, 0, 1, 0, 0],
+		[0, 1, -1, 0, 16, 0],
+		[-1, 0, 0, -1, 16, 16],
+		[0, -1, 1, 0, 0, 16]
+	]
+
+	var Canvas = document.createElement('canvas')
+	Canvas.width = 80
+	Canvas.height = 64
+	var Dc = Canvas.getContext('2d')
+	for (var Tile = 0; Tile < 5; Tile++) {
+		var TileX = TilePos[Tile][0] << 4
+		var TileY = TilePos[Tile][1] << 4
+		var TileDir = TilePos[Tile][2]
+		for (var Dir = 0; Dir < 4; Dir++) {
+			var Transform = Transforms[(Dir - TileDir) & 3]
+			Dc.save()
+			Dc.translate(Tile << 4, Dir << 4)
+			Dc.transform.apply(Dc, Transform)
+			Dc.drawImage(Dom.Skin, TileX, TileY, 16, 16, 0, 0, 16, 16)
+			Dc.restore()
+		}
+	}
+	Dom.Skin.src = Canvas.toDataURL()
 }
 
 function Upload() {
