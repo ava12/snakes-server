@@ -166,10 +166,12 @@ class Snake extends ActiveRecord {
 	public function asArray() {
 		$maps = array();
 		foreach ($this->maps as $map) $maps[] = $map->asArray();
-		return $this->getAttributes() + array(
+		$result = $this->getAttributes();
+		$result['data'] = $this->serialize(array(
 			'templates' => $this->templates,
 			'maps' => $maps,
-		);
+		));
+		return $result;
 	}
 
 //---------------------------------------------------------------------------

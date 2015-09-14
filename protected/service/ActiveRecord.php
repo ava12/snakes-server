@@ -27,7 +27,7 @@ abstract class ActiveRecord extends CActiveRecord {
 	protected function afterFind() {
 		if (!$this->hasAttribute('data')) return;
 
-		$data = json_decode($this->getAttribute('data'), true);
+		$data = $this->deserialize($this->getAttribute('data'));
 		foreach ($this->blobNames as $name => $class) {
 			if (is_numeric($name)) {
 				$name = $class;
@@ -78,8 +78,7 @@ abstract class ActiveRecord extends CActiveRecord {
 			}
 			$data[$name] = $value;
 		}
-		$flags = (defined('JSON_UNESCAPED_UNICODE') ? JSON_UNESCAPED_UNICODE : 0);
-		$this->setAttribute('data', json_encode($data, $flags));
+		$this->setAttribute('data', $this->serialize($data));
 		return true;
 	}
 
@@ -114,5 +113,14 @@ abstract class ActiveRecord extends CActiveRecord {
 				}
 			}
 		}
+	}
+
+	protected function serialize($data) {
+		$flags = (defined('JSON_UNESCAPED_UNICODE') ? JSON_UNESCAPED_UNICODE : 0);
+		return json_encode($data, $flags);
+	}
+
+	protected function deserialize($data) {
+		return json_decode($data, true);
 	}
 }
